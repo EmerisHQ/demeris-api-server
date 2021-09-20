@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gaia "github.com/cosmos/gaia/v5/app"
 	"github.com/go-redis/redis/v8"
@@ -37,6 +38,7 @@ type Store struct {
 	Config        struct {
 		ExpiryTime time.Duration
 	}
+	Cdc codec.Marshaler
 }
 
 type TxHashEntry struct {
@@ -65,6 +67,7 @@ func (t Ticket) MarshalBinary() (data []byte, err error) {
 func NewClient(connUrl string) (*Store, error) {
 
 	var store Store
+	cdc, _ := gaia.MakeCodecs()
 
 	store.Client = redis.NewClient(&redis.Options{
 		Addr: connUrl,
@@ -74,6 +77,7 @@ func NewClient(connUrl string) (*Store, error) {
 	store.ConnectionURL = connUrl
 
 	store.Config.ExpiryTime = defaultExpiry
+	store.Cdc = cdc
 
 	return &store, nil
 
@@ -376,8 +380,7 @@ func (s *Store) GetParams(key string) (liquiditytypes.Params, error) {
 		return liquiditytypes.Params{}, err
 	}
 
-	cdc, _ := gaia.MakeCodecs()
-	err = cdc.UnmarshalJSON(bz, &res)
+	err = s.Cdc.UnmarshalJSON(bz, &res)
 	if err != nil {
 		return liquiditytypes.Params{}, err
 	}
