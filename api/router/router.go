@@ -5,28 +5,28 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/allinbits/demeris-backend/api/block"
-	"github.com/allinbits/demeris-backend/api/pool"
+	"github.com/allinbits/demeris-api-server/api/block"
+	"github.com/allinbits/demeris-api-server/api/pool"
 
-	"github.com/allinbits/demeris-backend/utils/logging"
+	"github.com/allinbits/demeris-api-server/utils/logging"
 
-	"github.com/allinbits/demeris-backend/api/relayer"
+	"github.com/allinbits/demeris-api-server/api/relayer"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/allinbits/demeris-backend/utils/validation"
+	"github.com/allinbits/demeris-api-server/utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/allinbits/demeris-backend/api/chains"
-	"github.com/allinbits/demeris-backend/api/tx"
-	"github.com/allinbits/demeris-backend/api/verifieddenoms"
+	"github.com/allinbits/demeris-api-server/api/chains"
+	"github.com/allinbits/demeris-api-server/api/tx"
+	"github.com/allinbits/demeris-api-server/api/verifieddenoms"
 
-	"github.com/allinbits/demeris-backend/api/account"
-	"github.com/allinbits/demeris-backend/api/database"
-	"github.com/allinbits/demeris-backend/api/router/deps"
-	"github.com/allinbits/demeris-backend/utils/store"
+	"github.com/allinbits/demeris-api-server/api/account"
+	"github.com/allinbits/demeris-api-server/api/database"
+	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/demeris-api-server/utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

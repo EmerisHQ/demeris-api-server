@@ -1,9 +1,9 @@
 package verifieddenoms
 
-import "github.com/allinbits/demeris-backend/models"
+import "github.com/allinbits/demeris-backend-models/cns"
 
 type verifiedDenom struct {
-	models.Denom
+	cns.Denom
 	ChainName string `json:"chain_name"`
 }
 type verifiedDenomsResponse struct {

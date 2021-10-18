@@ -1,11 +1,9 @@
 package database
 
-import (
-	"github.com/allinbits/demeris-backend/models"
-)
+import "github.com/allinbits/demeris-backend-models/tracelistener"
 
-func (d *Database) Balances(address string) ([]models.BalanceRow, error) {
-	var balances []models.BalanceRow
+func (d *Database) Balances(address string) ([]tracelistener.BalanceRow, error) {
+	var balances []tracelistener.BalanceRow
 
 	q := "SELECT * FROM tracelistener.balances WHERE address=? and chain_name in (select chain_name from cns.chains where enabled=true);"
 

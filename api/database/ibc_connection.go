@@ -1,9 +1,9 @@
 package database
 
-import "github.com/allinbits/demeris-backend/models"
+import "github.com/allinbits/demeris-backend-models/tracelistener"
 
-func (d *Database) Connection(chain string, connection_id string) (models.IBCConnectionRow, error) {
-	var connection models.IBCConnectionRow
+func (d *Database) Connection(chain string, connection_id string) (tracelistener.IBCConnectionRow, error) {
+	var connection tracelistener.IBCConnectionRow
 
 	q := `
 	SELECT *

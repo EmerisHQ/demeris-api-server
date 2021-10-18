@@ -1,6 +1,9 @@
 package chains
 
-import "github.com/allinbits/demeris-backend/models"
+import (
+	"github.com/allinbits/demeris-backend-models/cns"
+	"github.com/allinbits/demeris-backend-models/tracelistener"
+)
 
 type chainsResponse struct {
 	Chains []supportedChain `json:"chains"`
@@ -11,15 +14,15 @@ type supportedChain struct {
 	Logo        string `json:"logo"`
 }
 type chainResponse struct {
-	Chain models.Chain `json:"chain"`
+	Chain cns.Chain `json:"chain"`
 }
 
 type bech32ConfigResponse struct {
-	Bech32Config models.Bech32Config `json:"bech32_config"`
+	Bech32Config cns.Bech32Config `json:"bech32_config"`
 }
 
 type feeResponse struct {
-	Denoms models.DenomList `json:"denoms"`
+	Denoms cns.DenomList `json:"denoms"`
 }
 
 type feeAddressResponse struct {
@@ -34,7 +37,7 @@ type feeAddressesResponse struct {
 }
 
 type feeTokenResponse struct {
-	FeeTokens []models.Denom `json:"fee_tokens"`
+	FeeTokens []cns.Denom `json:"fee_tokens"`
 }
 
 type primaryChannel struct {
@@ -74,11 +77,11 @@ type statusResponse struct {
 }
 
 type numbersResponse struct {
-	Numbers models.AuthRow `json:"numbers"`
+	Numbers tracelistener.AuthRow `json:"numbers"`
 }
 
 type validatorsResponse struct {
-	Validators []models.ValidatorRow `json:"validators"`
+	Validators []tracelistener.ValidatorRow `json:"validators"`
 }
 
 type inflationResponse struct {

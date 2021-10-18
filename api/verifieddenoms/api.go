@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/allinbits/demeris-backend/api/router/deps"
+	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/gin-gonic/gin"
 )
 

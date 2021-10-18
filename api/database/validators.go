@@ -1,9 +1,9 @@
 package database
 
-import "github.com/allinbits/demeris-backend/models"
+import "github.com/allinbits/demeris-backend-models/tracelistener"
 
-func (d *Database) GetValidators(chain string) ([]models.ValidatorRow, error) {
-	var validators []models.ValidatorRow
+func (d *Database) GetValidators(chain string) ([]tracelistener.ValidatorRow, error) {
+	var validators []tracelistener.ValidatorRow
 
 	q := `
 	SELECT *

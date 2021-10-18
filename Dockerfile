@@ -1,4 +1,4 @@
-FROM golang:1.16 as builder
+FROM golang:1.17 as builder
 
 ARG GIT_TOKEN
 
@@ -9,7 +9,7 @@ WORKDIR /app
 COPY go.mod go.sum* ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOPROXY=direct make api-server
+RUN CGO_ENABLED=0 GOPROXY=direct make
 
 FROM alpine:latest
 

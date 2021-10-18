@@ -7,12 +7,12 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/allinbits/demeris-backend/api/config"
-	"github.com/allinbits/demeris-backend/api/database"
-	"github.com/allinbits/demeris-backend/api/router"
-	"github.com/allinbits/demeris-backend/utils/k8s"
-	"github.com/allinbits/demeris-backend/utils/logging"
-	"github.com/allinbits/demeris-backend/utils/store"
+	"github.com/allinbits/demeris-api-server/api/config"
+	"github.com/allinbits/demeris-api-server/api/database"
+	"github.com/allinbits/demeris-api-server/api/router"
+	"github.com/allinbits/demeris-api-server/utils/k8s"
+	"github.com/allinbits/demeris-api-server/utils/logging"
+	"github.com/allinbits/demeris-api-server/utils/store"
 	gaia "github.com/cosmos/gaia/v5/app"
 	_ "github.com/lib/pq"
 )

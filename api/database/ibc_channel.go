@@ -3,11 +3,11 @@ package database
 import (
 	"fmt"
 
-	"github.com/allinbits/demeris-backend/models"
+	"github.com/allinbits/demeris-backend-models/cns"
 )
 
-func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (models.IbcChannelsInfo, error) {
-	var c models.IbcChannelsInfo
+func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (cns.IbcChannelsInfo, error) {
+	var c cns.IbcChannelsInfo
 
 	q := `
 	SELECT

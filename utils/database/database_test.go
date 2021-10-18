@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/allinbits/demeris-backend/utils/database"
+	"github.com/allinbits/demeris-api-server/utils/database"
 )
 
 func TestNew(t *testing.T) {

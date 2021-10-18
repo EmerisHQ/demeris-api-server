@@ -1,8 +1,6 @@
 package tx
 
-import (
-	"github.com/allinbits/demeris-backend/models"
-)
+import "github.com/allinbits/demeris-backend-models/cns"
 
 type TxRequest struct {
 	Owner   string `json:"owner"`
@@ -122,7 +120,7 @@ type TxMeta struct {
 	SignerSequence string
 	FeePayer       string
 	Valid          bool
-	Chain          models.Chain
+	Chain          cns.Chain
 }
 
 type TxResponse struct {

@@ -1,6 +1,8 @@
 package account
 
-import "github.com/allinbits/demeris-backend/models"
+import (
+	"github.com/allinbits/demeris-backend-models/tracelistener"
+)
 
 type balancesResponse struct {
 	Balances []balance `json:"balances"`
@@ -34,13 +36,13 @@ type unbondingDelegationsResponse struct {
 }
 
 type unbondingDelegation struct {
-	ValidatorAddress string                            `json:"validator_address"`
-	Entries          models.UnbondingDelegationEntries `json:"entries"`
-	ChainName        string                            `json:"chain_name"`
+	ValidatorAddress string                                   `json:"validator_address"`
+	Entries          tracelistener.UnbondingDelegationEntries `json:"entries"`
+	ChainName        string                                   `json:"chain_name"`
 }
 
 type numbersResponse struct {
-	Numbers []models.AuthRow `json:"numbers"`
+	Numbers []tracelistener.AuthRow `json:"numbers"`
 }
 
 type userTicketsResponse struct {

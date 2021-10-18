@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	"google.golang.org/grpc"
 
-	"github.com/allinbits/demeris-backend/api/router/deps"
+	"github.com/allinbits/demeris-api-server/api/router/deps"
 	// typestx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
 	// "google.golang.org/protobuf/proto"

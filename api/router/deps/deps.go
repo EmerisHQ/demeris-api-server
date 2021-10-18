@@ -5,8 +5,8 @@ import (
 
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/allinbits/demeris-backend/api/database"
-	"github.com/allinbits/demeris-backend/utils/store"
+	"github.com/allinbits/demeris-api-server/api/database"
+	"github.com/allinbits/demeris-api-server/utils/store"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

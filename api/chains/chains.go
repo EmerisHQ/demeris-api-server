@@ -18,8 +18,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/allinbits/demeris-backend/api/router/deps"
-	"github.com/allinbits/demeris-backend/models"
+	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/demeris-backend-models/cns"
+	"github.com/allinbits/demeris-backend-models/tracelistener"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	mint "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -389,7 +390,7 @@ func VerifyTrace(c *gin.Context) {
 
 		channel := strings.TrimPrefix(element, "transfer/")
 
-		var channelInfo models.IbcChannelsInfo
+		var channelInfo cns.IbcChannelsInfo
 		var trace trace
 
 		chainID, ok := chainIDsMap[nextChain]
@@ -812,22 +813,22 @@ func GetNumbersByAddress(c *gin.Context) {
 	c.JSON(http.StatusOK, numbersResponse{Numbers: resp})
 }
 
-func fetchNumbers(chain models.Chain, account string) (models.AuthRow, error) {
+func fetchNumbers(chain cns.Chain, account string) (tracelistener.AuthRow, error) {
 	accBytes, err := hex.DecodeString(account)
 	if err != nil {
-		return models.AuthRow{}, fmt.Errorf("cannot decode hex bytes from account string")
+		return tracelistener.AuthRow{}, fmt.Errorf("cannot decode hex bytes from account string")
 	}
 
 	cdc, _ := simapp.MakeCodecs()
 
 	addr, err := bech322.ConvertAndEncode(chain.NodeInfo.Bech32Config.PrefixAccount, accBytes)
 	if err != nil {
-		return models.AuthRow{}, fmt.Errorf("cannot encode bytes to %s acc address, %w", chain.ChainName, err)
+		return tracelistener.AuthRow{}, fmt.Errorf("cannot encode bytes to %s acc address, %w", chain.ChainName, err)
 	}
 
 	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chain.ChainName, grpcPort), grpc.WithInsecure())
 	if err != nil {
-		return models.AuthRow{}, err
+		return tracelistener.AuthRow{}, err
 	}
 
 	authQuery := types.NewQueryClient(grpcConn)
@@ -836,25 +837,25 @@ func fetchNumbers(chain models.Chain, account string) (models.AuthRow, error) {
 	})
 
 	if status.Code(err) == codes.NotFound {
-		return models.AuthRow{}, nil
+		return tracelistener.AuthRow{}, nil
 	}
 
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "not found") {
-			return models.AuthRow{}, nil
+			return tracelistener.AuthRow{}, nil
 		}
 
-		return models.AuthRow{}, fmt.Errorf("cannot query account, %w", err)
+		return tracelistener.AuthRow{}, fmt.Errorf("cannot query account, %w", err)
 	}
 
 	// get a baseAccount
 	var accountI types.AccountI
 	if err := cdc.UnpackAny(resp.Account, &accountI); err != nil {
-		return models.AuthRow{}, err
+		return tracelistener.AuthRow{}, err
 	}
 
-	result := models.AuthRow{
-		TracelistenerDatabaseRow: models.TracelistenerDatabaseRow{
+	result := tracelistener.AuthRow{
+		TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
 			ChainName: chain.ChainName,
 		},
 		Address:        addr,

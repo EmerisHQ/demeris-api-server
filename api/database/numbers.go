@@ -1,12 +1,12 @@
 package database
 
 import (
-	"github.com/allinbits/demeris-backend/models"
+	"github.com/allinbits/demeris-backend-models/tracelistener"
 	"github.com/jmoiron/sqlx"
 )
 
-func (d *Database) Numbers(address string) ([]models.AuthRow, error) {
-	var numbers []models.AuthRow
+func (d *Database) Numbers(address string) ([]tracelistener.AuthRow, error) {
+	var numbers []tracelistener.AuthRow
 
 	q, args, err := sqlx.In("SELECT * FROM tracelistener.auth WHERE address IN (?) and chain_name in (select chain_name from cns.chains where enabled=true);", []string{address})
 	if err != nil {

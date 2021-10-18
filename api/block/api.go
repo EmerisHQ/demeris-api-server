@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/allinbits/demeris-backend/utils/store"
+	"github.com/allinbits/demeris-api-server/utils/store"
 
-	"github.com/allinbits/demeris-backend/api/router/deps"
+	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/gin-gonic/gin"
 )
 

@@ -11,12 +11,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/allinbits/demeris-backend/models"
+	"github.com/allinbits/demeris-api-server/api/database"
+	"github.com/allinbits/demeris-backend-models/cns"
 
-	"github.com/allinbits/demeris-backend/api/database"
-
-	"github.com/allinbits/demeris-backend/api/router/deps"
-	"github.com/allinbits/demeris-backend/utils/k8s"
+	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/demeris-api-server/utils/k8s"
 	v1 "github.com/allinbits/starport-operator/api/v1"
 	"github.com/gin-gonic/gin"
 )
@@ -175,8 +174,8 @@ func getRelayerBalance(c *gin.Context) {
 
 }
 
-func relayerThresh(chains []string, db *database.Database) (map[string]models.Denom, error) {
-	res := map[string]models.Denom{}
+func relayerThresh(chains []string, db *database.Database) (map[string]cns.Denom, error) {
+	res := map[string]cns.Denom{}
 
 	for _, cn := range chains {
 		chain, err := db.ChainFromChainID(cn)
@@ -193,7 +192,7 @@ func relayerThresh(chains []string, db *database.Database) (map[string]models.De
 	return res, nil
 }
 
-func enoughBalance(address string, denom models.Denom, db *database.Database) (bool, error) {
+func enoughBalance(address string, denom cns.Denom, db *database.Database) (bool, error) {
 	_, hb, err := bech32.DecodeAndConvert(address)
 	if err != nil {
 		return false, err

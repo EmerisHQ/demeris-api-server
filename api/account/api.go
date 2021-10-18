@@ -13,13 +13,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/allinbits/demeris-backend/models"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	bech322 "github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/allinbits/demeris-backend/api/database"
-	"github.com/allinbits/demeris-backend/api/router/deps"
+	"github.com/allinbits/demeris-api-server/api/database"
+	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/demeris-backend-models/tracelistener"
 )
 
 const (
@@ -360,7 +360,7 @@ func GetUserTickets(c *gin.Context) {
 	c.JSON(http.StatusOK, userTicketsResponse{Tickets: tickets})
 }
 
-func fetchNumbers(cns []database.ChainName, account string) ([]models.AuthRow, error) {
+func fetchNumbers(cns []database.ChainName, account string) ([]tracelistener.AuthRow, error) {
 	accBytes, err := hex.DecodeString(account)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode hex bytes from account string")
@@ -368,7 +368,7 @@ func fetchNumbers(cns []database.ChainName, account string) ([]models.AuthRow, e
 
 	queryGroup, _ := errgroup.WithContext(context.Background())
 
-	results := make([]models.AuthRow, len(cns))
+	results := make([]tracelistener.AuthRow, len(cns))
 
 	cdc, _ := simapp.MakeCodecs()
 
@@ -397,8 +397,8 @@ func fetchNumbers(cns []database.ChainName, account string) ([]models.AuthRow, e
 				return err
 			}
 
-			results[i] = models.AuthRow{
-				TracelistenerDatabaseRow: models.TracelistenerDatabaseRow{
+			results[i] = tracelistener.AuthRow{
+				TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
 					ChainName: chain.ChainName,
 				},
 				Address:        account,
