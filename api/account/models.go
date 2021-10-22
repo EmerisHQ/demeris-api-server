@@ -2,6 +2,7 @@ package account
 
 import (
 	"github.com/allinbits/demeris-backend-models/tracelistener"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type balancesResponse struct {
@@ -47,4 +48,8 @@ type numbersResponse struct {
 
 type userTicketsResponse struct {
 	Tickets map[string][]string `json:"tickets"`
+}
+
+type delegatorRewardsResponse struct {
+	Rewards distributiontypes.QueryDelegationTotalRewardsResponse `json:"delegation_rewards"`
 }
