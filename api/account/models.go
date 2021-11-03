@@ -48,3 +48,13 @@ type numbersResponse struct {
 type userTicketsResponse struct {
 	Tickets map[string][]string `json:"tickets"`
 }
+
+type delegationDelegatorReward struct {
+	ValidatorAddress string `json:"validator_address,omitempty"`
+	Reward           string `json:"reward"`
+}
+
+type delegatorRewardsResponse struct {
+	Rewards []delegationDelegatorReward `json:"rewards"`
+	Total   string                      `json:"total"`
+}

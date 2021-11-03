@@ -21,7 +21,11 @@ require (
 	github.com/go-playground/validator/v10 v10.5.0
 	github.com/go-redis/redis/v8 v8.8.3
 	github.com/golang/snappy v0.0.3 // indirect
+	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/websocket v1.4.2
+	github.com/gravity-devs/liquidity v1.2.9
 	github.com/iamolegga/enviper v1.2.1
+	github.com/jackc/pgconn v1.8.0
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/leodido/go-urn v1.2.1 // indirect
@@ -32,6 +36,8 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/swaggo/swag v1.7.0
+	github.com/syndtr/goleveldb v1.0.1-0.20210305035536-64b5b1c73954
+	github.com/tendermint/liquidity v1.2.9
 	github.com/tendermint/tendermint v0.34.11
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.17.0
