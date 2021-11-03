@@ -40,7 +40,7 @@ jobs:
         with:
           push: true
           context: .
-          file: Dockerfile.api-server
+          file: Dockerfile
           tags: gcr.io/tendermint-dev/emeris-api-server:${{ steps.get_version.outputs.version-without-v }},gcr.io/tendermint-dev/emeris-api-server:${{ github.sha }}
           build-args: |
             GIT_TOKEN=${{ secrets.TENDERBOT_GIT_TOKEN }}
