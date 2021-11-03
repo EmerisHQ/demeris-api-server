@@ -44,3 +44,16 @@ jobs:
           tags: gcr.io/tendermint-dev/emeris-api-server:${{ steps.get_version.outputs.version-without-v }},gcr.io/tendermint-dev/emeris-api-server:${{ github.sha }}
           build-args: |
             GIT_TOKEN=${{ secrets.TENDERBOT_GIT_TOKEN }}
+
+  deploy-on-dev:
+    runs-on: self-hosted
+    needs: api-server
+
+    steps:
+      - name: Call repository_dispatch on demeris-backend
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.TENDERBOT_GIT_TOKEN }}
+          repository: allinbits/demeris-backend
+          event-type: dev-push-api-server
+          client-payload: '{"event_type":"dev-push-api-server","client_payload":{"repo_name":"demeris-api-server","branch_name":"main","image_name":"emeris-api-server","image_sha":"${{ github.sha }}","service_name":"api-server"}}'
