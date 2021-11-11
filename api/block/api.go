@@ -24,7 +24,7 @@ func Register(router *gin.Engine) {
 // @Param height query string true "height to query for"
 // @Success 200 {object} blockHeightResp
 // @Failure 500,403 {object} deps.Error
-// @Router /block [get]
+// @Router /block_results [get]
 func GetBlock(c *gin.Context) {
 	d := deps.GetDeps(c)
 
