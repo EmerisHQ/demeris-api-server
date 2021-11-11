@@ -2,10 +2,9 @@ package main
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 	"runtime"
 	"runtime/debug"
-
-	_ "net/http/pprof"
 
 	"github.com/allinbits/demeris-api-server/api/config"
 	"github.com/allinbits/demeris-api-server/api/database"
@@ -15,6 +14,7 @@ import (
 	"github.com/allinbits/demeris-api-server/utils/store"
 	gaia "github.com/cosmos/gaia/v5/app"
 	_ "github.com/lib/pq"
+	"k8s.io/client-go/rest"
 )
 
 var Version = "not specified"
@@ -62,8 +62,20 @@ func main() {
 	if err != nil {
 		l.Panicw("cannot initialize k8s", "error", err)
 	}
-
 	cdc, _ := gaia.MakeCodecs()
+
+	l.Infow("setup relayers informer", "namespace", cfg.KubernetesNamespace)
+	infConfig, err := rest.InClusterConfig()
+	if err != nil {
+		l.Panicw("k8s server panic", "error", err)
+	}
+
+	informer, err := k8s.GetInformer(infConfig, cfg.KubernetesNamespace, "relayers")
+	if err != nil {
+		l.Panicw("k8s server panic", "error", err)
+	}
+
+	go informer.Informer().Run(make(chan struct{}))
 
 	r := router.New(
 		dbi,
@@ -73,6 +85,7 @@ func main() {
 		cfg.KubernetesNamespace,
 		cfg.CNSAddr,
 		cdc,
+		informer,
 		cfg.Debug,
 	)
 
