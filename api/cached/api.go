@@ -6,6 +6,7 @@ import (
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/gin-gonic/gin"
+	_ "github.com/tendermint/liquidity/x/liquidity/types"
 )
 
 func Register(router *gin.Engine) {
