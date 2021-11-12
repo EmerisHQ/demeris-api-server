@@ -9,8 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/allinbits/demeris-api-server/api/database"
@@ -68,9 +66,8 @@ func getRelayerStatus(c *gin.Context) {
 		return
 	}
 
-	relayer := &v1.Relayer{}
-	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
-		obj.(*unstructured.Unstructured).UnstructuredContent(), relayer); err != nil && !errors.Is(err, k8s.ErrNotFound) {
+	relayer, err := k8s.GetRelayerFromObj(obj)
+	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
 		e := deps.NewError(
 			"status",
 			fmt.Errorf("cannot query relayer status"),
@@ -136,9 +133,8 @@ func getRelayerBalance(c *gin.Context) {
 		return
 	}
 
-	relayer := &v1.Relayer{}
-	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
-		obj.(*unstructured.Unstructured).UnstructuredContent(), relayer); err != nil && !errors.Is(err, k8s.ErrNotFound) {
+	relayer, err := k8s.GetRelayerFromObj(obj)
+	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
 		e := deps.NewError(
 			"status",
 			fmt.Errorf("cannot query relayer status"),
