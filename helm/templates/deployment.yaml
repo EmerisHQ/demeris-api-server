@@ -31,8 +31,6 @@ spec:
               value: 0.0.0.0:{{ .Values.ports.http }}
             - name: DEMERIS-API_DATABASECONNECTIONURL
               value: "{{ .Values.databaseConnectionURL }}"
-            - name: DEMERIS-API_CNSADDR
-              value: "{{ .Values.cnsAddress }}"
             - name: DEMERIS-API_REDISADDR
               value: "{{ .Values.redisUrl }}"
             - name: DEMERIS-API_DEBUG

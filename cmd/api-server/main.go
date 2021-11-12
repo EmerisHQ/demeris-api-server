@@ -71,7 +71,6 @@ func main() {
 		s,
 		kubeClient,
 		cfg.KubernetesNamespace,
-		cfg.CNSAddr,
 		cdc,
 		cfg.Debug,
 	)

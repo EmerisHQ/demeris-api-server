@@ -19,7 +19,6 @@ type Deps struct {
 	Store         *store.Store
 	K8S           *kube.Client
 	Codec         codec.Marshaler
-	CNSURL        string
 	KubeNamespace string
 }
 
