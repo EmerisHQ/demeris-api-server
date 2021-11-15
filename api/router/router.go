@@ -40,7 +40,6 @@ type Router struct {
 	k8s              kube.Client
 	k8sNamespace     string
 	cdc              codec.Marshaler
-	cnsURL           string
 	relayersInformer informers.GenericInformer
 }
 
@@ -50,7 +49,6 @@ func New(
 	s *store.Store,
 	kubeClient kube.Client,
 	kubeNamespace string,
-	cnsURL string,
 	cdc codec.Marshaler,
 	relayersInformer informers.GenericInformer,
 	debug bool,
@@ -70,7 +68,6 @@ func New(
 		s:                s,
 		k8s:              kubeClient,
 		k8sNamespace:     kubeNamespace,
-		cnsURL:           cnsURL,
 		cdc:              cdc,
 		relayersInformer: relayersInformer,
 	}
@@ -129,7 +126,6 @@ func (r *Router) decorateCtxWithDeps(c *gin.Context) {
 		Logger:           r.l,
 		Database:         r.db,
 		Store:            r.s,
-		CNSURL:           r.cnsURL,
 		KubeNamespace:    r.k8sNamespace,
 		Codec:            r.cdc,
 		K8S:              &r.k8s,

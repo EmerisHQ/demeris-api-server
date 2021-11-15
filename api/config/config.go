@@ -11,7 +11,6 @@ import (
 type Config struct {
 	DatabaseConnectionURL string `validate:"required"`
 	ListenAddr            string `validate:"required"`
-	CNSAddr               string `validate:"required,url"`
 	RedisAddr             string `validate:"required"`
 	KubernetesNamespace   string `validate:"required"`
 	Debug                 bool

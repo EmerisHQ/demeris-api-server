@@ -16,8 +16,6 @@ resources:
 ports:
   http: 8000
 
-cnsAddress: cns-server:8000
-
 databaseConnectionURL: postgres://root@cockroachdb:26257?sslmode=disable
 
 redisUrl: redis-master:6379

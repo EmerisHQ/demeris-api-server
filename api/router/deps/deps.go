@@ -21,7 +21,6 @@ type Deps struct {
 	K8S              *kube.Client
 	Codec            codec.Marshaler
 	RelayersInformer informers.GenericInformer
-	CNSURL           string
 	KubeNamespace    string
 }
 

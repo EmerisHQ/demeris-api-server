@@ -83,7 +83,6 @@ func main() {
 		s,
 		kubeClient,
 		cfg.KubernetesNamespace,
-		cfg.CNSAddr,
 		cdc,
 		informer,
 		cfg.Debug,
