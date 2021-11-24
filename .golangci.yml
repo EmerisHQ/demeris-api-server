@@ -47,10 +47,10 @@ linters-settings:
     max-blank-identifiers: 3
   gosec:
     excludes:
-      - G108
+      - G108 # G108: Profiling endpoint is automatically exposed on /debug/pprof
   gocritic:
     disabled-checks:
-      - appendAssign
+      - appendAssign # to be removed after utils refactor
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true
