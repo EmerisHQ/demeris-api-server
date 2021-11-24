@@ -16,7 +16,7 @@ linters:
     - gocritic
     - gofmt
     - goimports
-    #    - revive
+    #    - revive // TODO: enable, being disabled as we use blank imports and also needs changing var names(poolId -> poolID)
     - gosec
     - gosimple
     - govet
