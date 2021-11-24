@@ -1,7 +1,6 @@
 package block
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -87,7 +86,5 @@ func GetBlock(c *gin.Context) {
 		return
 	}
 
-	var res blockHeightResp
-	_ = json.Unmarshal(bd, &res)
 	c.Data(http.StatusOK, "application/json", bd)
 }
