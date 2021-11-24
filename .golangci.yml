@@ -45,7 +45,12 @@ issues:
 linters-settings:
   dogsled:
     max-blank-identifiers: 3
-
+  gosec:
+    excludes:
+      - G108
+  gocritic:
+    disabled-checks:
+      - appendAssign
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true
