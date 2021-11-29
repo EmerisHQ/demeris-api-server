@@ -528,7 +528,7 @@ func fetchNumbers(cns []database.ChainName, account string) ([]tracelistener.Aut
 		queryGroup.Go(func() error {
 			resp, err := queryChainNumbers(chain.ChainName, addr)
 			if err != nil {
-				return fmt.Errorf("%s error, %w", err)
+				return fmt.Errorf("unable to query chain %s for numbers error, %w", chain.ChainName, err)
 			}
 
 			if resp == nil {

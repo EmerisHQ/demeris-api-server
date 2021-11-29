@@ -668,7 +668,7 @@ func GetChainStatus(c *gin.Context) {
 
 	d.Logger.Debugw("last block time", "chain", chainName, "time", cbt, "threshold_for_chain", chain.ValidBlockThresh.Duration())
 
-	if time.Now().Sub(cbt.BlockTime) > chain.ValidBlockThresh.Duration() {
+	if time.Since(cbt.BlockTime) > chain.ValidBlockThresh.Duration() {
 		res.Online = false
 		c.JSON(http.StatusOK, res)
 		return

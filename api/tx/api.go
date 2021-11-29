@@ -148,20 +148,20 @@ func validateBody(tx *sdktx.Tx, meta *TxMeta, d *deps.Deps) error {
 			fmt.Println(sourcePort, sourceChannel, tokenDenom)
 
 			if sourcePort != "transfer" {
-				return fmt.Errorf("Invalid IBC Port %s", sourcePort)
+				return fmt.Errorf("invalid IBC Port %s", sourcePort)
 			}
 
-			if "ibc/" == tokenDenom[:4] {
+			if tokenDenom[:4] == "ibc/" {
 				tokenHash := tokenDenom[4:]
 				denomTrace, err := d.Database.DenomTrace(meta.Chain.ChainName, tokenHash)
 				if err != nil {
-					return fmt.Errorf("Invalid denom trace")
+					return fmt.Errorf("invalid denom trace")
 				}
 
 				// TODO: move this to the chains/chains.go.path() function
 				channels := strings.Split(denomTrace.Path, "/")
 				if channels[1] != sourceChannel {
-					return fmt.Errorf("IBC forward is disabled for multi-hop tokens. Try sending it back through the original channel.")
+					return fmt.Errorf("IBC forward is disabled for multi-hop tokens. Try sending it back through the original channel")
 				}
 			}
 		}

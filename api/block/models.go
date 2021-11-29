@@ -4,6 +4,7 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
+// nolint :deadcode being used for swagger generation
 type blockHeightResp struct {
 	JSONRPC string                `json:"jsonrpc"`
 	ID      string                `json:"id"`
