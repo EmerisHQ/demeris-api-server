@@ -1,0 +1,34 @@
+name: Execute tests
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - api/**
+      - cmd/**
+      - utils/**
+      - go.mod
+      - go.sum
+
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - name: Setup token for pulling from allinbits private repos
+        run: |
+          go env -w GOPRIVATE=github.com/allinbits/*
+          git config --global url."https://git:${{ secrets.TENDERBOT_GIT_TOKEN }}@github.com".insteadOf "https://github.com"
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test -v ./...
