@@ -121,7 +121,7 @@ func TruncateDB(ctx *TestingCtx, t *testing.T) {
 }
 
 func getFreePort() (port string, err error) {
-	ln, err := net.Listen("tcp", "127.0.01:0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 
 	if err != nil {
 		return "", err
