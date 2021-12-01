@@ -54,7 +54,6 @@ func TestGetChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 
 			// arrange
 			// if we have a populated Chain store, add it
@@ -65,30 +64,31 @@ func TestGetChain(t *testing.T) {
 
 			// act
 			resp, err := http.Get(fmt.Sprintf(chainEndpointUrl, testingCtx.Cfg.ListenAddr, tt.chainName))
-			require.NoError(t, err)
 			defer func() { _ = resp.Body.Close() }()
+			require.NoError(t, err)
 
 			// assert
 			if !tt.success {
 				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
-			} else {
-
-				body, err := ioutil.ReadAll(resp.Body)
-				require.NoError(t, err)
-
-				respStruct := chains.ChainResponse{}
-				err = json.Unmarshal(body, &respStruct)
-				require.NoError(t, err)
-
-				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
-				require.Equal(t, tt.dataStruct, respStruct.Chain)
+				return
 			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			respStruct := chains.ChainResponse{}
+			err = json.Unmarshal(body, &respStruct)
+			require.NoError(t, err)
+
+			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+			require.Equal(t, tt.dataStruct, respStruct.Chain)
 		})
 	}
 	utils.TruncateDB(testingCtx, t)
 }
 
 func TestGetChains(t *testing.T) {
+
 	tests := []struct {
 		name             string
 		dataStruct       []cns.Chain
@@ -123,8 +123,8 @@ func TestGetChains(t *testing.T) {
 
 			// act
 			resp, err := http.Get(fmt.Sprintf(chainsEndpointUrl, testingCtx.Cfg.ListenAddr))
-			require.NoError(t, err)
 			defer func() { _ = resp.Body.Close() }()
+			require.NoError(t, err)
 
 			// assert
 			if !tt.success {

@@ -6,9 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/allinbits/emeris-utils/store"
+	"github.com/stretchr/testify/require"
 
 	"github.com/allinbits/demeris-api-server/api/config"
 	apiDb "github.com/allinbits/demeris-api-server/api/database"
