@@ -28,7 +28,7 @@ import (
 // @ID chains
 // @Description Gets list of supported chains.
 // @Produce json
-// @Success 200 {object} chainsResponse
+// @Success 200 {object} ChainsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chains [get]
 func GetChains(c *gin.Context) {
@@ -74,7 +74,7 @@ func GetChains(c *gin.Context) {
 // @Description Gets chain by name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} chainResponse
+// @Success 200 {object} ChainResponse
 // @Failure 500,400 {object} deps.Error
 // @Router /chain/{chainName} [get]
 func GetChain(c *gin.Context) {
