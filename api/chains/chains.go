@@ -11,11 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/allinbits/demeris-api-server/api/apiutils"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
 	"github.com/allinbits/demeris-backend-models/cns"
-	"github.com/allinbits/demeris-backend-models/tracelistener"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 )
 
@@ -889,7 +889,7 @@ func GetNumbersByAddress(c *gin.Context) {
 		return
 	}
 
-	resp, err := fetchNumbers(chainInfo, address)
+	resp, err := apiutils.FetchAccountNumbers(chainInfo, address)
 	if err != nil {
 		e := deps.NewError(
 			"numbers",
@@ -913,36 +913,6 @@ func GetNumbersByAddress(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, numbersResponse{Numbers: resp})
-}
-
-func fetchNumbers(chain cns.Chain, account string) (tracelistener.AuthRow, error) {
-	chainVersion := chain.MajorSDKVersion()
-	chainName := chain.ChainName
-
-	client, err := sdkservice.Client(chainVersion)
-	if err != nil {
-		return tracelistener.AuthRow{}, fmt.Errorf("cannot create sdkservice client, %w", err)
-	}
-
-	res, err := client.AccountNumbers(context.Background(), &sdkutilities.AccountNumbersPayload{
-		ChainName:    chainName,
-		Bech32Prefix: &chain.NodeInfo.Bech32Config.PrefixAccount,
-		AddresHex:    &account,
-	})
-	if err != nil {
-		return tracelistener.AuthRow{}, fmt.Errorf("cannot query account numbers, %w", err)
-	}
-
-	result := tracelistener.AuthRow{
-		TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
-			ChainName: chain.ChainName,
-		},
-		Address:        res.Bech32Address,
-		SequenceNumber: uint64(res.SequenceNumber),
-		AccountNumber:  uint64(res.AccountNumber),
-	}
-
-	return result, nil
 }
 
 // GetInflation returns the inflation of a specific chain
