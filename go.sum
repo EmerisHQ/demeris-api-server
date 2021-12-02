@@ -137,6 +137,10 @@ github.com/allinbits/sdk-service-meta v0.0.0-20211202112446-cf17c2e1537f h1:/sPX
 github.com/allinbits/sdk-service-meta v0.0.0-20211202112446-cf17c2e1537f/go.mod h1:88l4sS+8qo9AjK/kcQAyh8IlqBHwW3/cAyDZ6P7bFNs=
 github.com/allinbits/sdk-service-meta v0.0.0-20211202113356-6063636659bf h1:5zt29bbWfrk3hRRtWfnCfwf7bls920pbAO70VUmCAoQ=
 github.com/allinbits/sdk-service-meta v0.0.0-20211202113356-6063636659bf/go.mod h1:88l4sS+8qo9AjK/kcQAyh8IlqBHwW3/cAyDZ6P7bFNs=
+github.com/allinbits/sdk-service-meta v0.0.0-20211202145059-3957e68ee7ad h1:b5MVsHmfkY+q8AtySN/bmOnxj/0ItkhaHpdaNAYVG+E=
+github.com/allinbits/sdk-service-meta v0.0.0-20211202145059-3957e68ee7ad/go.mod h1:88l4sS+8qo9AjK/kcQAyh8IlqBHwW3/cAyDZ6P7bFNs=
+github.com/allinbits/sdk-service-meta v0.0.0-20211202150054-412240d9739c h1:9+fmB3iy8h7xI2iP1yjH0guxI/+7DhYOKZgeOINi7G4=
+github.com/allinbits/sdk-service-meta v0.0.0-20211202150054-412240d9739c/go.mod h1:88l4sS+8qo9AjK/kcQAyh8IlqBHwW3/cAyDZ6P7bFNs=
 github.com/allinbits/starport-operator v0.0.1-alpha.26 h1:qmyGI5sp11J/k4bTWtYyjvzGYYKRKXOnAJx5wMm2oIM=
 github.com/allinbits/starport-operator v0.0.1-alpha.26/go.mod h1:rhYpjy5c3QXjSS0SGxeDU/vVuxwLFeni1MJbpBTKXqo=
 github.com/andrew-d/go-termutil v0.0.0-20150726205930-009166a695a2/go.mod h1:jnzFpU88PccN/tPPhCpnNU8mZphvKxYM9lLNkd8e+os=
