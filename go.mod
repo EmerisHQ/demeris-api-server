@@ -10,7 +10,7 @@ replace (
 )
 
 require (
-	github.com/allinbits/demeris-backend-models v0.0.0-20211116145636-4485bb7af3c0
+	github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218
 	github.com/allinbits/starport-operator v0.0.1-alpha.26
 	github.com/cockroachdb/cockroach-go/v2 v2.1.1
 	github.com/cosmos/cosmos-sdk v0.42.8
