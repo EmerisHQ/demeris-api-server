@@ -66,12 +66,14 @@ func Setup() *TestingCtx {
 	checkNoError(err, l)
 
 	dbi, err := apiDb.Init(c)
+	checkNoError(err, l)
 
 	// --- Redis ---
 	miniRedis, err := miniredis.Run()
 	checkNoError(err, l)
 	c.RedisAddr = miniRedis.Addr()
 	s, err := store.NewClient(c.RedisAddr)
+	checkNoError(err, l)
 
 	// --- K8s ---
 	kube := mocks.Client{}
@@ -119,7 +121,7 @@ func TruncateDB(ctx *TestingCtx, t *testing.T) {
 }
 
 func getFreePort() (port string, err error) {
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.01:0")
 
 	if err != nil {
 		return "", err
