@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/allinbits/demeris-api-server/utils/store"
 
 	"github.com/allinbits/demeris-api-server/api/config"
@@ -18,7 +20,6 @@ import (
 	"github.com/allinbits/demeris-api-server/utils/logging"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	gaia "github.com/cosmos/gaia/v5/app"
-	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
@@ -59,9 +60,9 @@ func Setup() *TestingCtx {
 	c.DatabaseConnectionURL = cdbTestServer.PGURL().String()
 	checkNotNil(c.DatabaseConnectionURL, "CDB conn. string", l)
 
-	// FIXME: Initialize and migrate the DB using the CNS server's connection method
+	// FIXME: Do NOT initialize and migrate the DB using the CNS server's connection method
 	// A big no-no here, using one service's internals inside the other
-	// But no oter way, since one service writes and the other reads, sharing the DB schemas
+	// But no other way, since one service writes and the other reads, sharing the DB schemas
 	cns, err := cnsDb.New(c.DatabaseConnectionURL)
 	checkNoError(err, l)
 
@@ -117,7 +118,7 @@ func Setup() *TestingCtx {
 func TruncateDB(ctx *TestingCtx, t *testing.T) {
 	// FIXME: Using DB util from another service
 	_, err := ctx.CnsDB.Instance.DB.Exec("TRUNCATE cns.chains")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func getFreePort() (port string, err error) {

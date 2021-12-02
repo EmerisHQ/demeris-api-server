@@ -65,8 +65,8 @@ func TestGetChain(t *testing.T) {
 
 			// act
 			resp, err := http.Get(fmt.Sprintf(chainEndpointUrl, testingCtx.Cfg.ListenAddr, tt.chainName))
-			defer func() { _ = resp.Body.Close() }()
 			require.NoError(t, err)
+			defer func() { _ = resp.Body.Close() }()
 
 			// assert
 			if !tt.success {
@@ -123,8 +123,8 @@ func TestGetChains(t *testing.T) {
 
 			// act
 			resp, err := http.Get(fmt.Sprintf(chainsEndpointUrl, testingCtx.Cfg.ListenAddr))
-			defer func() { _ = resp.Body.Close() }()
 			require.NoError(t, err)
+			defer func() { _ = resp.Body.Close() }()
 
 			// assert
 			if !tt.success {
