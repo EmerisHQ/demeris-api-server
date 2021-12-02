@@ -27,4 +27,5 @@ generate-mocks:
 	mockery --srcpkg k8s.io/client-go/informers --name GenericInformer
 
 $(OBJS):
+	golangci-lint run ./...
 	go build -o build/$@ -ldflags='-X main.Version=${BRANCH}-${COMMIT}' ${EXTRAFLAGS} ${BASEPKG}/cmd/$@
