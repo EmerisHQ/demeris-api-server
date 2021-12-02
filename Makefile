@@ -16,4 +16,5 @@ generate-swagger:
 	@rm docs/docs.go
 
 $(OBJS):
+	golangci-lint run ./...
 	go build -o build/$@ -ldflags='-X main.Version=${BRANCH}-${COMMIT}' ${EXTRAFLAGS} ${BASEPKG}/cmd/$@
