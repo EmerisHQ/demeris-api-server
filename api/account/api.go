@@ -7,25 +7,17 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	basetypes "github.com/cosmos/cosmos-sdk/types"
-	bech322 "github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
-)
-
-const (
-	grpcPort = 9090
 )
 
 func Register(router *gin.Engine) {
