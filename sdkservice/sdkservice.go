@@ -25,6 +25,7 @@ func Client(sdkVersion string) (sdkutilities.Client, error) {
 	client := sdkserviceclient.NewClient(conn)
 
 	cc := sdkutilities.Client{
+		AccountNumbersEndpoint:      client.AccountNumbers(),
 		SupplyEndpoint:              client.Supply(),
 		QueryTxEndpoint:             client.QueryTx(),
 		BroadcastTxEndpoint:         client.BroadcastTx(),
