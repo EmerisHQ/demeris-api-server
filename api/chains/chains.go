@@ -3,29 +3,20 @@ package chains
 import (
 	"context"
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	bech322 "github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	gaia "github.com/cosmos/gaia/v5/app"
 	"github.com/gin-gonic/gin"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/demeris-api-server/sdkservice"
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	mint "github.com/cosmos/cosmos-sdk/x/mint/types"
+	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -694,16 +685,16 @@ func GetChainSupply(c *gin.Context) {
 
 	chainName := c.Param("chain")
 
-	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chainName, grpcPort), grpc.WithInsecure())
+	chain, err := d.Database.Chain(chainName)
 	if err != nil {
 		e := deps.NewError(
-			"supply",
-			fmt.Errorf("unable to connect to grpc server for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot connect to grpc",
+			"cannot retrieve chain",
 			"id",
 			e.ID,
 			"name",
@@ -715,18 +706,16 @@ func GetChainSupply(c *gin.Context) {
 		return
 	}
 
-	bankQuery := bank.NewQueryClient(grpcConn)
-
-	suppRes, err := bankQuery.TotalSupply(context.Background(), &bank.QueryTotalSupplyRequest{})
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
-			"supply",
-			fmt.Errorf("unable to query supply for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"unable to query supply",
+			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -738,7 +727,40 @@ func GetChainSupply(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, suppRes)
+	sdkRes, err := client.Supply(context.Background(), &sdkutilities.SupplyPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve supply from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve supply from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	res := supplyResponse{}
+
+	for _, s := range sdkRes.Coins {
+		res.Supply = append(res.Supply, coin{
+			Denom:  s.Denom,
+			Amount: s.Amount,
+		})
+	}
+
+	c.JSON(http.StatusOK, res)
 }
 
 // GetChainTx returns the tx info of a given chain.
@@ -758,20 +780,16 @@ func GetChainTx(c *gin.Context) {
 	chainName := c.Param("chain")
 	txHash := c.Param("tx")
 
-	grpcConn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", chainName, grpcPort),
-		grpc.WithInsecure(),
-	)
-
+	chain, err := d.Database.Chain(chainName)
 	if err != nil {
 		e := deps.NewError(
-			"tx info",
-			fmt.Errorf("unable to connect to grpc server for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot connect to grpc",
+			"cannot retrieve chain",
 			"id",
 			e.ID,
 			"name",
@@ -783,26 +801,20 @@ func GetChainTx(c *gin.Context) {
 		return
 	}
 
-	defer grpcConn.Close()
-
-	txClient := tx.NewServiceClient(grpcConn)
-
-	grpcRes, err := txClient.GetTx(context.Background(), &tx.GetTxRequest{Hash: txHash})
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
-			"tx info",
-			fmt.Errorf("unable to fetch tx %s for chain %v", txHash, chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot connect to grpc",
+			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
 			"name",
 			chainName,
-			"tx",
-			txHash,
 			"error",
 			err,
 		)
@@ -810,24 +822,24 @@ func GetChainTx(c *gin.Context) {
 		return
 	}
 
-	cdc, _ := gaia.MakeCodecs()
-	bz, err := cdc.MarshalJSON(grpcRes)
+	sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
+		ChainName: chainName,
+		Hash:      txHash,
+	})
 
 	if err != nil {
 		e := deps.NewError(
-			"tx info",
-			fmt.Errorf("unable to unmarshal tx %s for chain %v", txHash, chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve tx from sdk-service, %w", err),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot write tx to response",
+			"cannot retrieve tx from sdk-service",
 			"id",
 			e.ID,
 			"name",
 			chainName,
-			"tx",
-			txHash,
 			"error",
 			err,
 		)
@@ -835,7 +847,7 @@ func GetChainTx(c *gin.Context) {
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", bz)
+	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes)
 }
 
 // GetNumbersByAddress returns sequence and account number of an address.
@@ -904,53 +916,30 @@ func GetNumbersByAddress(c *gin.Context) {
 }
 
 func fetchNumbers(chain cns.Chain, account string) (tracelistener.AuthRow, error) {
-	accBytes, err := hex.DecodeString(account)
+	chainVersion := chain.MajorSDKVersion()
+	chainName := chain.ChainName
+
+	client, err := sdkservice.Client(chainVersion)
 	if err != nil {
-		return tracelistener.AuthRow{}, fmt.Errorf("cannot decode hex bytes from account string")
+		return tracelistener.AuthRow{}, fmt.Errorf("cannot create sdkservice client, %w", err)
 	}
 
-	cdc, _ := simapp.MakeCodecs()
-
-	addr, err := bech322.ConvertAndEncode(chain.NodeInfo.Bech32Config.PrefixAccount, accBytes)
-	if err != nil {
-		return tracelistener.AuthRow{}, fmt.Errorf("cannot encode bytes to %s acc address, %w", chain.ChainName, err)
-	}
-
-	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chain.ChainName, grpcPort), grpc.WithInsecure())
-	if err != nil {
-		return tracelistener.AuthRow{}, err
-	}
-
-	authQuery := types.NewQueryClient(grpcConn)
-	resp, err := authQuery.Account(context.Background(), &types.QueryAccountRequest{
-		Address: addr,
+	res, err := client.AccountNumbers(context.Background(), &sdkutilities.AccountNumbersPayload{
+		ChainName:    chainName,
+		Bech32Prefix: &chain.NodeInfo.Bech32Config.PrefixAccount,
+		AddresHex:    &account,
 	})
-
-	if status.Code(err) == codes.NotFound {
-		return tracelistener.AuthRow{}, nil
-	}
-
 	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "not found") {
-			return tracelistener.AuthRow{}, nil
-		}
-
-		return tracelistener.AuthRow{}, fmt.Errorf("cannot query account, %w", err)
-	}
-
-	// get a baseAccount
-	var accountI types.AccountI
-	if err := cdc.UnpackAny(resp.Account, &accountI); err != nil {
-		return tracelistener.AuthRow{}, err
+		return tracelistener.AuthRow{}, fmt.Errorf("cannot query account numbers, %w", err)
 	}
 
 	result := tracelistener.AuthRow{
 		TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
 			ChainName: chain.ChainName,
 		},
-		Address:        addr,
-		SequenceNumber: accountI.GetSequence(),
-		AccountNumber:  accountI.GetAccountNumber(),
+		Address:        res.Bech32Address,
+		SequenceNumber: uint64(res.SequenceNumber),
+		AccountNumber:  uint64(res.AccountNumber),
 	}
 
 	return result, nil
@@ -971,16 +960,16 @@ func GetInflation(c *gin.Context) {
 
 	chainName := c.Param("chain")
 
-	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chainName, grpcPort), grpc.WithInsecure())
+	chain, err := d.Database.Chain(chainName)
 	if err != nil {
 		e := deps.NewError(
-			"mint/inflation",
-			fmt.Errorf("unable to connect to grpc server for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot connect to grpc",
+			"cannot retrieve chain",
 			"id",
 			e.ID,
 			"name",
@@ -992,19 +981,16 @@ func GetInflation(c *gin.Context) {
 		return
 	}
 
-	mintQuery := mint.NewQueryClient(grpcConn)
-
-	queryInflationRes, err := mintQuery.Inflation(context.Background(), &mint.QueryInflationRequest{})
-
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
-			"mint/inflation",
-			fmt.Errorf("unable to query inflation for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"unable to query inflation",
+			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -1016,7 +1002,31 @@ func GetInflation(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, queryInflationRes)
+	sdkRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve inflation from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve inflation from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintInflation)
 }
 
 // GetMintParams returns the minting parameters of a specific chain
@@ -1024,7 +1034,7 @@ func GetInflation(c *gin.Context) {
 // @Description Gets minting params
 // @Tags Chain
 // @ID get-mint-params
-// @Produce json
+// @Produce Data
 // @Success 200 {object} paramsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/mint/params [get]
@@ -1034,16 +1044,16 @@ func GetMintParams(c *gin.Context) {
 
 	chainName := c.Param("chain")
 
-	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chainName, grpcPort), grpc.WithInsecure())
+	chain, err := d.Database.Chain(chainName)
 	if err != nil {
 		e := deps.NewError(
-			"mint/params",
-			fmt.Errorf("unable to connect to grpc server for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot connect to grpc",
+			"cannot retrieve chain",
 			"id",
 			e.ID,
 			"name",
@@ -1055,19 +1065,16 @@ func GetMintParams(c *gin.Context) {
 		return
 	}
 
-	mintQuery := mint.NewQueryClient(grpcConn)
-
-	queryParamsRes, err := mintQuery.Params(context.Background(), &mint.QueryParamsRequest{})
-
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
-			"mint/params",
-			fmt.Errorf("unable to query params for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"unable to query params",
+			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -1079,7 +1086,31 @@ func GetMintParams(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, queryParamsRes)
+	sdkRes, err := client.MintParams(context.Background(), &sdkutilities.MintParamsPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve mint params from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve mint params from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintParams)
 }
 
 // GetAnnualProvisions returns the annual provisions of a specific chain
@@ -1097,16 +1128,16 @@ func GetAnnualProvisions(c *gin.Context) {
 
 	chainName := c.Param("chain")
 
-	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chainName, grpcPort), grpc.WithInsecure())
+	chain, err := d.Database.Chain(chainName)
 	if err != nil {
 		e := deps.NewError(
-			"mint/annual-provisions",
-			fmt.Errorf("unable to connect to grpc server for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot connect to grpc",
+			"cannot retrieve chain",
 			"id",
 			e.ID,
 			"name",
@@ -1118,19 +1149,16 @@ func GetAnnualProvisions(c *gin.Context) {
 		return
 	}
 
-	mintQuery := mint.NewQueryClient(grpcConn)
-
-	queryAnnualProvisionsRes, err := mintQuery.AnnualProvisions(context.Background(), &mint.QueryAnnualProvisionsRequest{})
-
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
-			"mint/annual-provisions",
-			fmt.Errorf("unable to query annual provisions for chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"unable to query annual provisions",
+			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -1142,5 +1170,29 @@ func GetAnnualProvisions(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, queryAnnualProvisionsRes)
+	sdkRes, err := client.MintAnnualProvision(context.Background(), &sdkutilities.MintAnnualProvisionPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve mint annual provision from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve mint annual provision from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintAnnualProvision)
 }
