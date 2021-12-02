@@ -4,19 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
-
-	types2 "github.com/tendermint/tendermint/abci/types"
-
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
-	"google.golang.org/grpc"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
-	// typestx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/allinbits/demeris-api-server/sdkservice"
+	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
-	// "google.golang.org/protobuf/proto"
-	// "google.golang.org/protobuf/types/known/anypb"
 )
 
 func Register(router *gin.Engine) {
@@ -37,7 +29,6 @@ func Register(router *gin.Engine) {
 func Tx(c *gin.Context) {
 	// var tx typestx.Tx
 	var txRequest TxRequest
-	var meta TxMeta
 
 	d := deps.GetDeps(c)
 
@@ -59,23 +50,20 @@ func Tx(c *gin.Context) {
 		return
 	}
 
-	tx := sdktx.Tx{}
-
-	mustCheckTx := true
-	if err := d.Codec.UnmarshalBinaryBare(txRequest.TxBytes, &tx); err != nil {
-		mustCheckTx = false
-		d.Logger.Warnw("cannot decode transaction with the codec we have, bypassing transaction checking", "error", err)
-	}
-
-	meta.Chain, err = d.Database.Chain(chainName)
-
+	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError("tx", fmt.Errorf("chain %s does not exist", chainName), http.StatusBadRequest)
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
 
 		d.WriteError(c, e,
-			"Invalid chain",
+			"cannot retrieve chain",
 			"id",
 			e.ID,
+			"name",
+			chainName,
 			"error",
 			err,
 		)
@@ -83,27 +71,28 @@ func Tx(c *gin.Context) {
 		return
 	}
 
-	var validationErr error
-
-	if mustCheckTx {
-		validationErr = validateTx(&tx, &meta, d)
-	}
-
-	if validationErr != nil {
-		e := deps.NewError("tx", fmt.Errorf("invalid transaction"), http.StatusBadRequest)
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		)
 
 		d.WriteError(c, e,
-			"invalid transaction",
+			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
+			"name",
+			chainName,
 			"error",
-			validationErr,
+			err,
 		)
 
 		return
 	}
 
-	txhash, err := relayTx(d, txRequest.TxBytes, meta, txRequest.Owner)
+	txhash, err := relayTx(client, d, txRequest.TxBytes, chainName, txRequest.Owner)
 
 	if err != nil {
 		e := deps.NewError("tx", fmt.Errorf("relaying tx failed, %w", err), http.StatusBadRequest)
@@ -124,93 +113,26 @@ func Tx(c *gin.Context) {
 	})
 }
 
-// validateTx populates metadata and
-func validateTx(tx *sdktx.Tx, meta *TxMeta, d *deps.Deps) error {
-	return validateBody(tx, meta, d)
-}
-
-// validateBody validates the data inside the body and populates the relevant metadata
-func validateBody(tx *sdktx.Tx, meta *TxMeta, d *deps.Deps) error {
-	for _, m := range tx.GetMsgs() {
-		if m.Type() == "transfer" {
-
-			msg, ok := m.(*types.MsgTransfer)
-
-			if !ok {
-				return fmt.Errorf("expected MsgTransfer, got %T", msg)
-			}
-
-			sourcePort := msg.SourcePort
-			sourceChannel := msg.SourceChannel
-
-			tokenDenom := msg.Token.Denom
-
-			fmt.Println(sourcePort, sourceChannel, tokenDenom)
-
-			if sourcePort != "transfer" {
-				return fmt.Errorf("invalid IBC Port %s", sourcePort)
-			}
-
-			if tokenDenom[:4] == "ibc/" {
-				tokenHash := tokenDenom[4:]
-				denomTrace, err := d.Database.DenomTrace(meta.Chain.ChainName, tokenHash)
-				if err != nil {
-					return fmt.Errorf("invalid denom trace")
-				}
-
-				// TODO: move this to the chains/chains.go.path() function
-				channels := strings.Split(denomTrace.Path, "/")
-				if channels[1] != sourceChannel {
-					return fmt.Errorf("IBC forward is disabled for multi-hop tokens. Try sending it back through the original channel")
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-// RelayTx relays the tx to the specifc endpoint
-// RelayTx will also perform the ticketing mechanism
+// relayTx relays the tx to the specifc endpoint
+// relayTx will also perform the ticketing mechanism
 // Always expect broadcast mode to be `async`
-func relayTx(d *deps.Deps, txBytes []byte, meta TxMeta, owner string) (string, error) {
-
-	grpcConn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", meta.Chain.ChainName, 9090), // Or your gRPC server address.
-		grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
-	)
-
-	if err != nil {
-		return "", fmt.Errorf("cannot create grpc dialer, %w", err)
-	}
-
-	defer grpcConn.Close()
-
-	txClient := sdktx.NewServiceClient(grpcConn)
-	// We then call the BroadcastTx method on this client.
-	grpcRes, err := txClient.BroadcastTx(
-		context.Background(),
-		&sdktx.BroadcastTxRequest{
-			Mode:    sdktx.BroadcastMode_BROADCAST_MODE_SYNC,
-			TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.
-		},
-	)
+func relayTx(services sdkutilities.Client, d *deps.Deps, txBytes []byte, chainName string, owner string) (string, error) {
+	res, err := services.BroadcastTx(context.Background(), &sdkutilities.BroadcastTxPayload{
+		ChainName: chainName,
+		TxBytes:   txBytes,
+	})
 
 	if err != nil {
 		return "", err
 	}
 
-	if grpcRes.TxResponse.Code != types2.CodeTypeOK {
-		return "", fmt.Errorf("transaction relaying error: code %d, %s", grpcRes.TxResponse.Code, grpcRes.TxResponse.RawLog)
-	}
-
-	err = d.Store.CreateTicket(meta.Chain.ChainName, grpcRes.TxResponse.TxHash, owner)
+	err = d.Store.CreateTicket(chainName, res.Hash, owner)
 
 	if err != nil {
-		return grpcRes.TxResponse.TxHash, err
+		return res.Hash, err
 	}
 
-	return grpcRes.TxResponse.TxHash, nil
+	return res.Hash, nil
 }
 
 // GetTicket returns the transaction status n.
