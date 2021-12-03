@@ -13,8 +13,6 @@ import (
 
 	"github.com/allinbits/demeris-api-server/api/relayer"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/allinbits/demeris-api-server/utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
@@ -39,7 +37,6 @@ type Router struct {
 	s                *store.Store
 	k8s              kube.Client
 	k8sNamespace     string
-	cdc              codec.Marshaler
 	relayersInformer informers.GenericInformer
 }
 
@@ -49,7 +46,6 @@ func New(
 	s *store.Store,
 	kubeClient kube.Client,
 	kubeNamespace string,
-	cdc codec.Marshaler,
 	relayersInformer informers.GenericInformer,
 	debug bool,
 ) *Router {
@@ -68,7 +64,6 @@ func New(
 		s:                s,
 		k8s:              kubeClient,
 		k8sNamespace:     kubeNamespace,
-		cdc:              cdc,
 		relayersInformer: relayersInformer,
 	}
 
@@ -127,7 +122,6 @@ func (r *Router) decorateCtxWithDeps(c *gin.Context) {
 		Database:         r.db,
 		Store:            r.s,
 		KubeNamespace:    r.k8sNamespace,
-		Codec:            r.cdc,
 		K8S:              &r.k8s,
 		RelayersInformer: r.relayersInformer,
 	})

@@ -8,7 +8,6 @@ import (
 
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/utils/store"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -19,7 +18,6 @@ type Deps struct {
 	Database         *database.Database
 	Store            *store.Store
 	K8S              *kube.Client
-	Codec            codec.Marshaler
 	RelayersInformer informers.GenericInformer
 	KubeNamespace    string
 }
