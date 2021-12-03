@@ -131,6 +131,8 @@ github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk5
 github.com/allegro/bigcache v1.2.1-0.20190218064605-e24eb225f156/go.mod h1:Cb/ax3seSYIx7SuZdm2G2xzfwmv3TPSk2ucNfQESPXM=
 github.com/allinbits/demeris-backend-models v0.0.0-20211116145636-4485bb7af3c0 h1:BlxtQvYciZAu2NA/eWfz/NW0UDceRcnz/yj6DW2bLtM=
 github.com/allinbits/demeris-backend-models v0.0.0-20211116145636-4485bb7af3c0/go.mod h1:qloDLoSG+TzdDoayuxEUbygiQZlrV/WYcWHafEoXM/I=
+github.com/allinbits/demeris-backend-models v0.0.0-20211202172133-8c91e712f946 h1:MMERxOdgEVkRmNtLJP6PQG6YYa3AzQJ4xXJktUC1Ang=
+github.com/allinbits/demeris-backend-models v0.0.0-20211202172133-8c91e712f946/go.mod h1:JtnvhlvEkfb2TOqyU1Q3FMNHI8CwNWwfplUoWGWjjfQ=
 github.com/allinbits/starport-operator v0.0.1-alpha.26 h1:qmyGI5sp11J/k4bTWtYyjvzGYYKRKXOnAJx5wMm2oIM=
 github.com/allinbits/starport-operator v0.0.1-alpha.26/go.mod h1:rhYpjy5c3QXjSS0SGxeDU/vVuxwLFeni1MJbpBTKXqo=
 github.com/andrew-d/go-termutil v0.0.0-20150726205930-009166a695a2/go.mod h1:jnzFpU88PccN/tPPhCpnNU8mZphvKxYM9lLNkd8e+os=
