@@ -21,9 +21,8 @@ jobs:
           go-version: 1.16
 
       - name: Generate swagger
-        run: |
-          git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com" && \
-          make generate-swagger
+      - run: git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com"
+      - run: make generate-swagger
 
       - name: Upload Swagger
         uses: actions/upload-artifact@v2
