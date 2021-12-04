@@ -12,17 +12,13 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
-      - name: Configure git for private modules
-        run: git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com"
-
-      - name: Setup go
-        uses: actions/setup-go@v2
+      - uses: actions/setup-go@v2
         with:
           go-version: 1.16
-
       - name: Generate swagger
-      - run: git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com"
-      - run: make generate-swagger
+        run: |
+          git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com" &&
+          make generate-swagger
 
       - name: Upload Swagger
         uses: actions/upload-artifact@v2
