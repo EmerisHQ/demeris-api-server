@@ -16,6 +16,11 @@ jobs:
           GIT_TOKEN: ${{ secrets.TENDERBOT_GIT_TOKEN }}
         run: git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com"
 
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
       - name: Generate swagger
         run: make generate-swagger
 
