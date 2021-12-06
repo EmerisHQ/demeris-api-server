@@ -12,6 +12,9 @@ clean:
 	@rm -rf build docs/swagger.* docs/docs.go
 
 generate-swagger:
+	@echo $(value GOPRIVATE)
+	git config --list --show-origin
+
 	go generate ${BASEPKG}/docs
 	@rm docs/docs.go
 
