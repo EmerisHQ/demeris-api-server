@@ -15,14 +15,23 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.16
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Setup token for pulling from allinbits private repos
         run: |
-          go env -w GOPRIVATE=${GOPRIVATE}
-          git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com"
+          go env -w GOPRIVATE=github.com/allinbits/*
+          git config --global url."https://git:${{ secrets.TENDERBOT_GIT_TOKEN }}@github.com".insteadOf "https://github.com"
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Setup token for pulling from allinbits private repos
+        run: |
+          go env -w GOPRIVATE=github.com/allinbits/*
+          git config --global url."https://git:${{ secrets.TENDERBOT_GIT_TOKEN }}@github.com".insteadOf "https://github.com"
 
       - id: go-cache-paths
         run: |
