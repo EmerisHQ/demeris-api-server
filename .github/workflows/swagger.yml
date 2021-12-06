@@ -3,10 +3,6 @@ name: Generate Swagger
 on: [push]
 permissions:
   contents: read
-env:
-  GOPRIVATE: "github.com/allinbits/*"
-  GIT_TOKEN: ${{ secrets.TENDERBOT_GIT_TOKEN }}
-  GOPROXY: "direct"
 
 jobs:
   swagger:
@@ -46,7 +42,7 @@ jobs:
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
 
       - name: Generate swagger
-        run: make generate-swagger
+        run: go generate github.com/allinbits/demeris-api-server/docs
 
       - name: Upload Swagger
         uses: actions/upload-artifact@v2
