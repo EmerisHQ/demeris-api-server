@@ -10,8 +10,8 @@ env:
 
 jobs:
   swagger:
+    name: Generate Swagger
     strategy:
-      name: Generate Swagger
       matrix:
         go-version: [1.16.x]
         os: [alpine-latest]
