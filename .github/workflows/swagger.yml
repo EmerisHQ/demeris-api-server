@@ -6,6 +6,7 @@ permissions:
 env:
   GOPRIVATE: "github.com/allinbits/*"
   GIT_TOKEN: ${{ secrets.TENDERBOT_GIT_TOKEN }}
+  GOPROXY: "direct"
 
 jobs:
   swagger:
@@ -17,7 +18,9 @@ jobs:
           go-version: 1.16
       - name: Generate swagger
         run: |
+          go env -w GOPRIVATE=${GOPRIVATE} &&
           git config --global url."https://git:${GIT_TOKEN}@github.com".insteadOf "https://github.com" &&
+          go mod download &&
           make generate-swagger
 
       - name: Upload Swagger
