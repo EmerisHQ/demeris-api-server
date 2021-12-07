@@ -131,6 +131,8 @@ github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk5
 github.com/allegro/bigcache v1.2.1-0.20190218064605-e24eb225f156/go.mod h1:Cb/ax3seSYIx7SuZdm2G2xzfwmv3TPSk2ucNfQESPXM=
 github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218 h1:nwFYD164rmcIc7FBPI/4Z9F0vpcaIp0rVaYl7mHgqnk=
 github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218/go.mod h1:JtnvhlvEkfb2TOqyU1Q3FMNHI8CwNWwfplUoWGWjjfQ=
+github.com/allinbits/emeris-utils v0.0.0-20211207102434-c204fc997d4f h1:onZIUPzwG7MsTewb2AMRgEer3efypc1OwU/7ZaaYDJo=
+github.com/allinbits/emeris-utils v0.0.0-20211207102434-c204fc997d4f/go.mod h1:0JTBRbhbYL/4JIyKqfPvB7Zyn9HJokf9z9NB6sMty3s=
 github.com/allinbits/sdk-service-meta v0.0.0-20211202150054-412240d9739c h1:9+fmB3iy8h7xI2iP1yjH0guxI/+7DhYOKZgeOINi7G4=
 github.com/allinbits/sdk-service-meta v0.0.0-20211202150054-412240d9739c/go.mod h1:88l4sS+8qo9AjK/kcQAyh8IlqBHwW3/cAyDZ6P7bFNs=
 github.com/allinbits/starport-operator v0.0.1-alpha.26 h1:qmyGI5sp11J/k4bTWtYyjvzGYYKRKXOnAJx5wMm2oIM=

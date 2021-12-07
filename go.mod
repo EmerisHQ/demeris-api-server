@@ -11,33 +11,22 @@ replace (
 
 require (
 	github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218
+	github.com/allinbits/emeris-utils v0.0.0-20211207102434-c204fc997d4f
 	github.com/allinbits/sdk-service-meta v0.0.0-20211202150054-412240d9739c
 	github.com/allinbits/starport-operator v0.0.1-alpha.26
-	github.com/cockroachdb/cockroach-go/v2 v2.1.1
 	github.com/cosmos/cosmos-sdk v0.42.8
-	github.com/cosmos/gaia/v5 v5.0.4
-	github.com/ethereum/go-ethereum v1.10.12
 	github.com/gin-gonic/gin v1.7.4
-	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.9.0
-	github.com/go-redis/redis/v8 v8.8.3
 	github.com/gravity-devs/liquidity v1.2.9
-	github.com/iamolegga/enviper v1.2.1
-	github.com/jackc/pgx/v4 v4.10.1
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/lib/pq v1.10.3
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
-	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/sony/sonyflake v1.0.0
-	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/swaggo/swag v1.7.0
 	github.com/tendermint/tendermint v0.34.11
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.41.0
-	k8s.io/api v0.21.1
 	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.9.0

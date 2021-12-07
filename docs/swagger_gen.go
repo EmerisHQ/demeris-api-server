@@ -16,7 +16,7 @@
 package docs
 
 import (
-	_ "github.com/allinbits/demeris-api-server/utils/store"
+	_ "github.com/allinbits/emeris-utils/store"
 	_ "github.com/allinbits/demeris-backend-models/cns"
 	_ "github.com/allinbits/demeris-backend-models/tracelistener"
 	_ "github.com/cosmos/cosmos-sdk/types"

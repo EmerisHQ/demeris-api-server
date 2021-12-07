@@ -7,7 +7,7 @@ import (
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/allinbits/demeris-api-server/api/database"
-	"github.com/allinbits/demeris-api-server/utils/store"
+	"github.com/allinbits/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

@@ -8,12 +8,12 @@ import (
 	"github.com/allinbits/demeris-api-server/api/block"
 	"github.com/allinbits/demeris-api-server/api/cached"
 	"github.com/allinbits/demeris-api-server/api/liquidity"
-	"github.com/allinbits/demeris-api-server/utils/logging"
+	"github.com/allinbits/emeris-utils/logging"
 	"k8s.io/client-go/informers"
 
 	"github.com/allinbits/demeris-api-server/api/relayer"
 
-	"github.com/allinbits/demeris-api-server/utils/validation"
+	"github.com/allinbits/emeris-utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,7 +25,7 @@ import (
 	"github.com/allinbits/demeris-api-server/api/account"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/demeris-api-server/utils/store"
+	"github.com/allinbits/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
