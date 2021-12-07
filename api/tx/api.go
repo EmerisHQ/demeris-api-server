@@ -21,6 +21,7 @@ import (
 
 func Register(router *gin.Engine) {
 	router.POST("/tx/:chain", Tx)
+	router.GET("/tx/:srcChain/:destChain/:txHash", GetDestTx)
 	router.GET("/tx/ticket/:chain/:ticket", GetTicket)
 }
 
