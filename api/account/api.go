@@ -33,6 +33,7 @@ func Register(router *gin.Engine) {
 	group.GET("/balance", GetBalancesByAddress)
 	group.GET("/stakingbalances", GetDelegationsByAddress)
 	group.GET("/unbondingdelegations", GetUnbondingDelegationsByAddress)
+	group.GET("/redelegations", GetRedelegationsByAddress)
 	group.GET("/numbers", GetNumbersByAddress)
 	group.GET("/tickets", GetUserTickets)
 	group.GET("/delegatorrewards/:chain", GetDelegatorRewards)
@@ -258,6 +259,57 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 			ValidatorAddress: unbonding.Validator,
 			Entries:          unbonding.Entries,
 			ChainName:        unbonding.ChainName,
+		})
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+// GetRedelegationsByAddress returns the redelegations of an address
+// @Summary Gets redelegations
+// @Description gets redelegations
+// @Tags Account
+// @ID get-redelegations-account
+// @Produce json
+// @Param address path string true "address to query redelegations for"
+// @Success 200 {object} RedelegationsResponse
+// @Failure 500,403 {object} deps.Error
+// @Router /account/{address}/redelegations [get]
+func GetRedelegationsByAddress(c *gin.Context) {
+	var res redelegationsResponse
+
+	d := deps.GetDeps(c)
+
+	address := c.Param("address")
+
+	redelegations, err := d.Database.Redelegations(address)
+
+	if err != nil {
+		e := deps.NewError(
+			"redelegations",
+			fmt.Errorf("cannot retrieve redelegations for address %v", address),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot query database redelegations",
+			"id",
+			e.ID,
+			"address",
+			address,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	for _, r := range redelegations {
+		res.Redelegations = append(res.Redelegations, redelegation{
+			Delegator:           r.Delegator,
+			ValidatorSrcAddress: r.ValidatorSrcAddress,
+			ValidatorDstAddress: r.ValidatorDstAddress,
+			Entries:             r.Entries,
 		})
 	}
 

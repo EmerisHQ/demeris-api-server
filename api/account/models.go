@@ -58,3 +58,14 @@ type delegatorRewardsResponse struct {
 	Rewards []delegationDelegatorReward `json:"rewards"`
 	Total   string                      `json:"total"`
 }
+
+type redelegationsResponse struct {
+	Redelegations []redelegation `json:"unbonding_delegations"`
+}
+
+type redelegation struct {
+	Delegator           string                            `json:"delegator"`
+	ValidatorSrcAddress string                            `json:"validator_src_address"`
+	ValidatorDstAddress string                            `json:"validator_dst_address"`
+	Entries             tracelistener.RedelegationEntries `json:"entries"`
+}
