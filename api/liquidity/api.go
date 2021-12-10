@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,7 +31,7 @@ func getSwapFee(c *gin.Context) {
 
 	poolId := c.Param("poolId")
 
-	fees, err := d.Store.GetSwapFees(poolId)
+	res, err := d.Store.GetSwapFees(poolId)
 	if err != nil {
 		e := deps.NewError(
 			"swap fees",
@@ -49,6 +50,11 @@ func getSwapFee(c *gin.Context) {
 		)
 
 		return
+	}
+
+	fees := sdktypes.Coins{}
+	for _, f := range res {
+		fees = append(fees, sdktypes.NewInt64Coin(f.Denom, f.Amount.Int64()))
 	}
 
 	c.JSON(http.StatusOK, SwapFeesResponse{Fees: fees})
