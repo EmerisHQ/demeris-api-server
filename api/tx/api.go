@@ -7,12 +7,14 @@ import (
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
 )
 
 func Register(router *gin.Engine) {
 	router.POST("/tx/:chain", Tx)
+	router.POST("/tx/:chain/simulate", GetTxFeeEstimate)
 	router.GET("/tx/ticket/:chain/:ticket", GetTicket)
 }
 
@@ -176,4 +178,121 @@ func GetTicket(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, ticket)
+}
+
+// GetTxFeeEstimate relays a transaction to an internal node for the specified chain.
+// @Summary Relays a transaction to the relevant chain.
+// @Tags Tx
+// @ID tx
+// @Description Relays a transaction to the relevant chain.
+// @Param chainName path string true "chain name"
+// @Produce json
+// @Success 200 {object} TxResponse
+// @Failure 500,403 {object} deps.Error
+// @Router /tx/{chainName} [post]
+func GetTxFeeEstimate(c *gin.Context) {
+	var txRequest TxRequest
+
+	d := deps.GetDeps(c)
+
+	chainName := c.Param("chain")
+
+	err := c.BindJSON(&txRequest)
+
+	if err != nil {
+		e := deps.NewError("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
+
+		d.WriteError(c, e,
+			"Failed to parse JSON",
+			"id",
+			e.ID,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain's sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	sdkRes, err := client.EstimateFees(context.Background(), &sdkutilities.EstimateFeesPayload{
+		ChainName: chainName,
+		TxBytes:   txRequest.TxBytes,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve delegator rewards from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	coins := sdktypes.Coins{}
+
+	for _, c := range sdkRes.Fees {
+		amt, _ := sdktypes.NewIntFromString(c.Amount)
+		coins = append(coins, sdktypes.Coin{
+			Denom:  c.Denom,
+			Amount: amt,
+		})
+	}
+
+	c.JSON(http.StatusOK, TxFeeEstimateRes{
+		GasWanted: sdkRes.GasWanted,
+		GasUsed:   sdkRes.GasUsed,
+		Fees:      coins,
+	})
 }

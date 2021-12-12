@@ -1,6 +1,9 @@
 package tx
 
-import "github.com/allinbits/demeris-backend-models/cns"
+import (
+	"github.com/allinbits/demeris-backend-models/cns"
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
+)
 
 type TxRequest struct {
 	Owner   string `json:"owner"`
@@ -125,4 +128,10 @@ type TxMeta struct {
 
 type TxResponse struct {
 	Ticket string `json:"ticket"`
+}
+
+type TxFeeEstimateRes struct {
+	GasWanted uint64
+	GasUsed   uint64
+	Fees      []sdktypes.Coin
 }
