@@ -1,8 +1,6 @@
 package sdkservice
 
 import (
-	//sdkservicetypes "github.com/allinbits/sdk-service-meta"
-
 	"fmt"
 
 	sdkserviceclient "github.com/allinbits/sdk-service-meta/gen/grpc/sdk_utilities/client"
@@ -16,6 +14,7 @@ func sdkServiceURL(version string) string {
 	return fmt.Sprintf(sdkServiceURLFmt, version)
 }
 
+// Client returns a sdkutilities.Client for the given SDK version ready to be used.
 func Client(sdkVersion string) (sdkutilities.Client, error) {
 	conn, err := grpc.Dial(sdkServiceURL(sdkVersion), grpc.WithInsecure())
 	if err != nil {
