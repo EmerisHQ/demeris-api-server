@@ -27,10 +27,11 @@ func FetchAccountNumbers(chain cns.Chain, account string) (tracelistener.AuthRow
 		AddresHex:    &account,
 	})
 	if err != nil {
-		if res.Bech32Address == "" { // account doesn't yet have numbers
-			return tracelistener.AuthRow{}, nil
-		}
 		return tracelistener.AuthRow{}, fmt.Errorf("cannot query account numbers, %w", err)
+	}
+
+	if res == nil {
+		return tracelistener.AuthRow{}, nil
 	}
 
 	result := tracelistener.AuthRow{
