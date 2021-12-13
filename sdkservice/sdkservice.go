@@ -8,7 +8,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-const sdkServiceURLFmt = "sdk-service-v%s"
+const (
+	sdkServiceURLFmt = "sdk-service-v%s:9090"
+)
 
 func sdkServiceURL(version string) string {
 	return fmt.Sprintf(sdkServiceURLFmt, version)
