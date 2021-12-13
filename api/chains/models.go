@@ -85,7 +85,7 @@ type validatorsResponse struct {
 	Validators []tracelistener.ValidatorRow `json:"validators"`
 }
 
-// nolint: deadcode but used in swagger generation
+//nolint //deadcode but used in swagger generation
 type inflationResponse struct {
 	Inflation string `json:"inflation"`
 }
