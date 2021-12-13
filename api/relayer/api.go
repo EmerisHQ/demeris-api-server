@@ -15,7 +15,7 @@ import (
 	cnsmodels "github.com/allinbits/demeris-backend-models/cns"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/demeris-api-server/utils/k8s"
+	"github.com/allinbits/emeris-utils/k8s"
 	v1 "github.com/allinbits/starport-operator/api/v1"
 	"github.com/gin-gonic/gin"
 )

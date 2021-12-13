@@ -9,10 +9,9 @@ import (
 	"github.com/allinbits/demeris-api-server/api/config"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router"
-	"github.com/allinbits/demeris-api-server/utils/k8s"
-	"github.com/allinbits/demeris-api-server/utils/logging"
-	"github.com/allinbits/demeris-api-server/utils/store"
-	gaia "github.com/cosmos/gaia/v5/app"
+	"github.com/allinbits/emeris-utils/k8s"
+	"github.com/allinbits/emeris-utils/logging"
+	"github.com/allinbits/emeris-utils/store"
 	_ "github.com/lib/pq"
 	"k8s.io/client-go/rest"
 )
@@ -62,7 +61,6 @@ func main() {
 	if err != nil {
 		l.Panicw("cannot initialize k8s", "error", err)
 	}
-	cdc, _ := gaia.MakeCodecs()
 
 	l.Infow("setup relayers informer", "namespace", cfg.KubernetesNamespace)
 	infConfig, err := rest.InClusterConfig()
@@ -83,7 +81,6 @@ func main() {
 		s,
 		kubeClient,
 		cfg.KubernetesNamespace,
-		cdc,
 		informer,
 		cfg.Debug,
 	)

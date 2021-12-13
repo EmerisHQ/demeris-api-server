@@ -2,8 +2,6 @@ package chains
 
 import "github.com/gin-gonic/gin"
 
-const grpcPort = 9090
-
 func Register(router *gin.Engine) {
 	router.GET("/chains", GetChains)
 	router.GET("/chains/fee/addresses", GetFeeAddresses)

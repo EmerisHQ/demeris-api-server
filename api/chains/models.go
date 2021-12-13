@@ -85,7 +85,7 @@ type validatorsResponse struct {
 	Validators []tracelistener.ValidatorRow `json:"validators"`
 }
 
-// nolint :deadcode but used in swagger generation
+//nolint //deadcode but used in swagger generation
 type inflationResponse struct {
 	Inflation string `json:"inflation"`
 }
@@ -105,4 +105,13 @@ type paramsResponse struct {
 // nolint :ditto
 type annualProvisionsResponse struct {
 	AnnualProvisions string `json:"annual_provisions"`
+}
+
+type coin struct {
+	Denom  string `json:"denom,omitempty"`
+	Amount string `json:"amount,omitempty"`
+}
+
+type supplyResponse struct {
+	Supply []coin `json:"supply,omitempty"`
 }

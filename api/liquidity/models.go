@@ -1,7 +1,7 @@
 package liquidity
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import "github.com/allinbits/emeris-utils/exported/sdktypes"
 
 type SwapFeesResponse struct {
-	Fees sdk.Coins `json:"fees"`
+	Fees sdktypes.Coins `json:"fees"`
 }
