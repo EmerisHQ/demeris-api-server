@@ -415,7 +415,7 @@ func GetNumbersByAddress(c *gin.Context) {
 		e := deps.NewError(
 			"numbers",
 			fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
-			http.StatusBadRequest,
+			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,

@@ -12,7 +12,7 @@ replace (
 require (
 	github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218
 	github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359
-	github.com/allinbits/sdk-service-meta v0.0.0-20211212183412-eb82e7f68eed
+	github.com/allinbits/sdk-service-meta v0.0.0-20211202150054-412240d9739c
 	github.com/allinbits/starport-operator v0.0.1-alpha.26
 	github.com/cosmos/cosmos-sdk v0.42.8
 	github.com/gin-gonic/gin v1.7.4
@@ -24,9 +24,9 @@ require (
 	github.com/swaggo/swag v1.7.0
 	github.com/tendermint/tendermint v0.34.11
 	github.com/zsais/go-gin-prometheus v0.1.0
-	go.uber.org/zap v1.19.1
+	go.uber.org/zap v1.17.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	google.golang.org/grpc v1.42.0
+	google.golang.org/grpc v1.41.0
 	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.9.0

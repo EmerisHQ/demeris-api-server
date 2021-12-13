@@ -30,6 +30,10 @@ func FetchAccountNumbers(chain cns.Chain, account string) (tracelistener.AuthRow
 		return tracelistener.AuthRow{}, fmt.Errorf("cannot query account numbers, %w", err)
 	}
 
+	if res == nil {
+		return tracelistener.AuthRow{}, nil
+	}
+
 	result := tracelistener.AuthRow{
 		TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
 			ChainName: chain.ChainName,

@@ -1,4 +1,4 @@
-//go:generate go run github.com/swaggo/swag/cmd/swag i -g ../docs/swagger_gen.go -d ../api --parseDepth 2 --parseDependency -o ./
+//go:generate go run github.com/swaggo/swag/cmd/swag i -g ../docs/swagger_gen.go -d ../api --parseDepth 2 --parseInternal --parseDependency -o ./
 
 // @title Demeris API
 // @version 1.0
@@ -16,9 +16,11 @@
 package docs
 
 import (
-	_ "github.com/allinbits/emeris-utils/store"
+	// imports needed to make swagger generation run
 	_ "github.com/allinbits/demeris-backend-models/cns"
 	_ "github.com/allinbits/demeris-backend-models/tracelistener"
+	_ "github.com/allinbits/emeris-utils/exported/sdktypes"
+	_ "github.com/allinbits/emeris-utils/store"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/cosmos-sdk/x/bank/types"

@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	// needed for swagger gen
+	_ "encoding/json"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/allinbits/demeris-api-server/api/apiutils"
@@ -677,7 +680,7 @@ func GetChainStatus(c *gin.Context) {
 // @Description Gets supply of a given chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} types.QueryTotalSupplyResponse
+// @Success 200 {object} supplyResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/supply [get]
 func GetChainSupply(c *gin.Context) {
@@ -771,7 +774,7 @@ func GetChainSupply(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Param tx path string true "tx"
 // @Produce json
-// @Success 200 {object} tx.GetTxResponse
+// @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/txs/{txhash} [get]
 func GetChainTx(c *gin.Context) {
@@ -857,7 +860,7 @@ func GetChainTx(c *gin.Context) {
 // @ID get-numbers-account
 // @Produce json
 // @Param address path string true "address to query numbers for"
-// @Success 200 {object} numbersResponse
+// @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/numbers/{address} [get]
 func GetNumbersByAddress(c *gin.Context) {
@@ -921,7 +924,7 @@ func GetNumbersByAddress(c *gin.Context) {
 // @Tags Chain
 // @ID get-inflation
 // @Produce json
-// @Success 200 {object} inflationResponse
+// @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/mint/inflation [get]
 func GetInflation(c *gin.Context) {
@@ -1004,8 +1007,8 @@ func GetInflation(c *gin.Context) {
 // @Description Gets minting params
 // @Tags Chain
 // @ID get-mint-params
-// @Produce Data
-// @Success 200 {object} paramsResponse
+// @Produce json
+// @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/mint/params [get]
 func GetMintParams(c *gin.Context) {
@@ -1089,7 +1092,7 @@ func GetMintParams(c *gin.Context) {
 // @Tags Chain
 // @ID get-annual-provisions
 // @Produce json
-// @Success 200 {object} annualProvisionsResponse
+// @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/mint/annual_provisions [get]
 func GetAnnualProvisions(c *gin.Context) {
