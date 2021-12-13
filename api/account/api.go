@@ -300,7 +300,7 @@ func GetDelegatorRewards(c *gin.Context) {
 		e := deps.NewError(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
+			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,
@@ -326,7 +326,7 @@ func GetDelegatorRewards(c *gin.Context) {
 		e := deps.NewError(
 			"chains",
 			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
-			http.StatusBadRequest,
+			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,
