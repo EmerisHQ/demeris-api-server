@@ -180,25 +180,23 @@ func GetTicket(c *gin.Context) {
 	c.JSON(http.StatusOK, ticket)
 }
 
-// GetTxFeeEstimate relays a transaction to an internal node for the specified chain.
-// @Summary Relays a transaction to the relevant chain.
+// GetTxFeeEstimate returns the estimated gas and fee price for specified chain.
+// @Summary estimates the gas and fees fot transaction.
 // @Tags Tx
 // @ID tx
-// @Description Relays a transaction to the relevant chain.
+// @Description estimate transaction fees for the relevant chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} TxResponse
+// @Success 200 {object} TxFeeEstimateRes
 // @Failure 500,403 {object} deps.Error
-// @Router /tx/{chainName} [post]
+// @Router /tx/fees/{chainName} [post]
 func GetTxFeeEstimate(c *gin.Context) {
-	var txRequest TxRequest
+	var txRequest TxFeeEstimateReq
 
 	d := deps.GetDeps(c)
-
 	chainName := c.Param("chain")
 
 	err := c.BindJSON(&txRequest)
-
 	if err != nil {
 		e := deps.NewError("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
 
@@ -263,12 +261,12 @@ func GetTxFeeEstimate(c *gin.Context) {
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
+			fmt.Errorf("cannot estimate fees from sdk-service"),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve delegator rewards from sdk-service",
+			"cannot estimate fees from sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -281,7 +279,6 @@ func GetTxFeeEstimate(c *gin.Context) {
 	}
 
 	coins := sdktypes.Coins{}
-
 	for _, c := range sdkRes.Fees {
 		amt, _ := sdktypes.NewIntFromString(c.Amount)
 		coins = append(coins, sdktypes.Coin{
