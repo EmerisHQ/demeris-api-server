@@ -7,12 +7,14 @@ import (
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
 )
 
 func Register(router *gin.Engine) {
 	router.POST("/tx/:chain", Tx)
+	router.POST("/tx/:chain/simulate", GetTxFeeEstimate)
 	router.GET("/tx/ticket/:chain/:ticket", GetTicket)
 }
 
@@ -24,7 +26,7 @@ func Register(router *gin.Engine) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} TxResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,400 {object} deps.Error
 // @Router /tx/{chainName} [post]
 func Tx(c *gin.Context) {
 	// var tx typestx.Tx
@@ -144,7 +146,7 @@ func relayTx(services sdkutilities.Client, d *deps.Deps, txBytes []byte, chainNa
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} store.Ticket
-// @Failure 500,403 {object} deps.Error
+// @Failure 400 {object} deps.Error
 // @Router /tx/ticket/{chainName}/{ticketId} [get]
 func GetTicket(c *gin.Context) {
 
@@ -176,4 +178,118 @@ func GetTicket(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, ticket)
+}
+
+// GetTxFeeEstimate returns the estimated gas and fee price for specified chain.
+// @Summary estimates the gas and fees fot transaction.
+// @Tags Tx
+// @ID tx
+// @Description estimate transaction fees for the relevant chain.
+// @Param chainName path string true "chain name"
+// @Produce json
+// @Success 200 {object} TxFeeEstimateRes
+// @Failure 500,400 {object} deps.Error
+// @Router /tx/fees/{chainName} [post]
+func GetTxFeeEstimate(c *gin.Context) {
+	var txRequest TxFeeEstimateReq
+
+	d := deps.GetDeps(c)
+	chainName := c.Param("chain")
+
+	err := c.BindJSON(&txRequest)
+	if err != nil {
+		e := deps.NewError("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
+
+		d.WriteError(c, e,
+			"Failed to parse JSON",
+			"id",
+			e.ID,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusInternalServerError,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain's sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	sdkRes, err := client.EstimateFees(context.Background(), &sdkutilities.EstimateFeesPayload{
+		ChainName: chainName,
+		TxBytes:   txRequest.TxBytes,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot estimate fees from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot estimate fees from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	coins := sdktypes.Coins{}
+	for _, c := range sdkRes.Fees {
+		amt, _ := sdktypes.NewIntFromString(c.Amount)
+		coins = append(coins, sdktypes.Coin{
+			Denom:  c.Denom,
+			Amount: amt,
+		})
+	}
+
+	c.JSON(http.StatusOK, TxFeeEstimateRes{
+		GasWanted: sdkRes.GasWanted,
+		GasUsed:   sdkRes.GasUsed,
+		Fees:      coins,
+	})
 }
