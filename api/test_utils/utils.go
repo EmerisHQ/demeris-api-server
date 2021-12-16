@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/allinbits/demeris-api-server/utils/store"
+	"github.com/allinbits/emeris-utils/store"
 
 	"github.com/allinbits/demeris-api-server/api/config"
 	apiDb "github.com/allinbits/demeris-api-server/api/database"
@@ -17,9 +17,8 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/allinbits/demeris-api-server/api/router"
 	"github.com/allinbits/demeris-api-server/mocks"
-	"github.com/allinbits/demeris-api-server/utils/logging"
+	"github.com/allinbits/emeris-utils/logging"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
-	gaia "github.com/cosmos/gaia/v5/app"
 	"go.uber.org/zap"
 )
 
@@ -80,15 +79,12 @@ func Setup() *TestingCtx {
 	kube := mocks.Client{}
 	informer := mocks.GenericInformer{}
 
-	cdc, _ := gaia.MakeCodecs()
-
 	r := router.New(
 		dbi,
 		l,
 		s,
 		&kube,
 		c.KubernetesNamespace,
-		cdc,
 		&informer,
 		c.Debug,
 	)
