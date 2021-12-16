@@ -3,8 +3,9 @@ package account
 import (
 	"context"
 	"fmt"
-	"github.com/allinbits/emeris-utils/exported/sdktypes"
 	"net/http"
+
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
