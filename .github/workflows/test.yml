@@ -1,30 +1,21 @@
-name: Execute tests
+name: Tests / Code Coverage
 
 on:
   workflow_dispatch:
   pull_request:
   push:
-    
+
+env:
+  CODECOV_TOKEN: 667f6d56-f4cb-496b-8882-f3e23eba89e3
+
 jobs:
-  test:
-    runs-on: self-hosted
+  code_cov:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - uses: actions/cache@v2
         with:
-          # In order:
-          # * Module download cache
-          # * Build cache (Linux)
-          # * Build cache (Mac)
-          # * Build cache (Windows)
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          fetch-depth: 2
 
       - name: Setup go
         uses: actions/setup-go@v2
@@ -36,24 +27,13 @@ jobs:
           go env -w GOPRIVATE=github.com/allinbits/*
           git config --global url."https://git:${{ secrets.TENDERBOT_GIT_TOKEN }}@github.com".insteadOf "https://github.com"
 
-      - name: Test
-        run: make test
+      - name: Build
+        run: go build -v ./...
 
-      - name: Quality Gate - Test coverage shall be above threshold
-        env:
-            TESTCOVERAGE_THRESHOLD: 60
+      - name: Run tests
+        run: go test ./...
 
-        run: |
-          go test ./... -coverprofile coverage.out -covermode count
-          go tool cover -func coverage.out
-          echo "Quality Gate: checking test coverage is above threshold ..."
-          echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
-          totalCoverage=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
-          echo "Current test coverage : $totalCoverage %"
-          if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') )); then
-              echo "OK"
-          else
-              echo "Current test coverage is below threshold. Please add more unit tests or adjust threshold to a lower value."
-              echo "Failed"
-              exit 1
-          fi
+      - name: Run coverage
+        run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash)
