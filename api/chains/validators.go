@@ -23,6 +23,26 @@ func GetValidators(c *gin.Context) {
 	d := deps.GetDeps(c)
 	chainName := c.Param("chain")
 
+	if _, err := d.Database.Chain(chainName); err != nil {
+		e := deps.NewError(
+			"fee",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
 	validators, err := d.Database.GetValidators(chainName)
 
 	if err != nil {
