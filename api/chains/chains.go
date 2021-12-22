@@ -174,6 +174,26 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 	chainName := c.Param("chain")
 	counterparty := c.Param("counterparty")
 
+	if _, err := d.Database.Chain(chainName); err != nil {
+		e := deps.NewError(
+			"primarychannel",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
 	chain, err := d.Database.PrimaryChannelCounterparty(chainName, counterparty)
 
 	if err != nil {
@@ -222,6 +242,26 @@ func GetPrimaryChannels(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	chainName := c.Param("chain")
+
+	if _, err := d.Database.Chain(chainName); err != nil {
+		e := deps.NewError(
+			"primarychannels",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
 
 	chain, err := d.Database.PrimaryChannels(chainName)
 

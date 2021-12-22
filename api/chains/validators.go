@@ -25,7 +25,7 @@ func GetValidators(c *gin.Context) {
 
 	if _, err := d.Database.Chain(chainName); err != nil {
 		e := deps.NewError(
-			"fee",
+			"validators",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
