@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 
@@ -342,11 +344,19 @@ func GetDelegatorRewards(c *gin.Context) {
 		return
 	}
 
-	coinsSlice := func(in []*sdkutilities.Coin) sdkutilities.Coins {
-		ret := sdkutilities.Coins{}
+	coinsSlice := func(in []*sdkutilities.Coin) sdktypes.Coins {
+		ret := sdktypes.Coins{}
 
 		for _, c := range in {
-			ret = append(ret, *c)
+			amount, ok := sdktypes.NewIntFromString(c.Amount)
+			if !ok {
+				panic("cannot create Int from sdkutilities.Coin amount")
+			}
+
+			ret = append(ret, sdktypes.Coin{
+				Denom:  c.Denom,
+				Amount: amount,
+			})
 		}
 
 		return ret
