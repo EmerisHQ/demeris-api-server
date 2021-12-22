@@ -16,7 +16,7 @@ generate-swagger:
 	@rm docs/docs.go
 
 test:
-	go test -v -race ./...
+	go test -v -race ./... -cover
 
 lint:
 	golangci-lint run ./...
