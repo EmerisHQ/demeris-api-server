@@ -33,7 +33,6 @@ import (
 type Router struct {
 	g                *gin.Engine
 	db               *database.Database
-	l                *zap.SugaredLogger
 	s                *store.Store
 	k8s              kube.Client
 	k8sNamespace     string
@@ -57,10 +56,11 @@ func New(
 
 	engine := gin.New()
 
+	engine.Use(CorrelationIDMiddleware(l))
+
 	r := &Router{
 		g:                engine,
 		db:               db,
-		l:                l,
 		s:                s,
 		k8s:              kubeClient,
 		k8sNamespace:     kubeNamespace,
@@ -90,6 +90,7 @@ func (r *Router) Serve(address string) error {
 }
 
 func (r *Router) catchPanicsFunc(c *gin.Context) {
+	l := getLoggerFromContext(c)
 	defer func() {
 		if rval := recover(); rval != nil {
 			// okay we panic-ed, log it through r's logger and write back internal server error
@@ -98,7 +99,7 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 				errors.New("internal server error"),
 				http.StatusInternalServerError)
 
-			r.l.Errorw(
+			l.Errorw(
 				"panic handler triggered while handling call",
 				"endpoint", c.Request.RequestURI,
 				"error", fmt.Sprint(rval),
@@ -117,8 +118,10 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 }
 
 func (r *Router) decorateCtxWithDeps(c *gin.Context) {
+	l := getLoggerFromContext(c)
+
 	c.Set("deps", &deps.Deps{
-		Logger:           r.l,
+		Logger:           l,
 		Database:         r.db,
 		Store:            r.s,
 		KubeNamespace:    r.k8sNamespace,
