@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	correlationIDName    = "correlation_id"
-	intCorrelationIDName = "int_correlation_id"
+	CorrelationIDName    = "correlation_id"
+	IntCorrelationIDName = "int_correlation_id"
 )
 
 //CorrelationIDMiddleware adds correlationID if it's not specified in HTTP request
@@ -27,15 +27,15 @@ func addCorrelationID(c *gin.Context, l *zap.SugaredLogger) {
 	corralationID := c.Request.Header.Get("X-Correlation-id")
 
 	if corralationID != "" {
-		ctx = context.WithValue(ctx, correlationIDName, corralationID)
+		ctx = context.WithValue(ctx, CorrelationIDName, corralationID)
 		c.Request.Response.Header.Set("X-Correlation-Id", corralationID)
-		l = l.With(correlationIDName, corralationID)
+		l = l.With(CorrelationIDName, corralationID)
 	}
 
 	id, _ := uuid.NewV4()
 
-	ctx = context.WithValue(ctx, intCorrelationIDName, id.String())
-	l = l.With(intCorrelationIDName, id)
+	ctx = context.WithValue(ctx, IntCorrelationIDName, id.String())
+	l = l.With(IntCorrelationIDName, id)
 
 	c.Set("logger", l)
 
