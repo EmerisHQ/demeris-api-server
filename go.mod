@@ -34,6 +34,7 @@ require (
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/swaggo/swag v1.7.0
 	github.com/tendermint/tendermint v0.34.11
+	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc // indirect

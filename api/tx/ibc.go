@@ -3,10 +3,12 @@ package tx
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
+	"github.com/valyala/fastjson"
 	"google.golang.org/grpc"
 )
 
@@ -25,7 +27,7 @@ func GetDestTx(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	srcChain := c.Param("srcChain")
-	destChain := c.Param("destChain")
+	//destChain := c.Param("destChain")
 	txHash := c.Param("txHash")
 
 	grpcConn, err := grpc.Dial(
@@ -42,8 +44,26 @@ func GetDestTx(c *gin.Context) {
 	txClient := tx.NewServiceClient(grpcConn)
 	grpcRes, err := txClient.GetTx(context.Background(), &tx.GetTxRequest{Hash: txHash})
 	if err != nil {
+		d.LogError(" get tx", err)
 		return
 	}
-	tx := grpcRes.GetTx().GetAuthInfo().SignerInfos
+	//seq := grpcRes.GetTxResponse()
 
+	//url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%d\"", destChain, 7)
+	//resp, err := http.Get(url)
+	//if err != nil {
+	//	d.LogError("http get", err)
+	//	return
+	//}
+
+	bzs, err := grpcRes.GetTxResponse().Marshal()
+	seq := fastjson.GetString(bzs, "packet_sequence")
+	d.Logger.Debugw("thi si tx", "tx", seq)
+
+	//bz, err := io.ReadAll(resp.Body)
+	//if err != nil {
+	//}
+	//bodyString := string(bz)
+
+	c.JSON(http.StatusOK, seq)
 }
