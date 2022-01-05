@@ -38,6 +38,13 @@ func GetDeps(c *gin.Context) *Deps {
 
 // WriteError lgos and return client-facing errors
 func (d *Deps) WriteError(c *gin.Context, err Error, logMessage string, keyAndValues ...interface{}) {
+
+	// setting error id
+	value, ok := c.Request.Context().Value("int_correlation_id").(string)
+	if !ok {
+		panic("cant get value int_correlation_id")
+	}
+	err.ID = value
 	_ = c.Error(err)
 
 	if keyAndValues != nil {

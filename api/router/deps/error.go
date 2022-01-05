@@ -2,20 +2,7 @@ package deps
 
 import (
 	"fmt"
-	"strconv"
-	"sync"
-
-	"github.com/sony/sonyflake"
 )
-
-var flake *sonyflake.Sonyflake
-var once sync.Once
-
-func init() {
-	once.Do(func() {
-		flake = sonyflake.NewSonyflake(sonyflake.Settings{})
-	})
-}
 
 type Error struct {
 	ID            string `json:"id"`
@@ -34,15 +21,7 @@ func (e Error) Unwrap() error {
 }
 
 func NewError(namespace string, cause error, statusCode int) Error {
-	id, err := flake.NextID()
-	if err != nil {
-		panic(fmt.Errorf("cannot create sonyflake, %w", err))
-	}
-
-	idstr := strconv.FormatUint(id, 10)
-
 	return Error{
-		ID:            idstr,
 		StatusCode:    statusCode,
 		Namespace:     namespace,
 		LowLevelError: cause,

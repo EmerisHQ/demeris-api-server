@@ -14,6 +14,7 @@ require (
 	github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359
 	github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207
 	github.com/allinbits/starport-operator v0.0.1-alpha.26
+	github.com/cockroachdb/cockroach-go/v2 v2.1.1
 	github.com/cosmos/cosmos-sdk v0.42.8
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-playground/validator/v10 v10.9.0
@@ -22,6 +23,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/lib/pq v1.10.3
 	github.com/sony/sonyflake v1.0.0
+	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/swaggo/swag v1.7.0
 	github.com/tendermint/tendermint v0.34.11
 	github.com/zsais/go-gin-prometheus v0.1.0

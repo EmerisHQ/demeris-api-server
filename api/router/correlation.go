@@ -14,7 +14,7 @@ const (
 	IntCorrelationIDName = "int_correlation_id"
 )
 
-//CorrelationIDMiddleware adds correlationID if it's not specified in HTTP request
+// CorrelationIDMiddleware adds correlationID if it's not specified in HTTP request
 func CorrelationIDMiddleware(l *zap.SugaredLogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		addCorrelationID(c, l)
@@ -24,12 +24,12 @@ func CorrelationIDMiddleware(l *zap.SugaredLogger) gin.HandlerFunc {
 func addCorrelationID(c *gin.Context, l *zap.SugaredLogger) {
 	ctx := c.Request.Context()
 
-	corralationID := c.Request.Header.Get("X-Correlation-id")
+	correlationID := c.Request.Header.Get("X-Correlation-id")
 
-	if corralationID != "" {
-		ctx = context.WithValue(ctx, CorrelationIDName, corralationID)
-		c.Request.Response.Header.Set("X-Correlation-Id", corralationID)
-		l = l.With(CorrelationIDName, corralationID)
+	if correlationID != "" {
+		ctx = context.WithValue(ctx, CorrelationIDName, correlationID)
+		c.Writer.Header().Set("X-Correlation-Id", correlationID)
+		l = l.With(CorrelationIDName, correlationID)
 	}
 
 	id, _ := uuid.NewV4()
