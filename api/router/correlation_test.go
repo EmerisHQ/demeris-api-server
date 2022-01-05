@@ -51,10 +51,10 @@ func TestCorrelationIDMiddleWare(t *testing.T) {
 	require.Eventually(t, func() bool {
 		count := 0
 		for _, info := range observedLogs.All() {
-			if info.ContextMap()["int_correlation_id"] != nil {
+			if info.ContextMap()[string(router.IntCorrelationIDName)] != nil {
 				count++
 			}
-			if info.ContextMap()["correlation_id"] == fmt.Sprintf("%x", id) {
+			if info.ContextMap()[string(router.CorrelationIDName)] == fmt.Sprintf("%x", id) {
 				count++
 			}
 		}
