@@ -135,8 +135,9 @@ github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359 h1:X/paHexl
 github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359/go.mod h1:0JTBRbhbYL/4JIyKqfPvB7Zyn9HJokf9z9NB6sMty3s=
 github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207 h1:smJywJk9fUafXhzRiJKOhzjgDBWNZO1Fjux+WZ1JjLY=
 github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207/go.mod h1:fBhcjlbpaZPw16Y7LudcUfP0pLB2RshU2MixpZQpEG0=
-github.com/allinbits/starport-operator v0.0.1-alpha.26 h1:qmyGI5sp11J/k4bTWtYyjvzGYYKRKXOnAJx5wMm2oIM=
 github.com/allinbits/starport-operator v0.0.1-alpha.26/go.mod h1:rhYpjy5c3QXjSS0SGxeDU/vVuxwLFeni1MJbpBTKXqo=
+github.com/allinbits/starport-operator v0.0.1-alpha.45 h1:peplm7s6mXPhi9bd7qxC3CLgu1m1wRNRcrsYQZMiqAQ=
+github.com/allinbits/starport-operator v0.0.1-alpha.45/go.mod h1:8KNM5J00CtUCwjlnvMY/YpTbXBqHj04ER+SXi8PAWRI=
 github.com/andrew-d/go-termutil v0.0.0-20150726205930-009166a695a2/go.mod h1:jnzFpU88PccN/tPPhCpnNU8mZphvKxYM9lLNkd8e+os=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
