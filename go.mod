@@ -15,7 +15,7 @@ require (
 	github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cosmos/cosmos-sdk v0.42.8
-	github.com/gin-gonic/gin v1.7.4
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/gravity-devs/liquidity v1.2.9
 	github.com/jmoiron/sqlx v1.3.3
