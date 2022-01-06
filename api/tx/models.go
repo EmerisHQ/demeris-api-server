@@ -25,7 +25,7 @@ type TxResponse struct {
 }
 
 type TxFeeEstimateReq struct {
-	TxBytes []byte `json:"tx_bytes"`
+	TxBytes string `json:"tx_bytes"`
 }
 
 type TxFeeEstimateRes struct {

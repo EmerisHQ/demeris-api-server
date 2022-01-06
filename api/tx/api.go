@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -211,6 +212,19 @@ func GetTxFeeEstimate(c *gin.Context) {
 		return
 	}
 
+	bz, err := base64.URLEncoding.DecodeString(txRequest.TxBytes)
+	if err != nil {
+		e := deps.NewError("tx", fmt.Errorf("unable to decode string"), http.StatusBadRequest)
+
+		d.WriteError(c, e,
+			"Failed to parse JSON",
+			"id",
+			e.ID,
+			"error",
+			err,
+		)
+	}
+
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
 		e := deps.NewError(
@@ -255,7 +269,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 	sdkRes, err := client.EstimateFees(context.Background(), &sdkutilities.EstimateFeesPayload{
 		ChainName: chainName,
-		TxBytes:   txRequest.TxBytes,
+		TxBytes:   bz,
 	})
 
 	if err != nil {
