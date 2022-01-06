@@ -133,8 +133,8 @@ github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218 h
 github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218/go.mod h1:JtnvhlvEkfb2TOqyU1Q3FMNHI8CwNWwfplUoWGWjjfQ=
 github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359 h1:X/paHexlGcJ7I0z6CmgjfmlvEd1aU6Cpz3qT5t5PC/w=
 github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359/go.mod h1:0JTBRbhbYL/4JIyKqfPvB7Zyn9HJokf9z9NB6sMty3s=
-github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207 h1:smJywJk9fUafXhzRiJKOhzjgDBWNZO1Fjux+WZ1JjLY=
-github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207/go.mod h1:fBhcjlbpaZPw16Y7LudcUfP0pLB2RshU2MixpZQpEG0=
+github.com/allinbits/sdk-service-meta v0.0.0-20211215192911-cba8e990cc3d h1:yFAFHPd6YcXqtMUSBzDQ95qa10b5ReXYFsmmnNSjv34=
+github.com/allinbits/sdk-service-meta v0.0.0-20211215192911-cba8e990cc3d/go.mod h1:ZOehmlZy3nTRgpDE6hImQ5TzwXF8B4QIypYzOMgcO4Q=
 github.com/allinbits/starport-operator v0.0.1-alpha.26/go.mod h1:rhYpjy5c3QXjSS0SGxeDU/vVuxwLFeni1MJbpBTKXqo=
 github.com/allinbits/starport-operator v0.0.1-alpha.45 h1:peplm7s6mXPhi9bd7qxC3CLgu1m1wRNRcrsYQZMiqAQ=
 github.com/allinbits/starport-operator v0.0.1-alpha.45/go.mod h1:8KNM5J00CtUCwjlnvMY/YpTbXBqHj04ER+SXi8PAWRI=
