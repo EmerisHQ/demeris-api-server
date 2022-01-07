@@ -19,7 +19,7 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/gravity-devs/liquidity v1.2.9
 	github.com/jmoiron/sqlx v1.3.3
-	github.com/lib/pq v1.10.3
+	github.com/lib/pq v1.10.4
 	github.com/sony/sonyflake v1.0.0
 	github.com/swaggo/swag v1.7.0
 	github.com/tendermint/tendermint v0.34.11
