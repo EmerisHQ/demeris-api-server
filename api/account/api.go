@@ -96,42 +96,31 @@ func GetBalancesByAddress(c *gin.Context) {
 			OnChain: b.ChainName,
 		}
 
+		verified := vd[b.Denom]
+		baseDenom := b.Denom
+
 		if b.Denom[:4] == "ibc/" {
 			// is ibc token
 			balance.Ibc = ibcInfo{
 				Hash: b.Denom[4:],
 			}
 
+			// if err is nil, the ibc denom has a denom trace associated with it
+			// so we return it, along with its verified status as well as the complete ibc
+			// path
+
+			// otherwise, since we don't touch `verified` and `baseDenom` variables, we stick to the
+			// original `ibc/...` denom, which will be unverified by default
 			denomTrace, err := d.Database.DenomTrace(b.ChainName, b.Denom[4:])
-
-			if err != nil {
-				e := deps.NewError(
-					"account",
-					fmt.Errorf("cannot query denom trace for token %v on chain %v", b.Denom, b.ChainName),
-					http.StatusBadRequest,
-				)
-
-				d.WriteError(c, e,
-					"cannot query database balance for address",
-					"id",
-					e.ID,
-					"token",
-					b.Denom,
-					"chain",
-					b.ChainName,
-					"error",
-					err,
-				)
-
-				return
+			if err == nil {
+				balance.Ibc.Path = denomTrace.Path
+				baseDenom = denomTrace.BaseDenom
+				verified = vd[denomTrace.BaseDenom]
 			}
-			balance.BaseDenom = denomTrace.BaseDenom
-			balance.Ibc.Path = denomTrace.Path
-			balance.Verified = vd[denomTrace.BaseDenom]
-		} else {
-			balance.Verified = vd[b.Denom]
-			balance.BaseDenom = b.Denom
 		}
+
+		balance.Verified = verified
+		balance.BaseDenom = baseDenom
 
 		res.Balances = append(res.Balances, balance)
 	}
