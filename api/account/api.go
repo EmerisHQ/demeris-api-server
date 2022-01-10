@@ -99,53 +99,59 @@ func GetBalancesByAddress(c *gin.Context) {
 	// perhaps we can remove this since there will be another endpoint specifically for fee tokens
 
 	for _, b := range balances {
-		balance := balance{
-			Address: b.Address,
-			Amount:  b.Amount,
-			OnChain: b.ChainName,
-		}
-
-		if b.Denom[:4] == "ibc/" {
-			// is ibc token
-			balance.Ibc = ibcInfo{
-				Hash: b.Denom[4:],
-			}
-
-			denomTrace, err := d.Database.DenomTrace(b.ChainName, b.Denom[4:])
-
-			if err != nil {
-				e := deps.NewError(
-					"account",
-					fmt.Errorf("cannot query denom trace for token %v on chain %v", b.Denom, b.ChainName),
-					http.StatusBadRequest,
-				)
-
-				d.WriteError(c, e,
-					"cannot query database balance for address",
-					"id",
-					e.ID,
-					"token",
-					b.Denom,
-					"chain",
-					b.ChainName,
-					"error",
-					err,
-				)
-
-				return
-			}
-			balance.BaseDenom = denomTrace.BaseDenom
-			balance.Ibc.Path = denomTrace.Path
-			balance.Verified = vd[denomTrace.BaseDenom]
-		} else {
-			balance.Verified = vd[b.Denom]
-			balance.BaseDenom = b.Denom
-		}
-
-		res.Balances = append(res.Balances, balance)
+		res.Balances = append(res.Balances, balanceRespForBalance(
+			b,
+			vd,
+			d.Database.DenomTrace,
+		))
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+// What lies ahead is a refactoring operation to ease testing of the algorithm implemented
+// to determine whether a given IBC balance is verified or not.
+// Since at the time of this commit there isn't a well-formed testing framework for
+// api-server, we refactored the algo out, and provided a database querying function type.
+// This way we can easily implement table testing for this sensible component, and provide
+// fixes to it in a time-sensitive manner.
+// This will most probably go away as soon as we have proper testing in place.
+type denomTraceFunc func(string, string) (tracelistener.IBCDenomTraceRow, error)
+
+func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) balance {
+	balance := balance{
+		Address: rawBalance.Address,
+		Amount:  rawBalance.Amount,
+		OnChain: rawBalance.ChainName,
+	}
+
+	verified := vd[rawBalance.Denom]
+	baseDenom := rawBalance.Denom
+
+	if rawBalance.Denom[:4] == "ibc/" {
+		// is ibc token
+		balance.Ibc = ibcInfo{
+			Hash: rawBalance.Denom[4:],
+		}
+
+		// if err is nil, the ibc denom has a denom trace associated with it
+		// so we return it, along with its verified status as well as the complete ibc
+		// path
+
+		// otherwise, since we don't touch `verified` and `baseDenom` variables, we stick to the
+		// original `ibc/...` denom, which will be unverified by default
+		denomTrace, err := dt(rawBalance.ChainName, rawBalance.Denom[4:])
+		if err == nil {
+			balance.Ibc.Path = denomTrace.Path
+			baseDenom = denomTrace.BaseDenom
+			verified = vd[denomTrace.BaseDenom]
+		}
+	}
+
+	balance.Verified = verified
+	balance.BaseDenom = baseDenom
+
+	return balance
 }
 
 func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
