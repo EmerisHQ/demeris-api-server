@@ -2,7 +2,7 @@ package database
 
 import (
 	"github.com/allinbits/demeris-api-server/api/config"
-	"github.com/allinbits/demeris-api-server/utils/database"
+	"github.com/allinbits/emeris-utils/database"
 )
 
 type Database struct {

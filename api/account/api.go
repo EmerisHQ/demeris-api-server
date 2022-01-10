@@ -2,30 +2,21 @@ package account
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"net/http"
-	"strings"
+
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	basetypes "github.com/cosmos/cosmos-sdk/types"
-	bech322 "github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
+	"github.com/allinbits/demeris-api-server/api/apiutils"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/demeris-api-server/sdkservice"
+	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
-)
-
-const (
-	grpcPort = 9090
+	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 )
 
 func Register(router *gin.Engine) {
@@ -286,122 +277,99 @@ func GetDelegatorRewards(c *gin.Context) {
 	chainName := c.Param("chain")
 
 	chain, err := d.Database.Chain(chainName)
-
 	if err != nil {
 		e := deps.NewError(
-			"delegator rewards",
-			fmt.Errorf("unable to fetch chain %v", chainName),
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot get chain",
+			"cannot retrieve chain",
 			"id",
 			e.ID,
 			"name",
 			chainName,
-			"err",
+			"error",
 			err,
 		)
 
 		return
 	}
 
-	addressBytes, err := hex.DecodeString(address)
-
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
-			"delegator rewards",
-			fmt.Errorf("unable to decode hex to bytes"),
-			http.StatusBadRequest,
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,
-			"cannot decode bytes",
-			"id",
-			e.ID,
-			"err",
-			err,
-		)
-
-		return
-
-	}
-
-	bech23Address, err := basetypes.Bech32ifyAddressBytes(chain.NodeInfo.Bech32Config.PrefixAccount, addressBytes)
-
-	if err != nil {
-		e := deps.NewError(
-			"delegator rewards",
-			fmt.Errorf("failed to bech32ify address bytes"),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot bech32ify bytes",
-			"id",
-			e.ID,
-			"err",
-			err,
-		)
-
-		return
-
-	}
-
-	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chainName, grpcPort), grpc.WithInsecure())
-	if err != nil {
-		e := deps.NewError(
-			"DelegatorRewards",
-			fmt.Errorf("unable to connect to grpc server for chain %v", chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot connect to grpc",
+			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
 			"name",
 			chainName,
-			"err",
+			"error",
 			err,
 		)
 
 		return
 	}
 
-	distributionQuery := distribution.NewQueryClient(grpcConn)
-
-	rewardsRes, err := distributionQuery.DelegationTotalRewards(context.Background(), &distribution.QueryDelegationTotalRewardsRequest{
-		DelegatorAddress: bech23Address,
+	sdkRes, err := client.DelegatorRewards(context.Background(), &sdkutilities.DelegatorRewardsPayload{
+		ChainName:    chainName,
+		Bech32Prefix: &chain.NodeInfo.Bech32Config.MainPrefix,
+		AddresHex:    &address,
 	})
 
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot query delegations from chain"),
+			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
 			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve chains from database",
+			"cannot retrieve delegator rewards from sdk-service",
 			"id",
 			e.ID,
-			"err",
+			"name",
+			chainName,
+			"error",
 			err,
 		)
 
 		return
 	}
 
-	for _, r := range rewardsRes.Rewards {
+	coinsSlice := func(in []*sdkutilities.Coin) sdktypes.Coins {
+		ret := sdktypes.Coins{}
+
+		for _, c := range in {
+			amount, ok := sdktypes.NewIntFromString(c.Amount)
+			if !ok {
+				panic("cannot create Int from sdkutilities.Coin amount")
+			}
+
+			ret = append(ret, sdktypes.Coin{
+				Denom:  c.Denom,
+				Amount: amount,
+			})
+		}
+
+		return ret
+	}
+
+	for _, r := range sdkRes.Rewards {
 		res.Rewards = append(res.Rewards, delegationDelegatorReward{
 			ValidatorAddress: r.ValidatorAddress,
-			Reward:           r.Reward.String(),
+			Reward:           coinsSlice(r.Rewards).String(),
 		})
 	}
 
-	res.Total = rewardsRes.Total.String()
+	res.Total = coinsSlice(sdkRes.Total).String()
 
 	c.JSON(http.StatusOK, res)
 }
@@ -423,7 +391,7 @@ func GetNumbersByAddress(c *gin.Context) {
 
 	address := c.Param("address")
 
-	dd, err := d.Database.ChainNames()
+	dd, err := d.Database.Chains()
 	d.Logger.Debugw("chain names", "chain names", dd, "error", err)
 
 	/*
@@ -457,7 +425,7 @@ func GetNumbersByAddress(c *gin.Context) {
 		e := deps.NewError(
 			"numbers",
 			fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
-			http.StatusBadRequest,
+			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,
@@ -505,51 +473,21 @@ func GetUserTickets(c *gin.Context) {
 	c.JSON(http.StatusOK, userTicketsResponse{Tickets: tickets})
 }
 
-func fetchNumbers(cns []database.ChainName, account string) ([]tracelistener.AuthRow, error) {
-	accBytes, err := hex.DecodeString(account)
-	if err != nil {
-		return nil, fmt.Errorf("cannot decode hex bytes from account string")
-	}
-
+func fetchNumbers(cns []cns.Chain, account string) ([]tracelistener.AuthRow, error) {
 	queryGroup, _ := errgroup.WithContext(context.Background())
 
 	results := make([]tracelistener.AuthRow, len(cns))
 
-	cdc, _ := simapp.MakeCodecs()
-
 	for i, chain := range cns {
-		addr, err := bech322.ConvertAndEncode(chain.AccountPrefix, accBytes)
-		if err != nil {
-			return nil, fmt.Errorf("cannot encode bytes to %s acc address, %w", chain.ChainName, err)
-		}
-
-		i, chain, addr := i, chain, addr
-
+		iChain := chain
+		idx := i
 		queryGroup.Go(func() error {
-			resp, err := queryChainNumbers(chain.ChainName, addr)
+			row, err := apiutils.FetchAccountNumbers(iChain, account)
 			if err != nil {
-				return fmt.Errorf("unable to query chain %s for numbers error, %w", chain.ChainName, err)
+				return fmt.Errorf("unable to get account numbers, %w", err)
 			}
 
-			if resp == nil {
-				return nil // account doesn't have numbers
-			}
-
-			// get a baseAccount
-			var accountI types.AccountI
-
-			if err := cdc.UnpackAny(resp.Account, &accountI); err != nil {
-				return err
-			}
-
-			results[i] = tracelistener.AuthRow{
-				TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
-					ChainName: chain.ChainName,
-				},
-				Address:        account,
-				SequenceNumber: accountI.GetSequence(),
-				AccountNumber:  accountI.GetAccountNumber(),
-			}
+			results[idx] = row
 
 			return nil
 		})
@@ -569,33 +507,4 @@ func fetchNumbers(cns []database.ChainName, account string) ([]tracelistener.Aut
 	}
 
 	return results, nil
-}
-
-func queryChainNumbers(chainName string, address string) (*types.QueryAccountResponse, error) {
-	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chainName, grpcPort), grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-
-	authQuery := types.NewQueryClient(grpcConn)
-
-	nums, err := authQuery.Account(context.Background(), &types.QueryAccountRequest{
-		Address: address,
-	})
-
-	if status.Code(err) == codes.NotFound {
-		return nil, nil
-	}
-
-	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "not found") {
-			return nil, nil
-		}
-
-		return nil, fmt.Errorf("cannot query account, %w", err)
-	}
-
-	_ = grpcConn.Close()
-
-	return nums, nil
 }

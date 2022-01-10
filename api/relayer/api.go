@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/allinbits/demeris-api-server/api/database"
-	"github.com/allinbits/demeris-backend-models/cns"
+	cnsmodels "github.com/allinbits/demeris-backend-models/cns"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/demeris-api-server/utils/k8s"
+	"github.com/allinbits/emeris-utils/k8s"
 	v1 "github.com/allinbits/starport-operator/api/v1"
 	"github.com/gin-gonic/gin"
 )
@@ -41,20 +41,41 @@ func getRelayerStatus(c *gin.Context) {
 
 	d := deps.GetDeps(c)
 
-	running, err := k8s.Querier{
-		Client:    *d.K8S,
+	obj, err := d.RelayersInformer.Lister().Get(k8stypes.NamespacedName{
 		Namespace: d.KubeNamespace,
-	}.Relayer()
+		Name:      "relayer",
+	}.String())
 
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
 		e := deps.NewError(
 			"status",
-			fmt.Errorf("cannot retrieve relayer status"),
-			http.StatusBadRequest,
+			fmt.Errorf("cannot query relayer status"),
+			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve relayer status",
+			"cannot query relayer status",
+			"id",
+			e.ID,
+			"error",
+			err,
+			"obj",
+			obj,
+		)
+
+		return
+	}
+
+	relayer, err := k8s.GetRelayerFromObj(obj)
+	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
+		e := deps.NewError(
+			"status",
+			fmt.Errorf("cannot query relayer status"),
+			http.StatusInternalServerError,
+		)
+
+		d.WriteError(c, e,
+			"cannot unstructure relayer status",
 			"id",
 			e.ID,
 			"error",
@@ -66,7 +87,7 @@ func getRelayerStatus(c *gin.Context) {
 
 	res.Running = true
 
-	if errors.Is(err, k8s.ErrNotFound) || running.Status.Phase != v1.RelayerPhaseRunning {
+	if errors.Is(err, k8s.ErrNotFound) || relayer.Status.Phase != v1.RelayerPhaseRunning {
 		res.Running = false
 	}
 
@@ -87,33 +108,53 @@ func getRelayerBalance(c *gin.Context) {
 
 	d := deps.GetDeps(c)
 
-	running, err := k8s.Querier{
-		Client:    *d.K8S,
+	obj, err := d.RelayersInformer.Lister().Get(k8stypes.NamespacedName{
 		Namespace: d.KubeNamespace,
-	}.Relayer()
+		Name:      "relayer",
+	}.String())
 
-	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
+	if err != nil {
 		e := deps.NewError(
 			"status",
-			fmt.Errorf("cannot retrieve relayer status"),
-			http.StatusBadRequest,
+			fmt.Errorf("cannot query relayer status"),
+			http.StatusInternalServerError,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve relayer status",
+			"cannot query relayer status",
+			"id",
+			e.ID,
+			"error",
+			err,
+			"obj",
+			obj,
+		)
+
+		return
+	}
+
+	relayer, err := k8s.GetRelayerFromObj(obj)
+	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
+		e := deps.NewError(
+			"status",
+			fmt.Errorf("cannot query relayer status"),
+			http.StatusInternalServerError,
+		)
+
+		d.WriteError(c, e,
+			"cannot unstructure relayer status",
 			"id",
 			e.ID,
 			"error",
 			err,
 		)
 
-		return
 	}
 
 	chains := []string{}
 	addresses := []string{}
 
-	for _, cs := range running.Status.ChainStatuses {
+	for _, cs := range relayer.Status.ChainStatuses {
 		chains = append(chains, cs.ID)
 		addresses = append(addresses, cs.AccountAddress)
 	}
@@ -171,11 +212,10 @@ func getRelayerBalance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, res)
-
 }
 
-func relayerThresh(chains []string, db *database.Database) (map[string]cns.Denom, error) {
-	res := map[string]cns.Denom{}
+func relayerThresh(chains []string, db *database.Database) (map[string]cnsmodels.Denom, error) {
+	res := map[string]cnsmodels.Denom{}
 
 	for _, cn := range chains {
 		chain, err := db.ChainFromChainID(cn)
@@ -192,7 +232,7 @@ func relayerThresh(chains []string, db *database.Database) (map[string]cns.Denom
 	return res, nil
 }
 
-func enoughBalance(address string, denom cns.Denom, db *database.Database) (bool, error) {
+func enoughBalance(address string, denom cnsmodels.Denom, db *database.Database) (bool, error) {
 	_, hb, err := bech32.DecodeAndConvert(address)
 	if err != nil {
 		return false, err

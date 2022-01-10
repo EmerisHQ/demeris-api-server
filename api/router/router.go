@@ -8,13 +8,12 @@ import (
 	"github.com/allinbits/demeris-api-server/api/block"
 	"github.com/allinbits/demeris-api-server/api/cached"
 	"github.com/allinbits/demeris-api-server/api/liquidity"
-	"github.com/allinbits/demeris-api-server/utils/logging"
+	"github.com/allinbits/emeris-utils/logging"
+	"k8s.io/client-go/informers"
 
 	"github.com/allinbits/demeris-api-server/api/relayer"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/allinbits/demeris-api-server/utils/validation"
+	"github.com/allinbits/emeris-utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,19 +25,19 @@ import (
 	"github.com/allinbits/demeris-api-server/api/account"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/demeris-api-server/utils/store"
+	"github.com/allinbits/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Router struct {
-	g            *gin.Engine
-	db           *database.Database
-	l            *zap.SugaredLogger
-	s            *store.Store
-	k8s          kube.Client
-	k8sNamespace string
-	cdc          codec.Marshaler
+	g                *gin.Engine
+	db               *database.Database
+	l                *zap.SugaredLogger
+	s                *store.Store
+	k8s              kube.Client
+	k8sNamespace     string
+	relayersInformer informers.GenericInformer
 }
 
 func New(
@@ -47,7 +46,7 @@ func New(
 	s *store.Store,
 	kubeClient kube.Client,
 	kubeNamespace string,
-	cdc codec.Marshaler,
+	relayersInformer informers.GenericInformer,
 	debug bool,
 ) *Router {
 	gin.SetMode(gin.ReleaseMode)
@@ -59,13 +58,13 @@ func New(
 	engine := gin.New()
 
 	r := &Router{
-		g:            engine,
-		db:           db,
-		l:            l,
-		s:            s,
-		k8s:          kubeClient,
-		k8sNamespace: kubeNamespace,
-		cdc:          cdc,
+		g:                engine,
+		db:               db,
+		l:                l,
+		s:                s,
+		k8s:              kubeClient,
+		k8sNamespace:     kubeNamespace,
+		relayersInformer: relayersInformer,
 	}
 
 	r.metrics()
@@ -119,12 +118,12 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 
 func (r *Router) decorateCtxWithDeps(c *gin.Context) {
 	c.Set("deps", &deps.Deps{
-		Logger:        r.l,
-		Database:      r.db,
-		Store:         r.s,
-		KubeNamespace: r.k8sNamespace,
-		Codec:         r.cdc,
-		K8S:           &r.k8s,
+		Logger:           r.l,
+		Database:         r.db,
+		Store:            r.s,
+		KubeNamespace:    r.k8sNamespace,
+		K8S:              &r.k8s,
+		RelayersInformer: r.relayersInformer,
 	})
 }
 
