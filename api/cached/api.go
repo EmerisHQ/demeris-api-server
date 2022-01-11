@@ -49,7 +49,7 @@ func getPools(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getParams returns the params of liquidity module.
@@ -83,7 +83,7 @@ func getParams(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getSupply returns the total supply.
@@ -117,7 +117,7 @@ func getSupply(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getNodeInfo returns output of Cosmos's /node_info endpoint.
@@ -151,5 +151,5 @@ func getNodeInfo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
