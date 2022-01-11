@@ -128,11 +128,15 @@ github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
+github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a/go.mod h1:SGnFV6hVsYE877CKEZ6tDNTjaSXYUk6QqoIK6PrAtcc=
+github.com/alicebob/miniredis/v2 v2.16.0/go.mod h1:gquAfGbzn92jvtrSC69+6zZnwSODVXVpYDRaGhWaL6I=
 github.com/allegro/bigcache v1.2.1-0.20190218064605-e24eb225f156/go.mod h1:Cb/ax3seSYIx7SuZdm2G2xzfwmv3TPSk2ucNfQESPXM=
 github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218 h1:nwFYD164rmcIc7FBPI/4Z9F0vpcaIp0rVaYl7mHgqnk=
 github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218/go.mod h1:JtnvhlvEkfb2TOqyU1Q3FMNHI8CwNWwfplUoWGWjjfQ=
 github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359 h1:X/paHexlGcJ7I0z6CmgjfmlvEd1aU6Cpz3qT5t5PC/w=
 github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359/go.mod h1:0JTBRbhbYL/4JIyKqfPvB7Zyn9HJokf9z9NB6sMty3s=
+github.com/allinbits/emeris-utils v0.0.0-20220111142700-178bb8d37d1c h1:GcsoVA2Ymb7uwkF4QF4RNukolzzB5Ko1oz8InEYJUo8=
+github.com/allinbits/emeris-utils v0.0.0-20220111142700-178bb8d37d1c/go.mod h1:bNKJKEI+cBGwd41+57UcTJYv9oqpwIjEf3txHr9bU4c=
 github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207 h1:smJywJk9fUafXhzRiJKOhzjgDBWNZO1Fjux+WZ1JjLY=
 github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207/go.mod h1:fBhcjlbpaZPw16Y7LudcUfP0pLB2RshU2MixpZQpEG0=
 github.com/allinbits/starport-operator v0.0.1-alpha.26/go.mod h1:rhYpjy5c3QXjSS0SGxeDU/vVuxwLFeni1MJbpBTKXqo=
@@ -1384,6 +1388,7 @@ github.com/yuin/goldmark v1.3.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark-emoji v1.0.1/go.mod h1:2w1E6FEWLcDQkoTE+7HU6QF1F6SLlNGjRIBbIZQFqkQ=
+github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da/go.mod h1:E1AXubJBdNmFERAOucpDIxNzeGfLzg0mYh+UfMWdChA=
 github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea/go.mod h1:eNr558nEUjP8acGw8FFjTeWvSgU1stO7FAO6eknhHe4=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 github.com/zondax/hid v0.9.0 h1:eiT3P6vNxAEVxXMw66eZUAAnU2zD33JBkfG/EnfAKl8=
@@ -1610,6 +1615,7 @@ golang.org/x/sys v0.0.0-20181116152217-5ac8a444bdc5/go.mod h1:STP8DvDyc/dI5b8T5h
 golang.org/x/sys v0.0.0-20181122145206-62eef0e2fa9b/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20181205085412-a5c9d58dba9a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190130150945-aca44879d564/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190204203706-41f3e6584952/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190209173611-3b5209105503/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190221075227-b4e8571b14e0/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

@@ -11,7 +11,7 @@ replace (
 
 require (
 	github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218
-	github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359
+	github.com/allinbits/emeris-utils v0.0.0-20220111142700-178bb8d37d1c
 	github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cosmos/cosmos-sdk v0.42.8
