@@ -15,6 +15,7 @@ func Register(router *gin.Engine) {
 	group.GET("/liquidity/v1beta1/pools", getPools)
 	group.GET("/liquidity/v1beta1/params", getParams)
 	group.GET("/bank/v1beta1/supply", getSupply)
+	group.GET("/node_info", getNodeInfo)
 }
 
 // getPools returns the of all pools.
@@ -107,6 +108,40 @@ func getSupply(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve total supply",
+			"id",
+			e.ID,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+// getNodeInfo returns output of Cosmos's /node_info endpoint.
+// @Summary returns output of Cosmos's /node_info endpoint
+// @Tags nodeinfo
+// @ID node_info
+// @Description returns output of Cosmos's /node_info endpoint
+// @Produce json
+// @Success 200 {object} types.QueryTotalSupplyResponse
+// @Failure 500,403 {object} deps.Error
+// @Router / [get]
+func getNodeInfo(c *gin.Context) {
+	d := deps.GetDeps(c)
+
+	res, err := d.Store.GetNodeInfo()
+	if err != nil {
+		e := deps.NewError(
+			"node_info",
+			fmt.Errorf("cannot retrieve node_info"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve node_info",
 			"id",
 			e.ID,
 			"error",
