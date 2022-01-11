@@ -10,10 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gaia "github.com/cosmos/gaia/v5/app"
 	"github.com/go-redis/redis/v8"
-	liquiditytypes "github.com/gravity-devs/liquidity/x/liquidity/types"
 )
 
 const (
@@ -356,49 +354,40 @@ func (s *Store) GetUserTickets(user string) (map[string][]string, error) {
 	return res, nil
 }
 
-func (s *Store) GetPools() (liquiditytypes.QueryLiquidityPoolsResponse, error) {
-	var res liquiditytypes.QueryLiquidityPoolsResponse
+func (s *Store) GetPools() ([]byte, error) {
 	bz, err := s.Client.Get(context.Background(), "pools").Bytes()
 	if err != nil {
-		return liquiditytypes.QueryLiquidityPoolsResponse{}, err
+		return nil, fmt.Errorf("cannot fetch pools from cache, %w", err)
 	}
 
-	err = s.Cdc.UnmarshalJSON(bz, &res)
-	if err != nil {
-		return liquiditytypes.QueryLiquidityPoolsResponse{}, err
-	}
-
-	return res, nil
+	return bz, nil
 }
 
-func (s *Store) GetParams() (liquiditytypes.QueryParamsResponse, error) {
-	var res liquiditytypes.QueryParamsResponse
+func (s *Store) GetParams() ([]byte, error) {
 	bz, err := s.Client.Get(context.Background(), "params").Bytes()
 	if err != nil {
-		return liquiditytypes.QueryParamsResponse{}, err
+		return bz, fmt.Errorf("cannot fetch params from cache, %w", err)
 	}
 
-	err = s.Cdc.UnmarshalJSON(bz, &res)
-	if err != nil {
-		return liquiditytypes.QueryParamsResponse{}, err
-	}
-
-	return res, nil
+	return bz, nil
 }
 
-func (s *Store) GetSupply() (banktypes.QueryTotalSupplyResponse, error) {
-	var res banktypes.QueryTotalSupplyResponse
+func (s *Store) GetSupply() ([]byte, error) {
 	bz, err := s.Client.Get(context.Background(), "supply").Bytes()
 	if err != nil {
-		return banktypes.QueryTotalSupplyResponse{}, err
+		return nil, fmt.Errorf("cannot fetch total supply from cache, %w", err)
 	}
 
-	err = s.Cdc.UnmarshalJSON(bz, &res)
+	return bz, nil
+}
+
+func (s *Store) GetNodeInfo() ([]byte, error) {
+	bz, err := s.Client.Get(context.Background(), "node_info").Bytes()
 	if err != nil {
-		return banktypes.QueryTotalSupplyResponse{}, err
+		return nil, fmt.Errorf("cannot fetch node info from cache, %w", err)
 	}
 
-	return res, nil
+	return bz, nil
 }
 
 func (s *Store) Delete(key string) error {
