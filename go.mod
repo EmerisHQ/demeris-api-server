@@ -11,7 +11,7 @@ replace (
 
 require (
 	github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218
-	github.com/allinbits/emeris-utils v0.0.0-20211210104150-283219be3359
+	github.com/allinbits/emeris-utils v0.0.0-20220111144137-74da43e7bb11
 	github.com/allinbits/sdk-service-meta v0.0.0-20211213140844-1ad0f7cce207
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cosmos/cosmos-sdk v0.42.8
@@ -21,6 +21,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/lib/pq v1.10.4
 	github.com/sony/sonyflake v1.0.0
+	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/swaggo/swag v1.7.0
 	github.com/tendermint/tendermint v0.34.11
 	github.com/valyala/fastjson v1.6.3 // indirect
@@ -41,6 +42,8 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
+	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
+	github.com/alicebob/miniredis/v2 v2.16.0 // indirect
 	github.com/armon/go-metrics v0.3.8 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -157,7 +160,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1 // indirect
-	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
@@ -167,6 +169,7 @@ require (
 	github.com/tendermint/tm-db v0.6.4 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
+	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.opentelemetry.io/otel v0.20.0 // indirect
