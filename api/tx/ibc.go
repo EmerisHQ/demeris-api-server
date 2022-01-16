@@ -1,15 +1,14 @@
 package tx
 
 import (
-	"context"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/gin-gonic/gin"
-	"github.com/valyala/fastjson"
-	"google.golang.org/grpc"
+	"github.com/tidwall/gjson"
 )
 
 // GetDestTx returns the transaction status n.
@@ -27,43 +26,37 @@ func GetDestTx(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	srcChain := c.Param("srcChain")
-	//destChain := c.Param("destChain")
+	destChain := c.Param("destChain")
 	txHash := c.Param("txHash")
 
-	grpcConn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", srcChain, 9090), // Or your gRPC server address.
-		grpc.WithInsecure(),                  // The SDK doesn't support any transport security mechanism.
-	)
-
+	url := fmt.Sprintf("http://%s:26657/tx?hash=%s&prove=%t", srcChain, "0x"+txHash, false)
+	resp, err := http.Get(url)
 	if err != nil {
+		d.LogError("http get", err)
 		return
 	}
 
-	defer grpcConn.Close()
-
-	txClient := tx.NewServiceClient(grpcConn)
-	grpcRes, err := txClient.GetTx(context.Background(), &tx.GetTxRequest{Hash: txHash})
+	bz, err := io.ReadAll(resp.Body)
 	if err != nil {
-		d.LogError(" get tx", err)
+	}
+	r := gjson.GetBytes(bz, "result.tx_result.events.3.attributes.3.value")
+	d.Logger.Debugw("thi si tx", "tx", r)
+
+	seq, err := base64.StdEncoding.DecodeString(r.String())
+
+	url = fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChain, string(seq))
+	d.Logger.Debugw("this log", "url", url)
+	resp, err = http.Get(url)
+	if err != nil {
+		d.LogError("http get", err)
 		return
 	}
-	//seq := grpcRes.GetTxResponse()
+	bz, err = io.ReadAll(resp.Body)
+	if err != nil {
+	}
 
-	//url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%d\"", destChain, 7)
-	//resp, err := http.Get(url)
-	//if err != nil {
-	//	d.LogError("http get", err)
-	//	return
-	//}
+	r = gjson.GetBytes(bz, "result.txs.0.hash")
+	d.Logger.Debugw("thi si tx", "tx", r)
 
-	bzs, err := grpcRes.GetTxResponse().Marshal()
-	seq := fastjson.GetString(bzs, "packet_sequence")
-	d.Logger.Debugw("thi si tx", "tx", seq)
-
-	//bz, err := io.ReadAll(resp.Body)
-	//if err != nil {
-	//}
-	//bodyString := string(bz)
-
-	c.JSON(http.StatusOK, seq)
+	c.JSON(http.StatusOK, r.String())
 }
