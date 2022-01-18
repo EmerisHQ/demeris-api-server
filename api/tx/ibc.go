@@ -32,31 +32,6 @@ func GetDestTx(c *gin.Context) {
 	destChain := c.Param("destChain")
 	txHash := c.Param("txHash")
 
-	//url := fmt.Sprintf("http://%s:26657/tx?hash=%s&prove=%t", srcChain, "0x"+txHash, false)
-	//
-	//bz, err := GetUrlRes(url)
-	//if err != nil {
-	//	e := deps.NewError(
-	//		"chains",
-	//		fmt.Errorf("cannot retrieve tx info of %s on %s", txHash, srcChain),
-	//		http.StatusBadRequest,
-	//	)
-	//
-	//	d.WriteError(c, e,
-	//		"cannot retrieve tx info",
-	//		"id",
-	//		e.ID,
-	//		"txHash",
-	//		txHash,
-	//		"src chain name",
-	//		srcChain,
-	//		"error",
-	//		err,
-	//	)
-	//
-	//	return
-	//}
-
 	chain, err := d.Database.Chain(srcChain)
 	if err != nil {
 		e := deps.NewError(
@@ -133,7 +108,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve tx with packet sequence %d on %s", r.String(), destChain),
+			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", r.String(), destChain),
 			http.StatusBadRequest,
 		)
 
