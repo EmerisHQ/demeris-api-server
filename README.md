@@ -17,6 +17,9 @@ At its simplest the api-server is a translation layer between JSON REST and chai
   Generate `swagger.yaml` under `docs`.
   Alternatively, you can get a generated copy as a [Github action artifact](https://github.com/allinbits/demeris-api-server/actions/workflows/swagger.yml).
 
+* `make generate-mocks`  
+  Generate mock testing files under the `mocs` package.
+
 ## Dependencies & Licenses
 
 The list of non-{Cosmos, AiB, Tendermint} dependencies and their licenses are:

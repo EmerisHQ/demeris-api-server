@@ -5,15 +5,15 @@ import (
 	"github.com/allinbits/demeris-backend-models/tracelistener"
 )
 
-type chainsResponse struct {
-	Chains []supportedChain `json:"chains"`
+type ChainsResponse struct {
+	Chains []SupportedChain `json:"chains"`
 }
-type supportedChain struct {
+type SupportedChain struct {
 	ChainName   string `json:"chain_name"`
 	DisplayName string `json:"display_name"`
 	Logo        string `json:"logo"`
 }
-type chainResponse struct {
+type ChainResponse struct {
 	Chain cns.Chain `json:"chain"`
 }
 
