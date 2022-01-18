@@ -104,7 +104,30 @@ func GetDestTx(c *gin.Context) {
 	r := gjson.GetBytes(sdkRes, "tx_response.logs.0.events.2.attributes.3.value")
 	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChain, r.String())
 
-	bz, err := GetUrlRes(url)
+	resp, err := http.Get(url)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", r.String(), destChain),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve destination tx",
+			"id",
+			e.ID,
+			"txHash",
+			txHash,
+			"dest chain name",
+			destChain,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	bz, err := io.ReadAll(resp.Body)
 	if err != nil {
 		e := deps.NewError(
 			"chains",
@@ -132,18 +155,4 @@ func GetDestTx(c *gin.Context) {
 		DestChain: destChain,
 		TxHash:    r.String(),
 	})
-}
-
-func GetUrlRes(url string) ([]byte, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-
-	bz, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return bz, nil
 }
