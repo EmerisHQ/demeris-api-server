@@ -28,11 +28,11 @@ import (
 // @ID chains
 // @Description Gets list of supported chains.
 // @Produce json
-// @Success 200 {object} chainsResponse
+// @Success 200 {object} ChainsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chains [get]
 func GetChains(c *gin.Context) {
-	var res chainsResponse
+	var res ChainsResponse
 
 	d := deps.GetDeps(c)
 
@@ -57,7 +57,7 @@ func GetChains(c *gin.Context) {
 	}
 
 	for _, cc := range chains {
-		res.Chains = append(res.Chains, supportedChain{
+		res.Chains = append(res.Chains, SupportedChain{
 			ChainName:   cc.ChainName,
 			DisplayName: cc.DisplayName,
 			Logo:        cc.Logo,
@@ -74,11 +74,11 @@ func GetChains(c *gin.Context) {
 // @Description Gets chain by name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} chainResponse
-// @Failure 500,403 {object} deps.Error
+// @Success 200 {object} ChainResponse
+// @Failure 500,400 {object} deps.Error
 // @Router /chain/{chainName} [get]
 func GetChain(c *gin.Context) {
-	var res chainResponse
+	var res ChainResponse
 
 	d := deps.GetDeps(c)
 
