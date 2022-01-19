@@ -19,7 +19,7 @@ require (
 	github.com/cockroachdb/cockroach-go/v2 v2.1.1
 	github.com/cosmos/cosmos-sdk v0.42.8
 	github.com/gin-gonic/gin v1.7.7
-	github.com/go-playground/validator/v10 v10.9.0
+	github.com/go-playground/validator/v10 v10.10.0
 	github.com/google/go-cmp v0.5.6
 	github.com/gravity-devs/liquidity v1.2.9
 	github.com/jmoiron/sqlx v1.3.3
