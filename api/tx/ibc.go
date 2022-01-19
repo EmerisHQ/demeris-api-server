@@ -126,6 +126,7 @@ func GetDestTx(c *gin.Context) {
 
 		return
 	}
+	defer resp.Body.Close()
 
 	bz, err := io.ReadAll(resp.Body)
 	if err != nil {
