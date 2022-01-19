@@ -16,7 +16,7 @@ require (
 	github.com/allinbits/emeris-utils v0.0.0-20220111144137-74da43e7bb11
 	github.com/allinbits/sdk-service-meta v0.0.0-20220114142340-a44e073d0b27
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
-	github.com/cockroachdb/cockroach-go/v2 v2.1.1
+	github.com/cockroachdb/cockroach-go/v2 v2.2.6
 	github.com/cosmos/cosmos-sdk v0.42.8
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.0
@@ -85,6 +85,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-redis/redis/v8 v8.8.3 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
+	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
