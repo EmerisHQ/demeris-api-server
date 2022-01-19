@@ -137,10 +137,14 @@ github.com/allegro/bigcache v1.2.1-0.20190218064605-e24eb225f156/go.mod h1:Cb/ax
 github.com/allinbits/demeris-backend-models v0.0.0-20211116145636-4485bb7af3c0/go.mod h1:qloDLoSG+TzdDoayuxEUbygiQZlrV/WYcWHafEoXM/I=
 github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218 h1:nwFYD164rmcIc7FBPI/4Z9F0vpcaIp0rVaYl7mHgqnk=
 github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218/go.mod h1:JtnvhlvEkfb2TOqyU1Q3FMNHI8CwNWwfplUoWGWjjfQ=
+github.com/allinbits/demeris-backend-models v0.1.0 h1:rlfYTtvVtX/zZgXKQTEkpt2F1R1f6tT0NXk8dEL+AZc=
+github.com/allinbits/demeris-backend-models v0.1.0/go.mod h1:KF3guzQFY/P09uH9WY0AkUdRpN9kbHdCHSavm4ehMZE=
 github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded h1:AD2UB10Bx7QgStLnJ6Jp1XQD2Y2u9Js0TMCJIhd61n8=
 github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded/go.mod h1:FuP1e/sGgjXI/pJ0ipHmEWLHHQWMPwnT8rDFz2WKKUE=
 github.com/allinbits/emeris-utils v0.0.0-20220111144137-74da43e7bb11 h1:057ekDu1cke6wfy0H4o0e/52VF24CAyyTwLuZEBJqt4=
 github.com/allinbits/emeris-utils v0.0.0-20220111144137-74da43e7bb11/go.mod h1:/4J2hcesLBELMRd2nISKVynPEa061ao2QUwEbzdPcDk=
+github.com/allinbits/emeris-utils v0.1.0 h1:MsAh9d3IMMDeUgA23iZDbafT3Mnaly70xiKOqQyP85s=
+github.com/allinbits/emeris-utils v0.1.0/go.mod h1:/4J2hcesLBELMRd2nISKVynPEa061ao2QUwEbzdPcDk=
 github.com/allinbits/sdk-service-meta v0.0.0-20220114142340-a44e073d0b27 h1:7HQKXS3wg2EXMh6l7/1hrCec7dwukvizvh+g2zU+/mo=
 github.com/allinbits/sdk-service-meta v0.0.0-20220114142340-a44e073d0b27/go.mod h1:ZOehmlZy3nTRgpDE6hImQ5TzwXF8B4QIypYzOMgcO4Q=
 github.com/allinbits/starport-operator v0.0.1-alpha.26/go.mod h1:rhYpjy5c3QXjSS0SGxeDU/vVuxwLFeni1MJbpBTKXqo=
@@ -378,6 +382,7 @@ github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/ethereum/go-ethereum v1.10.12 h1:el/KddB3gLEsnNgGQ3SQuZuiZjwnFTYHe5TwUet5Om4=
 github.com/ethereum/go-ethereum v1.10.12/go.mod h1:W3yfrFyL9C1pHcwY5hmRHVDaorTiQxhYBkKyu5mEDHw=
+github.com/ethereum/go-ethereum v1.10.13/go.mod h1:W3yfrFyL9C1pHcwY5hmRHVDaorTiQxhYBkKyu5mEDHw=
 github.com/evanphx/json-patch v0.0.0-20200808040245-162e5629780b/go.mod h1:NAJj0yf/KaRKURN6nyi7A9IZydMivZEm9oQLWNjfKDc=
 github.com/evanphx/json-patch v0.5.2/go.mod h1:ZWS5hhDbVDyob71nXKNL0+PWn6ToqBHMikGIFbs31qQ=
 github.com/evanphx/json-patch v4.2.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=

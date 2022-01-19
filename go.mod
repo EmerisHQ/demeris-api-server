@@ -11,9 +11,9 @@ replace (
 
 require (
 	github.com/alicebob/miniredis/v2 v2.16.1
-	github.com/allinbits/demeris-backend-models v0.0.0-20211202094520-07017cad0218
+	github.com/allinbits/demeris-backend-models v0.1.0
 	github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded
-	github.com/allinbits/emeris-utils v0.0.0-20220111144137-74da43e7bb11
+	github.com/allinbits/emeris-utils v0.1.0
 	github.com/allinbits/sdk-service-meta v0.0.0-20220114142340-a44e073d0b27
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cockroachdb/cockroach-go/v2 v2.1.1
@@ -68,7 +68,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v0.0.0-20200901110807-248326c1351b // indirect
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25 // indirect
-	github.com/ethereum/go-ethereum v1.10.12 // indirect
+	github.com/ethereum/go-ethereum v1.10.13 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
