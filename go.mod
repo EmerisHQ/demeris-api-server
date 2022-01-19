@@ -26,7 +26,7 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/sony/sonyflake v1.0.0
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	github.com/swaggo/swag v1.7.4
+	github.com/swaggo/swag v1.7.8
 	github.com/tendermint/tendermint v0.34.11
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.20.0
@@ -78,9 +78,9 @@ require (
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.5 // indirect
-	github.com/go-openapi/spec v0.20.3 // indirect
-	github.com/go-openapi/swag v0.19.14 // indirect
+	github.com/go-openapi/jsonreference v0.19.6 // indirect
+	github.com/go-openapi/spec v0.20.4 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-redis/redis/v8 v8.8.3 // indirect
