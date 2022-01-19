@@ -13,6 +13,15 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// paths for packet_sequence and tx from the events,
+// can be updated to more readable format after typed events are introduced in sdk
+const (
+	// packetSequencePath may need updates if ibc-go/transfer events change
+	packetSequencePath = "tx_response.logs.0.events.2.attributes.3.value"
+	// txPath may need updates if tendermint response changes
+	txPath = "result.txs.0.hash"
+)
+
 // GetDestTx returns tx hash on destination chain.
 // @Summary Gets tx hash on destination chain.
 // @Tags Tx
@@ -32,16 +41,16 @@ func GetDestTx(c *gin.Context) {
 	destChain := c.Param("destChain")
 	txHash := c.Param("txHash")
 
-	chain, err := d.Database.Chain(srcChain)
+	srcChainInfo, err := d.Database.Chain(srcChain)
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve chain with name %v", srcChain),
+			fmt.Errorf("cannot retrieve srcChainInfo with name %v", srcChain),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve chain",
+			"cannot retrieve srcChainInfo",
 			"id",
 			e.ID,
 			"name",
@@ -53,16 +62,38 @@ func GetDestTx(c *gin.Context) {
 		return
 	}
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	// validate destination srcChainInfo is present
+	destChainInfo, err := d.Database.Chain(destChain)
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			fmt.Errorf("cannot retrieve srcChainInfo with name %v", destChain),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve chain's sdk-service",
+			"cannot retrieve srcChainInfo",
+			"id",
+			e.ID,
+			"name",
+			destChain,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(srcChainInfo.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with srcChainInfo name %v", srcChainInfo.CosmosSDKVersion, srcChainInfo.ChainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve srcChainInfo's sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -75,7 +106,7 @@ func GetDestTx(c *gin.Context) {
 	}
 
 	sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
-		ChainName: srcChain,
+		ChainName: srcChainInfo.ChainName,
 		Hash:      txHash,
 	})
 
@@ -92,7 +123,7 @@ func GetDestTx(c *gin.Context) {
 			e.ID,
 			"txHash",
 			txHash,
-			"src chain name",
+			"src srcChainInfo name",
 			srcChain,
 			"error",
 			err,
@@ -101,10 +132,10 @@ func GetDestTx(c *gin.Context) {
 		return
 	}
 
-	r := gjson.GetBytes(sdkRes, "tx_response.logs.0.events.2.attributes.3.value")
-	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChain, r.String())
+	r := gjson.GetBytes(sdkRes, packetSequencePath)
+	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, r.String())
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // nolint: gosec - we're validating inputs and hence G107 can be ignored
 	if err != nil {
 		e := deps.NewError(
 			"chains",
@@ -118,7 +149,7 @@ func GetDestTx(c *gin.Context) {
 			e.ID,
 			"txHash",
 			txHash,
-			"dest chain name",
+			"dest srcChainInfo name",
 			destChain,
 			"error",
 			err,
@@ -142,7 +173,7 @@ func GetDestTx(c *gin.Context) {
 			e.ID,
 			"txHash",
 			txHash,
-			"dest chain name",
+			"dest srcChainInfo name",
 			destChain,
 			"error",
 			err,
@@ -151,7 +182,7 @@ func GetDestTx(c *gin.Context) {
 		return
 	}
 
-	r = gjson.GetBytes(bz, "result.txs.0.hash")
+	r = gjson.GetBytes(bz, txPath)
 	c.JSON(http.StatusOK, DestTxResponse{
 		DestChain: destChain,
 		TxHash:    r.String(),
