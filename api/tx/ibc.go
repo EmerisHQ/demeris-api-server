@@ -135,7 +135,8 @@ func GetDestTx(c *gin.Context) {
 	r := gjson.GetBytes(sdkRes, packetSequencePath)
 	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, r.String())
 
-	resp, err := http.Get(url) // nolint: gosec - we're validating inputs and hence G107 can be ignored
+	// we're validating inputs and hence gosec-G107 can be ignored
+	resp, err := http.Get(url) // nolint: gosec
 	if err != nil {
 		e := deps.NewError(
 			"chains",
