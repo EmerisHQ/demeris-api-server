@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
@@ -19,7 +20,8 @@ const (
 	// packetSequencePath may need updates if ibc-go/transfer events change
 	packetSequencePath = "tx_response.logs.0.events.2.attributes.3.value"
 	// txPath may need updates if tendermint response changes
-	txPath = "result.txs.0.hash"
+	txPath  = "result.txs.0.hash"
+	timeout = 10 * time.Second
 )
 
 // GetDestTx returns tx hash on destination chain.
@@ -37,9 +39,9 @@ const (
 func GetDestTx(c *gin.Context) {
 	d := deps.GetDeps(c)
 
-	srcChain := c.Param("srcChain")
-	destChain := c.Param("destChain")
-	txHash := c.Param("txHash")
+	srcChain := c.Param("src-chain")
+	destChain := c.Param("dest-chain")
+	txHash := c.Param("tx-hash")
 
 	srcChainInfo, err := d.Database.Chain(srcChain)
 	if err != nil {
@@ -135,8 +137,12 @@ func GetDestTx(c *gin.Context) {
 	r := gjson.GetBytes(sdkRes, packetSequencePath)
 	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, r.String())
 
+	httpClient := &http.Client{
+		Timeout: timeout,
+	}
+
 	// we're validating inputs and hence gosec-G107 can be ignored
-	resp, err := http.Get(url) // nolint: gosec
+	resp, err := httpClient.Get(url) // nolint: gosec
 	if err != nil {
 		e := deps.NewError(
 			"chains",
