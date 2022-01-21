@@ -247,12 +247,16 @@ func GetPrimaryChannels(c *gin.Context) {
 
 	chainName := c.Param("chain")
 
-	if _, err := d.Database.Chain(chainName); err != nil {
+	if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
 		e := deps.NewError(
-			"primarychannels",
+			"primarychannel",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		)
+
+		if err == nil {
+			err = fmt.Errorf("%s chain doesnt exists", chainName)
+		}
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
