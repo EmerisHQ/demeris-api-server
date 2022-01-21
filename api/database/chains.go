@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fmt"
+	"database/sql"
 
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
@@ -28,10 +28,15 @@ func (d *Database) Chain(name string) (cns.Chain, error) {
 }
 
 func (d *Database) ChainExists(name string) (bool, error) {
-	query := fmt.Sprintf("select tables like '%s'", name)
-	rows, err := d.dbi.DB.Query(query)
+	var exists bool
+	query := "select exists (select * from cns.chains where chain_name=:name and enabled=TRUE limit 1)"
 
-	return rows.Next(), err
+	err := d.dbi.DB.QueryRow(query).Scan(&exists)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	return exists, err
 }
 
 func (d *Database) ChainFromChainID(chainID string) (cns.Chain, error) {
