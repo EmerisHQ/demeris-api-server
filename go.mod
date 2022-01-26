@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.42.8
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.0
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/gravity-devs/liquidity v1.2.9
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/lib/pq v1.10.4
