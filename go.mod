@@ -10,7 +10,7 @@ replace (
 )
 
 require (
-	github.com/alicebob/miniredis/v2 v2.16.1
+	github.com/alicebob/miniredis/v2 v2.18.0
 	github.com/allinbits/demeris-backend-models v1.0.0
 	github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded
 	github.com/allinbits/emeris-utils v0.1.0
