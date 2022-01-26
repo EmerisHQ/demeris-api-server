@@ -13,7 +13,6 @@ func TestMain(m *testing.M) {
 
 	// global setup
 	testingCtx = utils.Setup()
-	_ = testingCtx // suppress compiler error, testingCtx is used in pkg tests
 
 	// Run test suites
 	exitVal := m.Run()

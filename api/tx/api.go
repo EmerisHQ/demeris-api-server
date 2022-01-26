@@ -14,6 +14,7 @@ import (
 
 func Register(router *gin.Engine) {
 	router.POST("/tx/:chain", Tx)
+	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx)
 	router.POST("/tx/:chain/simulate", GetTxFeeEstimate)
 	router.GET("/tx/ticket/:chain/:ticket", GetTicket)
 }

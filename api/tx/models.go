@@ -33,3 +33,8 @@ type TxFeeEstimateRes struct {
 	GasUsed   uint64
 	Fees      []sdktypes.Coin
 }
+
+type DestTxResponse struct {
+	DestChain string `json:"dest_chain"`
+	TxHash    string `json:"tx_hash"`
+}
