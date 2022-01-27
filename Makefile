@@ -15,8 +15,16 @@ generate-swagger:
 	go generate ${BASEPKG}/docs
 	@rm docs/docs.go
 
+test:
+	go test -v -race ./... -cover
+
 lint:
 	golangci-lint run ./...
+
+generate-mocks:
+	@rm mocks/*.go || true
+	mockery --srcpkg sigs.k8s.io/controller-runtime/pkg/client --name Client
+	mockery --srcpkg k8s.io/client-go/informers --name GenericInformer
 
 $(OBJS):
 	go build -o build/$@ -ldflags='-X main.Version=${BRANCH}-${COMMIT}' ${EXTRAFLAGS} ${BASEPKG}/cmd/$@
