@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql"
+
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
 )
@@ -23,6 +25,18 @@ func (d *Database) Chain(name string) (cns.Chain, error) {
 	return c, n.Get(&c, map[string]interface{}{
 		"name": name,
 	})
+}
+
+func (d *Database) ChainExists(name string) (bool, error) {
+	var exists bool
+	query := "select exists (select * from cns.chains where chain_name=($1) and enabled=TRUE limit 1)"
+
+	err := d.dbi.DB.QueryRow(query, name).Scan(&exists)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	return exists, err
 }
 
 func (d *Database) ChainFromChainID(chainID string) (cns.Chain, error) {
