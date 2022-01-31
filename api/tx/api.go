@@ -184,7 +184,7 @@ func GetTicket(c *gin.Context) {
 // GetTxFeeEstimate returns the estimated gas and fee price for specified chain.
 // @Summary estimates the gas and fees fot transaction.
 // @Tags Tx
-// @ID tx
+// @ID txFees
 // @Description estimate transaction fees for the relevant chain.
 // @Param chainName path string true "chain name"
 // @Produce json
