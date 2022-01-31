@@ -73,10 +73,10 @@ func New(
 
 	validation.JSONFields(binding.Validator)
 
-	engine.Use(r.catchPanicsFunc)
 	if debug {
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
+	engine.Use(r.catchPanicsFunc)
 	engine.Use(r.decorateCtxWithDeps)
 	engine.Use(r.handleErrors)
 	engine.RedirectTrailingSlash = false
@@ -92,7 +92,7 @@ func (r *Router) Serve(address string) error {
 }
 
 func (r *Router) catchPanicsFunc(c *gin.Context) {
-	l := getLoggerFromContext(c)
+	l := GetLoggerFromContext(c)
 	defer func() {
 		if rval := recover(); rval != nil {
 			// okay we panic-ed, log it through r's logger and write back internal server error
@@ -120,7 +120,7 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 }
 
 func (r *Router) decorateCtxWithDeps(c *gin.Context) {
-	l := getLoggerFromContext(c)
+	l := GetLoggerFromContext(c)
 
 	c.Set("deps", &deps.Deps{
 		Logger:           l,
