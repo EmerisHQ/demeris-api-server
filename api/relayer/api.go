@@ -54,7 +54,7 @@ func getRelayerStatus(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query relayer status",
 			"id",
 			e.ID,
@@ -75,7 +75,7 @@ func getRelayerStatus(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot unstructure relayer status",
 			"id",
 			e.ID,
@@ -121,7 +121,7 @@ func getRelayerBalance(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query relayer status",
 			"id",
 			e.ID,
@@ -142,7 +142,7 @@ func getRelayerBalance(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot unstructure relayer status",
 			"id",
 			e.ID,
@@ -168,7 +168,7 @@ func getRelayerBalance(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve relayer status",
 			"id",
 			e.ID,
@@ -193,7 +193,7 @@ func getRelayerBalance(c *gin.Context) {
 				http.StatusBadRequest,
 			)
 
-			d.WriteError(c, e,
+			apierror.WriteError(d.Logger, c, e,
 				"cannot retrieve relayer status",
 				"id",
 				e.ID,

@@ -39,7 +39,7 @@ func GetBlock(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query block, missing height",
 			"id",
 			e.ID,
@@ -55,7 +55,7 @@ func GetBlock(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query block, malformed height",
 			"id",
 			e.ID,
@@ -77,7 +77,7 @@ func GetBlock(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query block from redis",
 			"id",
 			e.ID,

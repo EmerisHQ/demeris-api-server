@@ -46,7 +46,7 @@ func GetChains(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chains",
 			"id",
 			e.ID,
@@ -94,7 +94,7 @@ func GetChain(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -138,7 +138,7 @@ func GetChainBech32Config(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -186,7 +186,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 			err = fmt.Errorf("%s chain doesnt exists", chainName)
 		}
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -208,7 +208,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -259,7 +259,7 @@ func GetPrimaryChannels(c *gin.Context) {
 			err = fmt.Errorf("%s chain doesnt exists", chainName)
 		}
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -281,7 +281,7 @@ func GetPrimaryChannels(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -333,7 +333,7 @@ func VerifyTrace(c *gin.Context) {
 
 		cause := fmt.Sprintf("token hash %v not found on chain %v", hash, chainName)
 
-		d.LogError(
+		apierror.LogError(d.Logger,
 			cause,
 			"hash",
 			hash,
@@ -361,7 +361,7 @@ func VerifyTrace(c *gin.Context) {
 
 		cause := fmt.Sprintf("unsupported path %s", res.VerifiedTrace.Path)
 
-		d.LogError(
+		apierror.LogError(d.Logger,
 			"invalid denom",
 			"hash",
 			hash,
@@ -391,7 +391,7 @@ func VerifyTrace(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query list of chain ids",
 			"id",
 			e.ID,
@@ -411,7 +411,7 @@ func VerifyTrace(c *gin.Context) {
 		if !strings.HasPrefix(element, "transfer/") {
 			cause := fmt.Sprintf("Unsupported path %s", res.VerifiedTrace.Path)
 
-			d.LogError(
+			apierror.LogError(d.Logger,
 				"invalid denom",
 				"hash",
 				hash,
@@ -437,7 +437,7 @@ func VerifyTrace(c *gin.Context) {
 		chainID, ok := chainIDsMap[nextChain]
 		if !ok {
 
-			d.LogError(
+			apierror.LogError(d.Logger,
 				"cannot check path element during path resolution",
 				"hash",
 				hash,
@@ -459,7 +459,7 @@ func VerifyTrace(c *gin.Context) {
 
 		if err != nil {
 			if errors.As(err, &database.ErrNoMatchingChannel{}) {
-				d.LogError(
+				apierror.LogError(d.Logger,
 					err.Error(),
 					"hash",
 					hash,
@@ -480,7 +480,7 @@ func VerifyTrace(c *gin.Context) {
 					http.StatusBadRequest,
 				)
 
-				d.WriteError(c, e1,
+				apierror.WriteError(d.Logger, c, e1,
 					"invalid number of query responses",
 					"id",
 					e1.ID,
@@ -510,7 +510,7 @@ func VerifyTrace(c *gin.Context) {
 				http.StatusBadRequest,
 			)
 
-			d.WriteError(c, e,
+			apierror.WriteError(d.Logger, c, e,
 				"cannot query primary channel information",
 				"id",
 				e.ID,
@@ -538,7 +538,7 @@ func VerifyTrace(c *gin.Context) {
 			// 	http.StatusBadRequest,
 			// )
 
-			// d.WriteError(c, e,
+			// apierror.WriteError(d.Logger, c, e,
 			// 	"not primary channel",
 			// 	"id",
 			// 	e.ID,
@@ -562,7 +562,7 @@ func VerifyTrace(c *gin.Context) {
 	nextChainData, err := d.Database.Chain(nextChain)
 	if err != nil {
 
-		d.LogError(
+		apierror.LogError(d.Logger,
 			"cannot query chain",
 			"hash",
 			hash,
@@ -589,7 +589,7 @@ func VerifyTrace(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			fmt.Sprintf("cannot query chain with name %s", nextChain),
 			"id",
 			e.ID,
@@ -674,7 +674,7 @@ func GetChainStatus(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain last block time",
 			"id",
 			e.ID,
@@ -695,7 +695,7 @@ func GetChainStatus(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -744,7 +744,7 @@ func GetChainSupply(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -765,7 +765,7 @@ func GetChainSupply(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -789,7 +789,7 @@ func GetChainSupply(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve supply from sdk-service",
 			"id",
 			e.ID,
@@ -839,7 +839,7 @@ func GetChainTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -860,7 +860,7 @@ func GetChainTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -885,7 +885,7 @@ func GetChainTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve tx from sdk-service",
 			"id",
 			e.ID,
@@ -925,7 +925,7 @@ func GetNumbersByAddress(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query chain info for address",
 			"id",
 			e.ID,
@@ -948,7 +948,7 @@ func GetNumbersByAddress(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query nodes auth for address",
 			"id",
 			e.ID,
@@ -989,7 +989,7 @@ func GetInflation(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -1010,7 +1010,7 @@ func GetInflation(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -1034,7 +1034,7 @@ func GetInflation(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve inflation from sdk-service",
 			"id",
 			e.ID,
@@ -1073,7 +1073,7 @@ func GetMintParams(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -1094,7 +1094,7 @@ func GetMintParams(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -1118,7 +1118,7 @@ func GetMintParams(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve mint params from sdk-service",
 			"id",
 			e.ID,
@@ -1157,7 +1157,7 @@ func GetAnnualProvisions(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -1178,7 +1178,7 @@ func GetAnnualProvisions(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -1202,7 +1202,7 @@ func GetAnnualProvisions(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve mint annual provision from sdk-service",
 			"id",
 			e.ID,

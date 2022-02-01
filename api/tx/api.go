@@ -43,7 +43,7 @@ func Tx(c *gin.Context) {
 	if err != nil {
 		e := apierror.New("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"Failed to parse JSON",
 			"id",
 			e.ID,
@@ -62,7 +62,7 @@ func Tx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -83,7 +83,7 @@ func Tx(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -101,7 +101,7 @@ func Tx(c *gin.Context) {
 	if err != nil {
 		e := apierror.New("tx", fmt.Errorf("relaying tx failed, %w", err), http.StatusBadRequest)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"relaying tx failed",
 			"id",
 			e.ID,
@@ -166,7 +166,7 @@ func GetTicket(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve ticket",
 			"id",
 			e.ID,
@@ -202,7 +202,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 	if err != nil {
 		e := apierror.New("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"Failed to parse JSON",
 			"id",
 			e.ID,
@@ -221,7 +221,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -242,7 +242,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -267,7 +267,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot estimate fees from sdk-service",
 			"id",
 			e.ID,

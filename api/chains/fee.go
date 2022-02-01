@@ -35,7 +35,7 @@ func GetFee(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -81,7 +81,7 @@ func GetFeeAddress(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -124,7 +124,7 @@ func GetFeeAddresses(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chains",
 			"id",
 			e.ID,
@@ -174,7 +174,7 @@ func GetFeeToken(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,

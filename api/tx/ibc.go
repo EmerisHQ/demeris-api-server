@@ -52,7 +52,7 @@ func GetDestTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve srcChainInfo",
 			"id",
 			e.ID,
@@ -74,7 +74,7 @@ func GetDestTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve srcChainInfo",
 			"id",
 			e.ID,
@@ -95,7 +95,7 @@ func GetDestTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve srcChainInfo's sdk-service",
 			"id",
 			e.ID,
@@ -120,7 +120,7 @@ func GetDestTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve tx from sdk-service",
 			"id",
 			e.ID,
@@ -151,7 +151,7 @@ func GetDestTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve destination tx",
 			"id",
 			e.ID,
@@ -175,7 +175,7 @@ func GetDestTx(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve destination tx",
 			"id",
 			e.ID,

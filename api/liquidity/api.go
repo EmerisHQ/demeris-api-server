@@ -40,7 +40,7 @@ func getSwapFee(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot get swap fees",
 			"id",
 			e.ID,

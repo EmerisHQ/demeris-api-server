@@ -54,7 +54,7 @@ func GetBalancesByAddress(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query database balance for address",
 			"id",
 			e.ID,
@@ -74,7 +74,7 @@ func GetBalancesByAddress(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query database verified denoms",
 			"id",
 			e.ID,
@@ -187,7 +187,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query database delegations for addresses",
 			"id",
 			e.ID,
@@ -237,7 +237,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query database unbonding delegations for addresses",
 			"id",
 			e.ID,
@@ -290,7 +290,7 @@ func GetDelegatorRewards(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -311,7 +311,7 @@ func GetDelegatorRewards(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain's sdk-service",
 			"id",
 			e.ID,
@@ -337,7 +337,7 @@ func GetDelegatorRewards(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve delegator rewards from sdk-service",
 			"id",
 			e.ID,
@@ -413,7 +413,7 @@ func GetNumbersByAddress(c *gin.Context) {
 				http.StatusBadRequest,
 			)
 
-			d.WriteError(c, e,
+			apierror.WriteError(d.Logger, c, e,
 				"cannot query database auth for addresses",
 				"id",
 				e.ID,
@@ -434,7 +434,7 @@ func GetNumbersByAddress(c *gin.Context) {
 			http.StatusInternalServerError,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query nodes auth for addresses",
 			"id",
 			e.ID,
@@ -465,7 +465,7 @@ func GetUserTickets(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query store for tickets",
 			"address",
 			address,

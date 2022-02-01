@@ -39,7 +39,7 @@ func getPools(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot query pools",
 			"id",
 			e.ID,
@@ -73,7 +73,7 @@ func getParams(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve params",
 			"id",
 			e.ID,
@@ -107,7 +107,7 @@ func getSupply(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve total supply",
 			"id",
 			e.ID,
@@ -141,7 +141,7 @@ func getNodeInfo(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve node_info",
 			"id",
 			e.ID,

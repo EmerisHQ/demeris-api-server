@@ -35,7 +35,7 @@ func GetValidators(c *gin.Context) {
 			err = fmt.Errorf("%s chain doesnt exists", chainName)
 		}
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve chain",
 			"id",
 			e.ID,
@@ -57,7 +57,7 @@ func GetValidators(c *gin.Context) {
 			http.StatusBadRequest,
 		)
 
-		d.WriteError(c, e,
+		apierror.WriteError(d.Logger, c, e,
 			"cannot retrieve validators",
 			"id",
 			e.ID,
