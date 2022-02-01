@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sony/sonyflake"
+	"go.uber.org/zap"
 )
 
 var flake *sonyflake.Sonyflake
@@ -47,5 +49,21 @@ func New(namespace string, cause error, statusCode int) Error {
 		Namespace:     namespace,
 		LowLevelError: cause,
 		Cause:         cause.Error(),
+	}
+}
+
+// WriteError logs and return client-facing errors
+func WriteError(logger *zap.SugaredLogger, c *gin.Context, err Error, logMessage string, keyAndValues ...interface{}) {
+	_ = c.Error(err)
+	LogError(logger, logMessage, keyAndValues...)
+}
+
+// LogError logs errors internally without altering the http response
+func LogError(logger *zap.SugaredLogger, logMessage string, keyAndValues ...interface{}) {
+	if keyAndValues != nil {
+		logger.Errorw(
+			logMessage,
+			keyAndValues...,
+		)
 	}
 }
