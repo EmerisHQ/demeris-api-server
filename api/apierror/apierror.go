@@ -1,4 +1,4 @@
-package deps
+package apierror
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ func (e Error) Unwrap() error {
 	return e.LowLevelError
 }
 
-func NewError(namespace string, cause error, statusCode int) Error {
+func New(namespace string, cause error, statusCode int) Error {
 	id, err := flake.NextID()
 	if err != nil {
 		panic(fmt.Errorf("cannot create sonyflake, %w", err))
