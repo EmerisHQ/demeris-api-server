@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/allinbits/emeris-utils/exported/sdktypes"
-
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/allinbits/demeris-api-server/api/apierror"
 	"github.com/allinbits/demeris-api-server/api/apiutils"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
+	"github.com/allinbits/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 )
 
@@ -48,7 +48,7 @@ func GetBalancesByAddress(c *gin.Context) {
 	balances, err := d.Database.Balances(address)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"account",
 			fmt.Errorf("cannot retrieve account for address %v", address),
 			http.StatusBadRequest,
@@ -68,7 +68,7 @@ func GetBalancesByAddress(c *gin.Context) {
 
 	vd, err := verifiedDenomsMap(d.Database)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"account",
 			fmt.Errorf("cannot retrieve account for address %v", address),
 			http.StatusBadRequest,
@@ -181,7 +181,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 	dl, err := d.Database.Delegations(address)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"delegations",
 			fmt.Errorf("cannot retrieve delegations for address %v", address),
 			http.StatusBadRequest,
@@ -231,7 +231,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 	unbondings, err := d.Database.UnbondingDelegations(address)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"unbonding delegations",
 			fmt.Errorf("cannot retrieve unbonding delegations for address %v", address),
 			http.StatusBadRequest,
@@ -284,7 +284,7 @@ func GetDelegatorRewards(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -305,7 +305,7 @@ func GetDelegatorRewards(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusInternalServerError,
@@ -331,7 +331,7 @@ func GetDelegatorRewards(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
 			http.StatusInternalServerError,
@@ -407,7 +407,7 @@ func GetNumbersByAddress(c *gin.Context) {
 		dl, err := d.Database.Numbers(address)
 
 		if err != nil {
-			e := deps.NewError(
+			e := apierror.New(
 				"numbers",
 				fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
 				http.StatusBadRequest,
@@ -428,7 +428,7 @@ func GetNumbersByAddress(c *gin.Context) {
 
 	resp, err := fetchNumbers(dd, address)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"numbers",
 			fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
 			http.StatusInternalServerError,
@@ -459,7 +459,7 @@ func GetUserTickets(c *gin.Context) {
 
 	tickets, err := d.Store.GetUserTickets(address)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"tickets",
 			fmt.Errorf("cannot retrieve tickets for address %v", address),
 			http.StatusBadRequest,

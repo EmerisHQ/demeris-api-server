@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/allinbits/demeris-api-server/api/apierror"
 	"github.com/allinbits/demeris-api-server/api/apiutils"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
@@ -39,7 +40,7 @@ func GetChains(c *gin.Context) {
 	chains, err := d.Database.SimpleChains()
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chains"),
 			http.StatusBadRequest,
@@ -87,7 +88,7 @@ func GetChain(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -131,7 +132,7 @@ func GetChainBech32Config(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -175,7 +176,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 	counterparty := c.Param("counterparty")
 
 	if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
-		e := deps.NewError(
+		e := apierror.New(
 			"primarychannel",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -201,7 +202,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 	chain, err := d.Database.PrimaryChannelCounterparty(chainName, counterparty)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"primarychannel",
 			fmt.Errorf("cannot retrieve primary channel between %v and %v", chainName, counterparty),
 			http.StatusBadRequest,
@@ -248,7 +249,7 @@ func GetPrimaryChannels(c *gin.Context) {
 	chainName := c.Param("chain")
 
 	if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
-		e := deps.NewError(
+		e := apierror.New(
 			"primarychannel",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -274,7 +275,7 @@ func GetPrimaryChannels(c *gin.Context) {
 	chain, err := d.Database.PrimaryChannels(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"primarychannel",
 			fmt.Errorf("cannot retrieve primary channels for %v", chainName),
 			http.StatusBadRequest,
@@ -384,7 +385,7 @@ func VerifyTrace(c *gin.Context) {
 
 		err = fmt.Errorf("cannot query list of chain ids, %w", err)
 
-		e := deps.NewError(
+		e := apierror.New(
 			"denom/verify-trace",
 			fmt.Errorf("cannot query list of chain ids"),
 			http.StatusBadRequest,
@@ -473,7 +474,7 @@ func VerifyTrace(c *gin.Context) {
 
 				c.JSON(http.StatusOK, res)
 			} else {
-				e1 := deps.NewError(
+				e1 := apierror.New(
 					"denom/verify-trace",
 					fmt.Errorf("failed querying for %s", hash),
 					http.StatusBadRequest,
@@ -503,7 +504,7 @@ func VerifyTrace(c *gin.Context) {
 		primaryChannelInfo, err := d.Database.PrimaryChannelCounterparty(chainName, nextChain)
 
 		if err != nil {
-			e := deps.NewError(
+			e := apierror.New(
 				"denom/verify-trace",
 				fmt.Errorf("failed to get primary channel for %s", hash),
 				http.StatusBadRequest,
@@ -531,7 +532,7 @@ func VerifyTrace(c *gin.Context) {
 		if primaryChannelInfo.ChannelName != channel {
 
 			// save this for the error message when the cause pr is merged
-			// e := deps.NewError(
+			// e := deps.New(
 			// 	"denom/verify-trace",
 			// 	fmt.Errorf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo, channel),
 			// 	http.StatusBadRequest,
@@ -582,7 +583,7 @@ func VerifyTrace(c *gin.Context) {
 			return
 		}
 
-		e := deps.NewError(
+		e := apierror.New(
 			"denom/verify-trace",
 			fmt.Errorf("database error, %w", err),
 			http.StatusInternalServerError,
@@ -667,7 +668,7 @@ func GetChainStatus(c *gin.Context) {
 
 	cbt, err := d.Database.ChainLastBlock(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"status",
 			fmt.Errorf("cannot retrieve chain status for %v", chainName),
 			http.StatusBadRequest,
@@ -688,7 +689,7 @@ func GetChainStatus(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"status",
 			fmt.Errorf("cannot retrieve chain status for %v", chainName),
 			http.StatusBadRequest,
@@ -737,7 +738,7 @@ func GetChainSupply(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -758,7 +759,7 @@ func GetChainSupply(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
@@ -782,7 +783,7 @@ func GetChainSupply(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve supply from sdk-service"),
 			http.StatusBadRequest,
@@ -832,7 +833,7 @@ func GetChainTx(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -853,7 +854,7 @@ func GetChainTx(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
@@ -878,7 +879,7 @@ func GetChainTx(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve tx from sdk-service, %w", err),
 			http.StatusBadRequest,
@@ -918,7 +919,7 @@ func GetNumbersByAddress(c *gin.Context) {
 
 	chainInfo, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"numbers",
 			fmt.Errorf("cannot retrieve chain data for chain %s", chainName),
 			http.StatusBadRequest,
@@ -941,7 +942,7 @@ func GetNumbersByAddress(c *gin.Context) {
 
 	resp, err := apiutils.FetchAccountNumbers(chainInfo, address)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"numbers",
 			fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
 			http.StatusBadRequest,
@@ -982,7 +983,7 @@ func GetInflation(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -1003,7 +1004,7 @@ func GetInflation(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
@@ -1027,7 +1028,7 @@ func GetInflation(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve inflation from sdk-service"),
 			http.StatusBadRequest,
@@ -1066,7 +1067,7 @@ func GetMintParams(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -1087,7 +1088,7 @@ func GetMintParams(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
@@ -1111,7 +1112,7 @@ func GetMintParams(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve mint params from sdk-service"),
 			http.StatusBadRequest,
@@ -1150,7 +1151,7 @@ func GetAnnualProvisions(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -1171,7 +1172,7 @@ func GetAnnualProvisions(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
@@ -1195,7 +1196,7 @@ func GetAnnualProvisions(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"chains",
 			fmt.Errorf("cannot retrieve mint annual provision from sdk-service"),
 			http.StatusBadRequest,

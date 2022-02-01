@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/allinbits/demeris-api-server/api/apierror"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +25,7 @@ func GetValidators(c *gin.Context) {
 	chainName := c.Param("chain")
 
 	if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
-		e := deps.NewError(
+		e := apierror.New(
 			"primarychannel",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -50,7 +51,7 @@ func GetValidators(c *gin.Context) {
 	validators, err := d.Database.GetValidators(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"validators",
 			fmt.Errorf("cannot retrieve validators"),
 			http.StatusBadRequest,

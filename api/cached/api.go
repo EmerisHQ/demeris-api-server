@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/allinbits/demeris-api-server/api/apierror"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/gin-gonic/gin"
 	_ "github.com/gravity-devs/liquidity/x/liquidity/types"
@@ -32,7 +33,7 @@ func getPools(c *gin.Context) {
 
 	res, err := d.Store.GetPools()
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"pools",
 			fmt.Errorf("cannot retrieve pools"),
 			http.StatusBadRequest,
@@ -66,7 +67,7 @@ func getParams(c *gin.Context) {
 
 	res, err := d.Store.GetParams()
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"params",
 			fmt.Errorf("cannot retrieve params"),
 			http.StatusBadRequest,
@@ -100,7 +101,7 @@ func getSupply(c *gin.Context) {
 
 	res, err := d.Store.GetSupply()
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"supply",
 			fmt.Errorf("cannot retrieve total supply"),
 			http.StatusBadRequest,
@@ -134,7 +135,7 @@ func getNodeInfo(c *gin.Context) {
 
 	res, err := d.Store.GetNodeInfo()
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"node_info",
 			fmt.Errorf("cannot retrieve node_info"),
 			http.StatusBadRequest,

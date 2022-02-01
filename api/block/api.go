@@ -8,9 +8,9 @@ import (
 	// needed for swagger gen
 	_ "encoding/json"
 
-	"github.com/allinbits/emeris-utils/store"
-
+	"github.com/allinbits/demeris-api-server/api/apierror"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/allinbits/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,7 +33,7 @@ func GetBlock(c *gin.Context) {
 
 	h := c.Query("height")
 	if h == "" {
-		e := deps.NewError(
+		e := apierror.New(
 			"block",
 			fmt.Errorf("missing height"),
 			http.StatusBadRequest,
@@ -49,7 +49,7 @@ func GetBlock(c *gin.Context) {
 
 	hh, err := strconv.ParseInt(h, 10, 64)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"block",
 			fmt.Errorf("malformed height"),
 			http.StatusBadRequest,
@@ -71,7 +71,7 @@ func GetBlock(c *gin.Context) {
 
 	bd, err := bs.Block(hh)
 	if err != nil {
-		e := deps.NewError(
+		e := apierror.New(
 			"block",
 			fmt.Errorf("cannot get block at height %v", hh),
 			http.StatusBadRequest,

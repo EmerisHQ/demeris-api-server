@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/allinbits/demeris-api-server/api/apierror"
 	"github.com/allinbits/demeris-api-server/api/block"
 	"github.com/allinbits/demeris-api-server/api/cached"
 	"github.com/allinbits/demeris-api-server/api/liquidity"
@@ -93,7 +94,7 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 	defer func() {
 		if rval := recover(); rval != nil {
 			// okay we panic-ed, log it through r's logger and write back internal server error
-			err := deps.NewError(
+			err := apierror.New(
 				"fatal_error",
 				errors.New("internal server error"),
 				http.StatusInternalServerError)
@@ -136,7 +137,7 @@ func (r *Router) handleErrors(c *gin.Context) {
 		return
 	}
 
-	rerr := deps.Error{}
+	rerr := apierror.Error{}
 	if !errors.As(l, &rerr) {
 		panic(l)
 	}
