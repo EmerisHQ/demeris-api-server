@@ -100,7 +100,7 @@ var chainWithPublicEndpoints = cns.Chain{
 	SupportedWallets: pq.StringArray([]string{"keplr"}),
 	BlockExplorer:    "http://explorer.com",
 	PublicNodeEndpoints: cns.PublicNodeEndpoints{
-		TendermintRPC: "https://www.host.com:1234",
-		CosmosAPI:     "https://host.foo.bar:2345",
+		TendermintRPC: []string{"https://www.host.com:1234"},
+		CosmosAPI:     []string{"https://host.foo.bar:2345"},
 	},
 }

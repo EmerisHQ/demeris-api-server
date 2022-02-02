@@ -14,6 +14,7 @@ import (
 
 func Register(router *gin.Engine) {
 	router.POST("/tx/:chain", Tx)
+	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx)
 	router.POST("/tx/:chain/simulate", GetTxFeeEstimate)
 	router.GET("/tx/ticket/:chain/:ticket", GetTicket)
 }
@@ -183,7 +184,7 @@ func GetTicket(c *gin.Context) {
 // GetTxFeeEstimate returns the estimated gas and fee price for specified chain.
 // @Summary estimates the gas and fees fot transaction.
 // @Tags Tx
-// @ID tx
+// @ID txFees
 // @Description estimate transaction fees for the relevant chain.
 // @Param chainName path string true "chain name"
 // @Produce json
