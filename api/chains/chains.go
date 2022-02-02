@@ -12,7 +12,9 @@ import (
 	// needed for swagger gen
 	_ "encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc"
 
 	"github.com/allinbits/demeris-api-server/api/apiutils"
 	"github.com/allinbits/demeris-api-server/api/database"
@@ -1167,4 +1169,133 @@ func GetAnnualProvisions(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintAnnualProvision)
+}
+
+// GetChannelIsFresh returns the annual provisions of a specific chain
+// @Summary Gets the annual provisions of a chain
+// @Description Gets annual provisions
+// @Tags Chain
+// @ID get-annual-provisions
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 500,403 {object} deps.Error
+// @Router /chain/{chainName}/mint/annual_provisions [get]
+func GetChannelIsFresh(c *gin.Context) {
+	d := deps.GetDeps(c)
+
+	chainName := c.Param("chain")
+	channelId := c.Param("channelId")
+
+	Channel, err := d.Database.GetIbcChannelOfChain(chainName, channelId)
+	d.Logger.Infow("value", "Channel", Channel)
+	if err != nil {
+		e := deps.NewError(
+			"Channel freshness",
+			fmt.Errorf("cannot get Channel info of %s on chain %s ", channelId, chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot encode address to bech32",
+			"id",
+			e.ID,
+			"Channel",
+			channelId,
+			"error",
+			err,
+		)
+
+		return
+	}
+	if len(Channel.Hops) != 1 {
+		e := deps.NewError(
+			"Channel freshness",
+			fmt.Errorf("cannot get Channel info of %s on chain %s ", channelId, chainName),
+			http.StatusInternalServerError,
+		)
+
+		d.WriteError(c, e,
+			"cannot encode address to bech32",
+			"id",
+			e.ID,
+			"Channel",
+			channelId,
+			"error",
+			err,
+		)
+	}
+
+	connectionId := Channel.Hops[0]
+
+	connectionInfo, err := d.Database.Connection(chainName, connectionId)
+	if err != nil {
+		e := deps.NewError(
+			"Channel freshness",
+			fmt.Errorf("cannot get connection info of %s on chain %s ", channelId, chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot encode address to bech32",
+			"id",
+			e.ID,
+			"Channel",
+			channelId,
+			"error",
+			err,
+		)
+	}
+
+	d.Logger.Infow("conn", "conn", connectionInfo)
+	grpcAddr := fmt.Sprintf("%s:%d", chainName, 9090)
+	// creating a grpc ClientConn to perform RPCs
+	grpcConn, err := grpc.Dial(
+		fmt.Sprintf("%s:%d", chainName, 9090),
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		e := deps.NewError(
+			"Channel freshness",
+			fmt.Errorf("cannot get Channel info from grpc %s %s ", channelId, chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot query grpc",
+			"id",
+			e.ID,
+			"Channel",
+			channelId,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	d.Logger.Infow("infi", "grpc addr", grpcAddr)
+	clientQuery := types.NewQueryClient(grpcConn)
+	res, err := clientQuery.ClientState(context.Background(),
+		&types.QueryClientStateRequest{
+			ClientId: connectionInfo.ClientID,
+		})
+	if err != nil {
+		e := deps.NewError(
+			"Channel freshness",
+			fmt.Errorf("cannot get Channel info from grpc %s %s ", channelId, chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot encode address to bech32",
+			"id",
+			e.ID,
+			"Channel",
+			channelId,
+			"error",
+			err,
+		)
+	}
+
+	c.JSON(http.StatusOK, res)
 }
