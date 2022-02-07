@@ -607,6 +607,43 @@ func VerifyTrace(c *gin.Context) {
 		return
 	}
 
+	cbt, err := d.Database.ChainLastBlock(nextChain)
+	if err != nil {
+		e := deps.NewError(
+			"denom/verify-trace",
+			fmt.Errorf("cannot retrieve chain status for %v", nextChain),
+			http.StatusInternalServerError,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain last block time",
+			"id",
+			e.ID,
+			"hash",
+			hash,
+			"path",
+			res.VerifiedTrace.Path,
+			"chainName",
+			chainName,
+			"nextChain",
+			nextChain,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	d.Logger.Debugw("last block time", "chain", nextChain, "time", cbt, "threshold_for_chain", nextChainData.ValidBlockThresh.Duration())
+
+	if time.Since(cbt.BlockTime) > nextChainData.ValidBlockThresh.Duration() {
+		res.VerifiedTrace.Verified = false
+		res.VerifiedTrace.Cause = fmt.Sprintf("chain %s status offline", nextChain)
+		c.JSON(http.StatusOK, res)
+
+		return
+	}
+
 	res.VerifiedTrace.Verified = false
 
 	// set verifiedStatus for base denom on nextChain
