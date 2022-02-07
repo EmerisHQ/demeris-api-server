@@ -44,7 +44,7 @@ func addCorrelationID(c *gin.Context, l *zap.SugaredLogger) {
 	c.Next()
 }
 
-func getLoggerFromContext(c *gin.Context) *zap.SugaredLogger {
+func GetLoggerFromContext(c *gin.Context) *zap.SugaredLogger {
 	value, ok := c.Get("logger")
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, "logger does not exists in context")

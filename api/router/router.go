@@ -8,11 +8,11 @@ import (
 	"github.com/allinbits/demeris-api-server/api/block"
 	"github.com/allinbits/demeris-api-server/api/cached"
 	"github.com/allinbits/demeris-api-server/api/liquidity"
-	"github.com/allinbits/emeris-utils/logging"
 	"k8s.io/client-go/informers"
 
 	"github.com/allinbits/demeris-api-server/api/relayer"
 
+	"github.com/allinbits/emeris-utils/logging"
 	"github.com/allinbits/emeris-utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
@@ -90,7 +90,7 @@ func (r *Router) Serve(address string) error {
 }
 
 func (r *Router) catchPanicsFunc(c *gin.Context) {
-	l := getLoggerFromContext(c)
+	l := GetLoggerFromContext(c)
 	defer func() {
 		if rval := recover(); rval != nil {
 			// okay we panic-ed, log it through r's logger and write back internal server error
@@ -118,7 +118,7 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 }
 
 func (r *Router) decorateCtxWithDeps(c *gin.Context) {
-	l := getLoggerFromContext(c)
+	l := GetLoggerFromContext(c)
 
 	c.Set("deps", &deps.Deps{
 		Logger:           l,

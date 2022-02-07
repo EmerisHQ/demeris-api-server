@@ -48,7 +48,7 @@ func (d *Deps) WriteError(c *gin.Context, err Error, logMessage string, keyAndVa
 	_ = c.Error(err)
 
 	if keyAndValues != nil {
-		keyAndValues = append(keyAndValues, "id", err.ID)
+		keyAndValues = append(keyAndValues, "error", err)
 		d.Logger.Errorw(
 			logMessage,
 			keyAndValues...,
