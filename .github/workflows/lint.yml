@@ -1,4 +1,4 @@
-name: golangci-lint
+name: Lint
 on:
   pull_request:
   push:
@@ -13,7 +13,7 @@ env:
 jobs:
   golangci:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2

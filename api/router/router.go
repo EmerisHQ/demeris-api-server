@@ -32,7 +32,8 @@ import (
 
 type Router struct {
 	g                *gin.Engine
-	db               *database.Database
+	DB               *database.Database
+	l                *zap.SugaredLogger
 	s                *store.Store
 	k8s              kube.Client
 	k8sNamespace     string
@@ -60,7 +61,8 @@ func New(
 
 	r := &Router{
 		g:                engine,
-		db:               db,
+		DB:               db,
+		l:                l,
 		s:                s,
 		k8s:              kubeClient,
 		k8sNamespace:     kubeNamespace,
@@ -118,11 +120,11 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 }
 
 func (r *Router) decorateCtxWithDeps(c *gin.Context) {
-	l := GetLoggerFromContext(c)
+	r.l = GetLoggerFromContext(c)
 
 	c.Set("deps", &deps.Deps{
-		Logger:           l,
-		Database:         r.db,
+		Logger:           r.l,
+		Database:         r.DB,
 		Store:            r.s,
 		KubeNamespace:    r.k8sNamespace,
 		K8S:              &r.k8s,
