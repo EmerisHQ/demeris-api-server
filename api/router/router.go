@@ -73,10 +73,10 @@ func New(
 
 	validation.JSONFields(binding.Validator)
 
-	engine.Use(r.catchPanicsFunc)
 	if debug {
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
+	engine.Use(r.catchPanicsFunc)
 	engine.Use(r.decorateCtxWithDeps)
 	engine.Use(r.handleErrors)
 	engine.RedirectTrailingSlash = false

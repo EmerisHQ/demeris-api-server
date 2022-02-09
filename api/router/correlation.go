@@ -27,14 +27,14 @@ func addCorrelationID(c *gin.Context, l *zap.SugaredLogger) {
 	correlationID := c.Request.Header.Get("X-Correlation-id")
 
 	if correlationID != "" {
-		ctx = context.WithValue(ctx, CorrelationIDName, correlationID)
+		ctx = context.WithValue(ctx, CorrelationIDName, correlationID) //nolint:staticcheck
 		c.Writer.Header().Set("X-Correlation-Id", correlationID)
 		l = l.With(CorrelationIDName, correlationID)
 	}
 
 	id, _ := uuid.NewV4()
 
-	ctx = context.WithValue(ctx, IntCorrelationIDName, id.String())
+	ctx = context.WithValue(ctx, IntCorrelationIDName, id.String()) //nolint:staticcheck
 	l = l.With(IntCorrelationIDName, id)
 
 	c.Set("logger", l)
