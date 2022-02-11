@@ -1244,7 +1244,7 @@ func GetChannelIsFresh(c *gin.Context) {
 		)
 
 		d.WriteError(c, e,
-			"cannot encode address to bech32",
+			"cannot get Channel info",
 			"id",
 			e.ID,
 			"Channel",
@@ -1263,7 +1263,7 @@ func GetChannelIsFresh(c *gin.Context) {
 		)
 
 		d.WriteError(c, e,
-			"cannot encode address to bech32",
+			"cannot get Channel info",
 			"id",
 			e.ID,
 			"Channel",
@@ -1284,7 +1284,7 @@ func GetChannelIsFresh(c *gin.Context) {
 		)
 
 		d.WriteError(c, e,
-			"cannot encode address to bech32",
+			"cannot get Channel info",
 			"id",
 			e.ID,
 			"Channel",
@@ -1335,7 +1335,7 @@ func GetChannelIsFresh(c *gin.Context) {
 		)
 
 		d.WriteError(c, e,
-			"cannot encode address to bech32",
+			"cannot get Channel info",
 			"id",
 			e.ID,
 			"Channel",
