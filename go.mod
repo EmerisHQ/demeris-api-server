@@ -10,27 +10,27 @@ replace (
 )
 
 require (
-	github.com/alicebob/miniredis/v2 v2.16.1
-	github.com/allinbits/demeris-backend-models v1.0.1
+	github.com/alicebob/miniredis/v2 v2.18.0
+	github.com/allinbits/demeris-backend-models v1.0.0
 	github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded
 	github.com/allinbits/emeris-utils v0.1.0
 	github.com/allinbits/sdk-service-meta v0.0.0-20220114142340-a44e073d0b27
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
-	github.com/cockroachdb/cockroach-go/v2 v2.2.6
+	github.com/cockroachdb/cockroach-go/v2 v2.2.8
 	github.com/cosmos/cosmos-sdk v0.42.8
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.0
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/gravity-devs/liquidity v1.2.9
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/lib/pq v1.10.4
 	github.com/sony/sonyflake v1.0.0
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	github.com/swaggo/swag v1.7.8
+	github.com/swaggo/swag v1.7.9
 	github.com/tendermint/tendermint v0.34.11
 	github.com/tidwall/gjson v1.14.0
 	github.com/zsais/go-gin-prometheus v0.1.0
-	go.uber.org/zap v1.20.0
+	go.uber.org/zap v1.21.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.43.0
 	k8s.io/apimachinery v0.21.1
@@ -87,6 +87,7 @@ require (
 	github.com/go-redis/redis/v8 v8.8.3 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
+	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
