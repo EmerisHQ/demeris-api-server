@@ -1219,20 +1219,20 @@ func GetAnnualProvisions(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintAnnualProvision)
 }
 
-// GetChannelIsFresh returns the annual provisions of a specific chain
-// @Summary Gets the annual provisions of a chain
-// @Description Gets annual provisions
+// GetChannelIsFresh returns the expiry of channel
+// @Summary Gets the expiration based on client expiration
+// @Description Gets channel freshness
 // @Tags Chain
-// @ID get-annual-provisions
+// @ID get-channel-freshness
 // @Produce json
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} deps.Error
-// @Router /chain/{chainName}/mint/annual_provisions [get]
+// @Router /chain/{chainName}/isFresh/{channel_id} [get]
 func GetChannelIsFresh(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	chainName := c.Param("chain")
-	channelId := c.Param("channelId")
+	channelId := c.Param("channel_id")
 
 	Channel, err := d.Database.GetIbcChannelOfChain(chainName, channelId)
 	d.Logger.Infow("value", "Channel", Channel)
