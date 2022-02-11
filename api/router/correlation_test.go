@@ -9,6 +9,7 @@ import (
 	"github.com/allinbits/demeris-api-server/api/config"
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router"
+	"github.com/allinbits/emeris-utils/logging"
 	"github.com/allinbits/emeris-utils/store"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	"github.com/gofrs/uuid"
@@ -51,10 +52,10 @@ func TestCorrelationIDMiddleWare(t *testing.T) {
 	require.Eventually(t, func() bool {
 		count := 0
 		for _, info := range observedLogs.All() {
-			if info.ContextMap()[string(router.IntCorrelationIDName)] != nil {
+			if info.ContextMap()[string(logging.IntCorrelationIDName)] != nil {
 				count++
 			}
-			if info.ContextMap()[string(router.CorrelationIDName)] == fmt.Sprintf("%x", id) {
+			if info.ContextMap()[string(logging.CorrelationIDName)] == fmt.Sprintf("%x", id) {
 				count++
 			}
 		}

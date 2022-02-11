@@ -7,6 +7,7 @@ import (
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/allinbits/demeris-api-server/api/database"
+	"github.com/allinbits/emeris-utils/logging"
 	"github.com/allinbits/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -40,7 +41,7 @@ func GetDeps(c *gin.Context) *Deps {
 func (d *Deps) WriteError(c *gin.Context, err Error, logMessage string, keyAndValues ...interface{}) {
 
 	// setting error id
-	value, ok := c.Request.Context().Value("int_correlation_id").(string)
+	value, ok := c.Request.Context().Value(logging.IntCorrelationIDName).(string)
 	if !ok {
 		panic("cant get value int_correlation_id")
 	}
