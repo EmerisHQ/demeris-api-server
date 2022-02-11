@@ -12,7 +12,7 @@ var chainWithoutPublicEndpoints = cns.Chain{
 	ChainName:      "chain1",
 	Logo:           "http://logo.com",
 	DisplayName:    "Chain 1",
-	PrimaryChannel: map[string]string{"key": "value"},
+	PrimaryChannel: map[string]string{"key": "value", "chain2": "ch1"},
 	Denoms: []cns.Denom{
 		{
 			Name:        "denom1",
@@ -38,7 +38,7 @@ var chainWithoutPublicEndpoints = cns.Chain{
 	GenesisHash:      "hash",
 	NodeInfo: cns.NodeInfo{
 		Endpoint: "http://endpoint",
-		ChainID:  "chain_123",
+		ChainID:  "chain_1",
 		Bech32Config: cns.Bech32Config{
 			MainPrefix:      "prefix",
 			PrefixAccount:   "acc",
@@ -85,7 +85,7 @@ var chainWithPublicEndpoints = cns.Chain{
 	GenesisHash:      "hash",
 	NodeInfo: cns.NodeInfo{
 		Endpoint: "http://endpoint",
-		ChainID:  "chain_123",
+		ChainID:  "chain_2",
 		Bech32Config: cns.Bech32Config{
 			MainPrefix:      "prefix",
 			PrefixAccount:   "acc",
