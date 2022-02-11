@@ -2,6 +2,7 @@ package database
 
 import (
 	"github.com/allinbits/demeris-backend-models/cns"
+	"github.com/allinbits/demeris-backend-models/tracelistener"
 )
 
 func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (cns.IbcChannelsInfo, error) {
@@ -85,4 +86,14 @@ func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (cns.Ibc
 	}
 
 	return c, nil
+}
+
+func (d *Database) GetIbcChannelOfChain(chain, channelId string) (tracelistener.IBCChannelRow, error) {
+	var channel tracelistener.IBCChannelRow
+
+	q := `SELECT * FROM tracelistener.channels WHERE channel_id=? and chain_name=?;`
+
+	q = d.dbi.DB.Rebind(q)
+
+	return channel, d.dbi.DB.Get(&channel, q, channelId, chain)
 }
