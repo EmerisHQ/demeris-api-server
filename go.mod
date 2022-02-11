@@ -26,7 +26,7 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/sony/sonyflake v1.0.0
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	github.com/swaggo/swag v1.7.8
+	github.com/swaggo/swag v1.7.9
 	github.com/tendermint/tendermint v0.34.11
 	github.com/tidwall/gjson v1.13.0
 	github.com/zsais/go-gin-prometheus v0.1.0
