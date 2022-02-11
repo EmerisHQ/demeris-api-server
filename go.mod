@@ -21,14 +21,14 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/gofrs/uuid v4.2.0+incompatible
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/gravity-devs/liquidity v1.2.9
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/lib/pq v1.10.4
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	github.com/swaggo/swag v1.7.8
+	github.com/swaggo/swag v1.7.9
 	github.com/tendermint/tendermint v0.34.11
-	github.com/tidwall/gjson v1.13.0
+	github.com/tidwall/gjson v1.14.0
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
