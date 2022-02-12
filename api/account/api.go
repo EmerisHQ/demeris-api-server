@@ -36,11 +36,11 @@ func Register(router *gin.Engine) {
 // @Description gets address balance
 // @Produce json
 // @Param address path string true "address to query balance for"
-// @Success 200 {object} balancesResponse
+// @Success 200 {object} BalancesResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/balance [get]
 func GetBalancesByAddress(c *gin.Context) {
-	var res balancesResponse
+	var res BalancesResponse
 	d := deps.GetDeps(c)
 
 	address := c.Param("address")
@@ -109,8 +109,8 @@ func GetBalancesByAddress(c *gin.Context) {
 // This will most probably go away as soon as we have proper testing in place.
 type denomTraceFunc func(string, string) (tracelistener.IBCDenomTraceRow, error)
 
-func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) balance {
-	balance := balance{
+func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) Balance {
+	balance := Balance{
 		Address: rawBalance.Address,
 		Amount:  rawBalance.Amount,
 		OnChain: rawBalance.ChainName,
@@ -121,7 +121,7 @@ func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bo
 
 	if rawBalance.Denom[:4] == "ibc/" {
 		// is ibc token
-		balance.Ibc = ibcInfo{
+		balance.Ibc = IbcInfo{
 			Hash: rawBalance.Denom[4:],
 		}
 
@@ -168,11 +168,11 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @ID get-staking-account
 // @Produce json
 // @Param address path string true "address to query staking for"
-// @Success 200 {object} stakingBalancesResponse
+// @Success 200 {object} StakingBalancesResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/stakingbalance [get]
 func GetDelegationsByAddress(c *gin.Context) {
-	var res stakingBalancesResponse
+	var res StakingBalancesResponse
 
 	d := deps.GetDeps(c)
 
@@ -201,7 +201,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 	}
 
 	for _, del := range dl {
-		res.StakingBalances = append(res.StakingBalances, stakingBalance{
+		res.StakingBalances = append(res.StakingBalances, StakingBalance{
 			ValidatorAddress: del.Validator,
 			Amount:           del.Amount,
 			ChainName:        del.ChainName,
@@ -218,11 +218,11 @@ func GetDelegationsByAddress(c *gin.Context) {
 // @ID get-unbonding-delegations-account
 // @Produce json
 // @Param address path string true "address to query unbonding delegations for"
-// @Success 200 {object} unbondingDelegationsResponse
+// @Success 200 {object} UnbondingDelegationsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/unbondingdelegations [get]
 func GetUnbondingDelegationsByAddress(c *gin.Context) {
-	var res unbondingDelegationsResponse
+	var res UnbondingDelegationsResponse
 
 	d := deps.GetDeps(c)
 
@@ -251,7 +251,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 	}
 
 	for _, unbonding := range unbondings {
-		res.UnbondingDelegations = append(res.UnbondingDelegations, unbondingDelegation{
+		res.UnbondingDelegations = append(res.UnbondingDelegations, UnbondingDelegation{
 			ValidatorAddress: unbonding.Validator,
 			Entries:          unbonding.Entries,
 			ChainName:        unbonding.ChainName,
@@ -269,11 +269,11 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 // @Produce json
 // @Param address path string true "address to query delegation rewards for"
 // @Param chain path string true "chain to query delegation rewards for"
-// @Success 200 {object} delegatorRewardsResponse
+// @Success 200 {object} DelegatorRewardsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/delegatorrewards/{chain} [get]
 func GetDelegatorRewards(c *gin.Context) {
-	var res delegatorRewardsResponse
+	var res DelegatorRewardsResponse
 
 	d := deps.GetDeps(c)
 
@@ -369,7 +369,7 @@ func GetDelegatorRewards(c *gin.Context) {
 	}
 
 	for _, r := range sdkRes.Rewards {
-		res.Rewards = append(res.Rewards, delegationDelegatorReward{
+		res.Rewards = append(res.Rewards, DelegationDelegatorReward{
 			ValidatorAddress: r.ValidatorAddress,
 			Reward:           coinsSlice(r.Rewards).String(),
 		})
@@ -387,11 +387,11 @@ func GetDelegatorRewards(c *gin.Context) {
 // @ID get-all-numbers-account
 // @Produce json
 // @Param address path string true "address to query numbers for"
-// @Success 200 {object} numbersResponse
+// @Success 200 {object} NumbersResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/numbers [get]
 func GetNumbersByAddress(c *gin.Context) {
-	var res numbersResponse
+	var res NumbersResponse
 
 	d := deps.GetDeps(c)
 
@@ -476,7 +476,7 @@ func GetUserTickets(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, userTicketsResponse{Tickets: tickets})
+	c.JSON(http.StatusOK, UserTicketsResponse{Tickets: tickets})
 }
 
 func fetchNumbers(cns []cns.Chain, account string) ([]tracelistener.AuthRow, error) {

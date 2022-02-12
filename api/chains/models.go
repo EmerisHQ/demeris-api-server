@@ -17,42 +17,42 @@ type ChainResponse struct {
 	Chain cns.Chain `json:"chain"`
 }
 
-type bech32ConfigResponse struct {
+type Bech32ConfigResponse struct {
 	Bech32Config cns.Bech32Config `json:"bech32_config"`
 }
 
-type feeResponse struct {
+type FeeResponse struct {
 	Denoms cns.DenomList `json:"denoms"`
 }
 
-type feeAddressResponse struct {
+type FeeAddressResponse struct {
 	FeeAddress []string `json:"fee_address"`
 }
-type feeAddress struct {
+type FeeAddress struct {
 	ChainName  string   `json:"chain_name"`
 	FeeAddress []string `json:"fee_address"`
 }
-type feeAddressesResponse struct {
-	FeeAddresses []feeAddress `json:"fee_addresses"`
+type FeeAddressesResponse struct {
+	FeeAddresses []FeeAddress `json:"fee_addresses"`
 }
 
-type feeTokenResponse struct {
+type FeeTokenResponse struct {
 	FeeTokens []cns.Denom `json:"fee_tokens"`
 }
 
-type primaryChannel struct {
+type PrimaryChannel struct {
 	Counterparty string `json:"counterparty"`
 	ChannelName  string `json:"channel_name"`
 }
 
-type primaryChannelResponse struct {
-	Channel primaryChannel `json:"primary_channel"`
+type PrimaryChannelResponse struct {
+	Channel PrimaryChannel `json:"primary_channel"`
 }
-type primaryChannelsResponse struct {
-	Channels []primaryChannel `json:"primary_channels"`
+type PrimaryChannelsResponse struct {
+	Channels []PrimaryChannel `json:"primary_channels"`
 }
 
-type trace struct {
+type Trace struct {
 	Channel          string `json:"channel,omitempty"`
 	Port             string `json:"port,omitempty"`
 	ClientId         string `json:"client_id,omitempty"`
@@ -60,38 +60,38 @@ type trace struct {
 	CounterpartyName string `json:"counterparty_name,omitempty"`
 }
 
-type verifiedTrace struct {
+type VerifiedTrace struct {
 	IbcDenom  string  `json:"ibc_denom,omitempty"`
 	BaseDenom string  `json:"base_denom,omitempty"`
 	Verified  bool    `json:"verified"`
 	Path      string  `json:"path,omitempty"`
-	Trace     []trace `json:"trace,omitempty"`
+	Trace     []Trace `json:"trace,omitempty"`
 	Cause     string  `json:"cause,omitempty"`
 }
 
-type verifiedTraceResponse struct {
-	VerifiedTrace verifiedTrace `json:"verify_trace"`
+type VerifiedTraceResponse struct {
+	VerifiedTrace VerifiedTrace `json:"verify_trace"`
 }
 
-type statusResponse struct {
+type StatusResponse struct {
 	Online bool `json:"online"`
 }
 
-type numbersResponse struct {
+type NumbersResponse struct {
 	Numbers tracelistener.AuthRow `json:"numbers"`
 }
 
-type validatorsResponse struct {
+type ValidatorsResponse struct {
 	Validators []tracelistener.ValidatorRow `json:"validators"`
 }
 
 //nolint //deadcode but used in swagger generation
-type inflationResponse struct {
+type InflationResponse struct {
 	Inflation string `json:"inflation"`
 }
 
 // nolint :ditto
-type paramsResponse struct {
+type ParamsResponse struct {
 	Params struct {
 		MintDenom           string `json:"mint_denom"`
 		InflationRateChange string `json:"inflation_rate_change"`
@@ -103,15 +103,15 @@ type paramsResponse struct {
 }
 
 // nolint :ditto
-type annualProvisionsResponse struct {
+type AnnualProvisionsResponse struct {
 	AnnualProvisions string `json:"annual_provisions"`
 }
 
-type coin struct {
+type Coin struct {
 	Denom  string `json:"denom,omitempty"`
 	Amount string `json:"amount,omitempty"`
 }
 
-type supplyResponse struct {
-	Supply []coin `json:"supply,omitempty"`
+type SupplyResponse struct {
+	Supply []Coin `json:"supply,omitempty"`
 }
