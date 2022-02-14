@@ -17,6 +17,7 @@ package docs
 
 import (
 	// imports needed to make swagger generation run
+	_ "github.com/allinbits/demeris-backend-models/api"
 	_ "github.com/allinbits/demeris-backend-models/cns"
 	_ "github.com/allinbits/demeris-backend-models/tracelistener"
 	_ "github.com/allinbits/emeris-utils/exported/sdktypes"
