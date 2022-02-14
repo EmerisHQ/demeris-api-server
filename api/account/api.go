@@ -350,16 +350,16 @@ func GetDelegatorRewards(c *gin.Context) {
 		return
 	}
 
-	coinsSlice := func(in []*sdkutilities.Coin) sdktypes.Coins {
-		ret := sdktypes.Coins{}
+	coinsSlice := func(in []*sdkutilities.Coin) sdktypes.DecCoins {
+		ret := sdktypes.DecCoins{}
 
 		for _, c := range in {
-			amount, ok := sdktypes.NewIntFromString(c.Amount)
-			if !ok {
-				panic("cannot create Int from sdkutilities.Coin amount")
+			amount, err := sdktypes.NewDecFromStr(c.Amount)
+			if err != nil {
+				panic(fmt.Errorf("cannot create dec from sdkutilities.Coin amount: %w", err))
 			}
 
-			ret = append(ret, sdktypes.Coin{
+			ret = append(ret, sdktypes.DecCoin{
 				Denom:  c.Denom,
 				Amount: amount,
 			})
