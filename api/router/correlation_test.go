@@ -18,17 +18,8 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 )
 
-type chainsResponse struct {
-	Chains []supportedChain `json:"chains"`
-}
-
-type supportedChain struct {
-	ChainName   string `json:"chain_name"`
-	DisplayName string `json:"display_name"`
-	Logo        string `json:"logo"`
-}
-
 func TestCorrelationIDMiddleWare(t *testing.T) {
+	t.Parallel()
 	r, cfg, observedLogs, tDown := setup(t)
 	defer tDown()
 	require.NotNil(t, r)
@@ -42,7 +33,8 @@ func TestCorrelationIDMiddleWare(t *testing.T) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s%s", cfg.ListenAddr, "/chains"), nil)
 	require.NoError(t, err)
 
-	id, _ := uuid.NewV4()
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
 
 	req.Header.Set("X-Correlation-id", fmt.Sprintf("%x", id))
 
