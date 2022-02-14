@@ -12,6 +12,7 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/allinbits/demeris-api-server/api/database"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	cnsmodels "github.com/allinbits/demeris-backend-models/cns"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
@@ -37,7 +38,7 @@ func Register(router *gin.Engine) {
 // @Failure 500,403 {object} deps.Error
 // @Router /relayer/status [get]
 func getRelayerStatus(c *gin.Context) {
-	var res RelayerStatusResponse
+	var res apimodels.RelayerStatusResponse
 
 	d := deps.GetDeps(c)
 
@@ -104,7 +105,7 @@ func getRelayerStatus(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /relayer/balance [get]
 func getRelayerBalance(c *gin.Context) {
-	var res RelayerBalances
+	var res apimodels.RelayerBalances
 
 	d := deps.GetDeps(c)
 
@@ -203,7 +204,7 @@ func getRelayerBalance(c *gin.Context) {
 			return
 		}
 
-		res.Balances = append(res.Balances, RelayerBalance{
+		res.Balances = append(res.Balances, apimodels.RelayerBalance{
 			Address:       addresses[i],
 			ChainName:     chains[i],
 			EnoughBalance: enough,

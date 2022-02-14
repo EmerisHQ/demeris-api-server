@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +23,7 @@ func Register(router *gin.Engine) {
 // @Failure 500,403 {object} deps.Error
 // @Router /verified_denoms [get]
 func GetVerifiedDenoms(c *gin.Context) {
-	var res VerifiedDenomsResponse
+	var res apimodels.VerifiedDenomsResponse
 
 	d := deps.GetDeps(c)
 
@@ -48,7 +49,7 @@ func GetVerifiedDenoms(c *gin.Context) {
 
 	for _, cc := range chains {
 		for _, vd := range cc.VerifiedTokens() {
-			res.VerifiedDenoms = append(res.VerifiedDenoms, VerifiedDenom{
+			res.VerifiedDenoms = append(res.VerifiedDenoms, apimodels.VerifiedDenom{
 				Denom:     vd,
 				ChainName: cc.ChainName,
 			})

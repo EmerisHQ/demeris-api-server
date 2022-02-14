@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +19,7 @@ import (
 // @Failure 500,403 {object} deps.Error
 // @Router /validators [get]
 func GetValidators(c *gin.Context) {
-	var res ValidatorsResponse
+	var res apimodels.ValidatorsResponse
 
 	d := deps.GetDeps(c)
 	chainName := c.Param("chain")

@@ -9,6 +9,7 @@ import (
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
@@ -190,7 +191,7 @@ func GetDestTx(c *gin.Context) {
 	}
 
 	r = gjson.GetBytes(bz, txPath)
-	c.JSON(http.StatusOK, DestTxResponse{
+	c.JSON(http.StatusOK, apimodels.DestTxResponse{
 		DestChain: destChain,
 		TxHash:    r.String(),
 	})

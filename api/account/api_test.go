@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +15,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 		rawBalance tracelistener.BalanceRow
 		vd         map[string]bool
 		dt         denomTraceFunc
-		want       Balance
+		want       apimodels.Balance
 	}{
 		{
 			"verified IBC balance returns verified balance",
@@ -33,13 +34,13 @@ func Test_balanceRespForBalance(t *testing.T) {
 					Hash:      "hash",
 				}, nil
 			},
-			Balance{
+			apimodels.Balance{
 				Address:   "address",
 				BaseDenom: "uatom",
 				Verified:  true,
 				Amount:    "42",
 				OnChain:   "",
-				Ibc: IbcInfo{
+				Ibc: apimodels.IbcInfo{
 					Path: "path",
 					Hash: "hash",
 				},
@@ -62,13 +63,13 @@ func Test_balanceRespForBalance(t *testing.T) {
 					Hash:      "hash",
 				}, nil
 			},
-			Balance{
+			apimodels.Balance{
 				Address:   "address",
 				BaseDenom: "uatom",
 				Verified:  false,
 				Amount:    "42",
 				OnChain:   "",
-				Ibc: IbcInfo{
+				Ibc: apimodels.IbcInfo{
 					Path: "path",
 					Hash: "hash",
 				},
@@ -87,13 +88,13 @@ func Test_balanceRespForBalance(t *testing.T) {
 			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, fmt.Errorf("error")
 			},
-			Balance{
+			apimodels.Balance{
 				Address:   "address",
 				BaseDenom: "ibc/hash",
 				Verified:  false,
 				Amount:    "42",
 				OnChain:   "",
-				Ibc: IbcInfo{
+				Ibc: apimodels.IbcInfo{
 					Hash: "hash",
 				},
 			},
@@ -111,7 +112,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, nil
 			},
-			Balance{
+			apimodels.Balance{
 				Address:   "address",
 				BaseDenom: "denom",
 				Verified:  true,
@@ -131,7 +132,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, nil
 			},
-			Balance{
+			apimodels.Balance{
 				Address:   "address",
 				BaseDenom: "denom",
 				Verified:  false,

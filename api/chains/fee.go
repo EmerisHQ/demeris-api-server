@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +20,7 @@ import (
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/fee [get]
 func GetFee(c *gin.Context) {
-	var res FeeResponse
+	var res apimodels.FeeResponse
 
 	d := deps.GetDeps(c)
 
@@ -47,7 +48,7 @@ func GetFee(c *gin.Context) {
 		return
 	}
 
-	res = FeeResponse{
+	res = apimodels.FeeResponse{
 		Denoms: chain.FeeTokens(),
 	}
 
@@ -65,7 +66,7 @@ func GetFee(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/address [get]
 func GetFeeAddress(c *gin.Context) {
-	var res FeeAddressResponse
+	var res apimodels.FeeAddressResponse
 
 	d := deps.GetDeps(c)
 
@@ -93,7 +94,7 @@ func GetFeeAddress(c *gin.Context) {
 		return
 	}
 
-	res = FeeAddressResponse{
+	res = apimodels.FeeAddressResponse{
 		FeeAddress: chain.DemerisAddresses,
 	}
 
@@ -110,7 +111,7 @@ func GetFeeAddress(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chains/fee/addresses [get]
 func GetFeeAddresses(c *gin.Context) {
-	var res FeeAddressesResponse
+	var res apimodels.FeeAddressesResponse
 
 	d := deps.GetDeps(c)
 
@@ -137,7 +138,7 @@ func GetFeeAddresses(c *gin.Context) {
 	for _, c := range chains {
 		res.FeeAddresses = append(
 			res.FeeAddresses,
-			FeeAddress{
+			apimodels.FeeAddress{
 				ChainName:  c.ChainName,
 				FeeAddress: c.DemerisAddresses,
 			},
@@ -158,7 +159,7 @@ func GetFeeAddresses(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/token [get]
 func GetFeeToken(c *gin.Context) {
-	var res FeeTokenResponse
+	var res apimodels.FeeTokenResponse
 
 	d := deps.GetDeps(c)
 

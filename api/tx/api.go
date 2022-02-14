@@ -7,6 +7,7 @@ import (
 
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/allinbits/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
@@ -31,7 +32,7 @@ func Register(router *gin.Engine) {
 // @Router /tx/{chainName} [post]
 func Tx(c *gin.Context) {
 	// var tx typestx.Tx
-	var txRequest TxRequest
+	var txRequest apimodels.TxRequest
 
 	d := deps.GetDeps(c)
 
@@ -111,7 +112,7 @@ func Tx(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, TxResponse{
+	c.JSON(http.StatusOK, apimodels.TxResponse{
 		Ticket: txhash,
 	})
 }
@@ -192,7 +193,7 @@ func GetTicket(c *gin.Context) {
 // @Failure 500,400 {object} deps.Error
 // @Router /tx/fees/{chainName} [post]
 func GetTxFeeEstimate(c *gin.Context) {
-	var txRequest TxFeeEstimateReq
+	var txRequest apimodels.TxFeeEstimateReq
 
 	d := deps.GetDeps(c)
 	chainName := c.Param("chain")
@@ -288,7 +289,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, TxFeeEstimateRes{
+	c.JSON(http.StatusOK, apimodels.TxFeeEstimateRes{
 		GasWanted: sdkRes.GasWanted,
 		GasUsed:   sdkRes.GasUsed,
 		Fees:      coins,

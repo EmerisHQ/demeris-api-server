@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/allinbits/demeris-api-server/api/chains"
 	utils "github.com/allinbits/demeris-api-server/api/test_utils"
 
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
@@ -76,7 +76,7 @@ func TestGetChain(t *testing.T) {
 			body, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err)
 
-			respStruct := chains.ChainResponse{}
+			respStruct := apimodels.ChainResponse{}
 			err = json.Unmarshal(body, &respStruct)
 			require.NoError(t, err)
 
@@ -133,7 +133,7 @@ func TestGetChains(t *testing.T) {
 				body, err := ioutil.ReadAll(resp.Body)
 				require.NoError(t, err)
 
-				respStruct := chains.ChainsResponse{}
+				respStruct := apimodels.ChainsResponse{}
 				err = json.Unmarshal(body, &respStruct)
 				require.NoError(t, err)
 
@@ -147,9 +147,9 @@ func TestGetChains(t *testing.T) {
 	utils.TruncateDB(testingCtx, t)
 }
 
-func toSupportedChain(c cns.Chain) chains.SupportedChain {
+func toSupportedChain(c cns.Chain) apimodels.SupportedChain {
 
-	return chains.SupportedChain{
+	return apimodels.SupportedChain{
 		ChainName:   c.ChainName,
 		DisplayName: c.DisplayName,
 		Logo:        c.Logo,

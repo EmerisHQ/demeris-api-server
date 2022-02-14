@@ -14,6 +14,7 @@ import (
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/allinbits/demeris-backend-models/tracelistener"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
@@ -40,7 +41,7 @@ func Register(router *gin.Engine) {
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/balance [get]
 func GetBalancesByAddress(c *gin.Context) {
-	var res BalancesResponse
+	var res apimodels.BalancesResponse
 	d := deps.GetDeps(c)
 
 	address := c.Param("address")
@@ -109,8 +110,8 @@ func GetBalancesByAddress(c *gin.Context) {
 // This will most probably go away as soon as we have proper testing in place.
 type denomTraceFunc func(string, string) (tracelistener.IBCDenomTraceRow, error)
 
-func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) Balance {
-	balance := Balance{
+func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) apimodels.Balance {
+	balance := apimodels.Balance{
 		Address: rawBalance.Address,
 		Amount:  rawBalance.Amount,
 		OnChain: rawBalance.ChainName,
@@ -121,7 +122,7 @@ func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bo
 
 	if rawBalance.Denom[:4] == "ibc/" {
 		// is ibc token
-		balance.Ibc = IbcInfo{
+		balance.Ibc = apimodels.IbcInfo{
 			Hash: rawBalance.Denom[4:],
 		}
 
@@ -172,7 +173,7 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/stakingbalance [get]
 func GetDelegationsByAddress(c *gin.Context) {
-	var res StakingBalancesResponse
+	var res apimodels.StakingBalancesResponse
 
 	d := deps.GetDeps(c)
 
@@ -201,7 +202,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 	}
 
 	for _, del := range dl {
-		res.StakingBalances = append(res.StakingBalances, StakingBalance{
+		res.StakingBalances = append(res.StakingBalances, apimodels.StakingBalance{
 			ValidatorAddress: del.Validator,
 			Amount:           del.Amount,
 			ChainName:        del.ChainName,
@@ -222,7 +223,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/unbondingdelegations [get]
 func GetUnbondingDelegationsByAddress(c *gin.Context) {
-	var res UnbondingDelegationsResponse
+	var res apimodels.UnbondingDelegationsResponse
 
 	d := deps.GetDeps(c)
 
@@ -251,7 +252,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 	}
 
 	for _, unbonding := range unbondings {
-		res.UnbondingDelegations = append(res.UnbondingDelegations, UnbondingDelegation{
+		res.UnbondingDelegations = append(res.UnbondingDelegations, apimodels.UnbondingDelegation{
 			ValidatorAddress: unbonding.Validator,
 			Entries:          unbonding.Entries,
 			ChainName:        unbonding.ChainName,
@@ -273,7 +274,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/delegatorrewards/{chain} [get]
 func GetDelegatorRewards(c *gin.Context) {
-	var res DelegatorRewardsResponse
+	var res apimodels.DelegatorRewardsResponse
 
 	d := deps.GetDeps(c)
 
@@ -369,7 +370,7 @@ func GetDelegatorRewards(c *gin.Context) {
 	}
 
 	for _, r := range sdkRes.Rewards {
-		res.Rewards = append(res.Rewards, DelegationDelegatorReward{
+		res.Rewards = append(res.Rewards, apimodels.DelegationDelegatorReward{
 			ValidatorAddress: r.ValidatorAddress,
 			Reward:           coinsSlice(r.Rewards).String(),
 		})
@@ -387,11 +388,11 @@ func GetDelegatorRewards(c *gin.Context) {
 // @ID get-all-numbers-account
 // @Produce json
 // @Param address path string true "address to query numbers for"
-// @Success 200 {object} NumbersResponse
+// @Success 200 {object} AccountNumbersResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/numbers [get]
 func GetNumbersByAddress(c *gin.Context) {
-	var res NumbersResponse
+	var res apimodels.AccountNumbersResponse
 
 	d := deps.GetDeps(c)
 
@@ -476,7 +477,7 @@ func GetUserTickets(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, UserTicketsResponse{Tickets: tickets})
+	c.JSON(http.StatusOK, apimodels.UserTicketsResponse{Tickets: tickets})
 }
 
 func fetchNumbers(cns []cns.Chain, account string) ([]tracelistener.AuthRow, error) {

@@ -18,6 +18,7 @@ import (
 	"github.com/allinbits/demeris-api-server/api/database"
 	"github.com/allinbits/demeris-api-server/api/router/deps"
 	"github.com/allinbits/demeris-api-server/sdkservice"
+	apimodels "github.com/allinbits/demeris-backend-models/api"
 	"github.com/allinbits/demeris-backend-models/cns"
 	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
 )
@@ -32,7 +33,7 @@ import (
 // @Failure 500,403 {object} deps.Error
 // @Router /chains [get]
 func GetChains(c *gin.Context) {
-	var res ChainsResponse
+	var res apimodels.ChainsResponse
 
 	d := deps.GetDeps(c)
 
@@ -57,7 +58,7 @@ func GetChains(c *gin.Context) {
 	}
 
 	for _, cc := range chains {
-		res.Chains = append(res.Chains, SupportedChain{
+		res.Chains = append(res.Chains, apimodels.SupportedChain{
 			ChainName:   cc.ChainName,
 			DisplayName: cc.DisplayName,
 			Logo:        cc.Logo,
@@ -78,7 +79,7 @@ func GetChains(c *gin.Context) {
 // @Failure 500,400 {object} deps.Error
 // @Router /chain/{chainName} [get]
 func GetChain(c *gin.Context) {
-	var res ChainResponse
+	var res apimodels.ChainResponse
 
 	d := deps.GetDeps(c)
 
@@ -122,7 +123,7 @@ func GetChain(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/bech32 [get]
 func GetChainBech32Config(c *gin.Context) {
-	var res Bech32ConfigResponse
+	var res apimodels.Bech32ConfigResponse
 
 	d := deps.GetDeps(c)
 
@@ -167,7 +168,7 @@ func GetChainBech32Config(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/primary_channel/{counterparty} [get]
 func GetPrimaryChannelWithCounterparty(c *gin.Context) {
-	var res PrimaryChannelResponse
+	var res apimodels.PrimaryChannelResponse
 
 	d := deps.GetDeps(c)
 
@@ -222,7 +223,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 		return
 	}
 
-	res.Channel = PrimaryChannel{
+	res.Channel = apimodels.PrimaryChannel{
 		Counterparty: counterparty,
 		ChannelName:  chain.ChannelName,
 	}
@@ -241,7 +242,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/primary_channel [get]
 func GetPrimaryChannels(c *gin.Context) {
-	var res PrimaryChannelsResponse
+	var res apimodels.PrimaryChannelsResponse
 
 	d := deps.GetDeps(c)
 
@@ -294,7 +295,7 @@ func GetPrimaryChannels(c *gin.Context) {
 	}
 
 	for _, cc := range chain {
-		res.Channels = append(res.Channels, PrimaryChannel{
+		res.Channels = append(res.Channels, apimodels.PrimaryChannel{
 			Counterparty: cc.Counterparty,
 			ChannelName:  cc.ChannelName,
 		})
@@ -315,7 +316,7 @@ func GetPrimaryChannels(c *gin.Context) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
 func VerifyTrace(c *gin.Context) {
-	var res VerifiedTraceResponse
+	var res apimodels.VerifiedTraceResponse
 
 	d := deps.GetDeps(c)
 
@@ -431,7 +432,7 @@ func VerifyTrace(c *gin.Context) {
 		channel := strings.TrimPrefix(element, "transfer/")
 
 		var channelInfo cns.IbcChannelsInfo
-		var trace Trace
+		var trace apimodels.Trace
 
 		chainID, ok := chainIDsMap[nextChain]
 		if !ok {
@@ -659,7 +660,7 @@ func paths(path string) ([]string, error) {
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/status [get]
 func GetChainStatus(c *gin.Context) {
-	var res StatusResponse
+	var res apimodels.StatusResponse
 
 	d := deps.GetDeps(c)
 
@@ -801,10 +802,10 @@ func GetChainSupply(c *gin.Context) {
 		return
 	}
 
-	res := SupplyResponse{}
+	res := apimodels.SupplyResponse{}
 
 	for _, s := range sdkRes.Coins {
-		res.Supply = append(res.Supply, Coin{
+		res.Supply = append(res.Supply, apimodels.Coin{
 			Denom:  s.Denom,
 			Amount: s.Amount,
 		})
@@ -962,7 +963,7 @@ func GetNumbersByAddress(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, NumbersResponse{Numbers: resp})
+	c.JSON(http.StatusOK, apimodels.NumbersResponse{Numbers: resp})
 }
 
 // GetInflation returns the inflation of a specific chain
