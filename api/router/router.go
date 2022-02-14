@@ -96,7 +96,9 @@ func (r *Router) setLoggerFromContext(c *gin.Context) {
 	if err != nil && r.l == nil {
 		panic("cant get logger from context")
 	}
-	r.l = l
+	if l != nil {
+		r.l = l
+	}
 }
 
 func (r *Router) catchPanicsFunc(c *gin.Context) {
