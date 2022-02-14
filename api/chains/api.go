@@ -21,7 +21,7 @@ func Register(router *gin.Engine) {
 	chain.GET("/mint/inflation", GetInflation)
 	chain.GET("/mint/params", GetMintParams)
 	chain.GET("/mint/annual_provisions", GetAnnualProvisions)
-	chain.GET("/isFresh/:channel_id", GetChannelIsFresh)
+	chain.GET("/channel_freshness/:channel_id", GetChannelFreshness)
 
 	fee := chain.Group("/fee")
 

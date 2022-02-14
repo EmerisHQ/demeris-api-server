@@ -1192,7 +1192,7 @@ func GetAnnualProvisions(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintAnnualProvision)
 }
 
-// GetChannelIsFresh returns the expiry of channel
+// GetChannelFreshness returns the expiry of channel
 // @Summary Gets the expiration based on client expiration
 // @Description Gets channel freshness
 // @Tags Chain
@@ -1200,123 +1200,81 @@ func GetAnnualProvisions(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} deps.Error
-// @Router /chain/{chainName}/isFresh/{channel_id} [get]
-func GetChannelIsFresh(c *gin.Context) {
+// @Router /chain/{chainName}/channel_freshness/{channel_id} [get]
+func GetChannelFreshness(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	chainName := c.Param("chain")
 	channelId := c.Param("channel_id")
 
-	Channel, err := d.Database.GetIbcChannelOfChain(chainName, channelId)
-	d.Logger.Infow("value", "Channel", Channel)
-	if err != nil {
-		e := deps.NewError(
-			"Channel freshness",
-			fmt.Errorf("cannot get Channel info of %s on chain %s ", channelId, chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot get Channel info",
-			"id",
-			e.ID,
-			"Channel",
-			channelId,
-			"error",
-			err,
-		)
-
-		return
-	}
-	if len(Channel.Hops) != 1 {
-		e := deps.NewError(
-			"Channel freshness",
-			fmt.Errorf("cannot get Channel info of %s on chain %s ", channelId, chainName),
-			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot get Channel info",
-			"id",
-			e.ID,
-			"Channel",
-			channelId,
-			"error",
-			err,
-		)
-	}
-
-	connectionId := Channel.Hops[0]
-
-	connectionInfo, err := d.Database.Connection(chainName, connectionId)
-	if err != nil {
-		e := deps.NewError(
-			"Channel freshness",
-			fmt.Errorf("cannot get connection info of %s on chain %s ", channelId, chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot get Channel info",
-			"id",
-			e.ID,
-			"Channel",
-			channelId,
-			"error",
-			err,
-		)
-	}
-
-	d.Logger.Infow("conn", "conn", connectionInfo)
+	// establish gRPC connection with chain node
 	grpcAddr := fmt.Sprintf("%s:%d", chainName, 9090)
-	// creating a grpc ClientConn to perform RPCs
 	grpcConn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", chainName, 9090),
+		grpcAddr,
 		grpc.WithInsecure(),
 	)
 	if err != nil {
 		e := deps.NewError(
-			"Channel freshness",
-			fmt.Errorf("cannot get Channel info from grpc %s %s ", channelId, chainName),
+			"ChannelFreshness",
+			fmt.Errorf("cannot establish grpc connection with %s node", chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
 			"cannot query grpc",
-			"id",
-			e.ID,
-			"Channel",
-			channelId,
-			"error",
-			err,
+			"id", e.ID,
+			"grpcAddr", grpcAddr,
+			"channel", channelId,
+			"error", err,
 		)
 
 		return
 	}
 
-	d.Logger.Infow("infi", "grpc addr", grpcAddr)
+	// fetch connection associated with the channelId
+	connectionInfo, err := d.Database.GetConnectionFromChannel(chainName, channelId)
+	if err != nil {
+		e := deps.NewError(
+			"ChannelFreshness",
+			fmt.Errorf("cannot find connection info for channel %s on chain %s", channelId, chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot get connection info",
+			"id", e.ID,
+			"chainName", chainName,
+			"channelId", channelId,
+			"error", err,
+		)
+
+		return
+	}
+
+	// call gRPC ClientState() method
 	clientQuery := types.NewQueryClient(grpcConn)
-	res, err := clientQuery.ClientState(context.Background(),
+	res, err := clientQuery.ClientState(c.Request.Context(),
 		&types.QueryClientStateRequest{
 			ClientId: connectionInfo.ClientID,
 		})
 	if err != nil {
 		e := deps.NewError(
-			"Channel freshness",
-			fmt.Errorf("cannot get Channel info from grpc %s %s ", channelId, chainName),
+			"ChannelFreshness",
+			fmt.Errorf("cannot retrieve channel %s info for %s", channelId, chainName),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot get Channel info",
-			"id",
-			e.ID,
-			"Channel",
-			channelId,
-			"error",
-			err,
+			"executing grpc ClientState",
+			"id", e.ID,
+			"chainName", chainName,
+			"channel", channelId,
+			"error", err,
 		)
+
+		return
 	}
 
+	// RETURN RESULT
 	c.JSON(http.StatusOK, res)
 }
