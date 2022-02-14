@@ -1,15 +1,15 @@
 package relayer
 
-type relayerStatusResponse struct {
+type RelayerStatusResponse struct {
 	Running bool `json:"running"`
 }
 
-type relayerBalance struct {
+type RelayerBalance struct {
 	Address       string `json:"address"`
 	ChainName     string `json:"chain_name"`
 	EnoughBalance bool   `json:"enough_balance"`
 }
 
-type relayerBalances struct {
-	Balances []relayerBalance `json:"balances"`
+type RelayerBalances struct {
+	Balances []RelayerBalance `json:"balances"`
 }

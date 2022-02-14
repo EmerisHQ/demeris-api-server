@@ -15,11 +15,11 @@ import (
 // @Description Gets average fee in dollar by chain name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} feeResponse
+// @Success 200 {object} FeeResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/fee [get]
 func GetFee(c *gin.Context) {
-	var res feeResponse
+	var res FeeResponse
 
 	d := deps.GetDeps(c)
 
@@ -47,7 +47,7 @@ func GetFee(c *gin.Context) {
 		return
 	}
 
-	res = feeResponse{
+	res = FeeResponse{
 		Denoms: chain.FeeTokens(),
 	}
 
@@ -61,11 +61,11 @@ func GetFee(c *gin.Context) {
 // @Description Gets address to pay fee for by chain name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} feeAddressResponse
+// @Success 200 {object} FeeAddressResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/address [get]
 func GetFeeAddress(c *gin.Context) {
-	var res feeAddressResponse
+	var res FeeAddressResponse
 
 	d := deps.GetDeps(c)
 
@@ -93,7 +93,7 @@ func GetFeeAddress(c *gin.Context) {
 		return
 	}
 
-	res = feeAddressResponse{
+	res = FeeAddressResponse{
 		FeeAddress: chain.DemerisAddresses,
 	}
 
@@ -106,11 +106,11 @@ func GetFeeAddress(c *gin.Context) {
 // @ID feeaddresses
 // @Description Gets all addresses to pay fee for.
 // @Produce json
-// @Success 200 {object} feeAddressesResponse
+// @Success 200 {object} FeeAddressesResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chains/fee/addresses [get]
 func GetFeeAddresses(c *gin.Context) {
-	var res feeAddressesResponse
+	var res FeeAddressesResponse
 
 	d := deps.GetDeps(c)
 
@@ -137,7 +137,7 @@ func GetFeeAddresses(c *gin.Context) {
 	for _, c := range chains {
 		res.FeeAddresses = append(
 			res.FeeAddresses,
-			feeAddress{
+			FeeAddress{
 				ChainName:  c.ChainName,
 				FeeAddress: c.DemerisAddresses,
 			},
@@ -154,11 +154,11 @@ func GetFeeAddresses(c *gin.Context) {
 // @Description Gets token used to pay fees by chain name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} feeTokenResponse
+// @Success 200 {object} FeeTokenResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/token [get]
 func GetFeeToken(c *gin.Context) {
-	var res feeTokenResponse
+	var res FeeTokenResponse
 
 	d := deps.GetDeps(c)
 
