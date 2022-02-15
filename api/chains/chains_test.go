@@ -18,6 +18,7 @@ import (
 const (
 	chainEndpointUrl  = "http://%s/chain/%s"
 	chainsEndpointUrl = "http://%s/chains"
+	chainStatusUrl    = "http://%s/chain/%s/status"
 )
 
 func TestGetChain(t *testing.T) {
@@ -50,6 +51,13 @@ func TestGetChain(t *testing.T) {
 			200,
 			true,
 		},
+		{
+			"Get Chain - Disabled",
+			disabledChain,
+			disabledChain.ChainName,
+			400,
+			true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -73,15 +81,18 @@ func TestGetChain(t *testing.T) {
 				return
 			}
 
-			body, err := ioutil.ReadAll(resp.Body)
-			require.NoError(t, err)
-
-			respStruct := chains.ChainResponse{}
-			err = json.Unmarshal(body, &respStruct)
-			require.NoError(t, err)
-
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
-			require.Equal(t, tt.dataStruct, respStruct.Chain)
+
+			if tt.expectedHttpCode == 200 {
+				body, err := ioutil.ReadAll(resp.Body)
+				require.NoError(t, err)
+
+				respStruct := chains.ChainResponse{}
+				err = json.Unmarshal(body, &respStruct)
+				require.NoError(t, err)
+
+				require.Equal(t, tt.dataStruct, respStruct.Chain)
+			}
 		})
 	}
 	utils.TruncateDB(testingCtx, t)
@@ -154,4 +165,76 @@ func toSupportedChain(c cns.Chain) chains.SupportedChain {
 		DisplayName: c.DisplayName,
 		Logo:        c.Logo,
 	}
+}
+
+func TestGetChainStatus(t *testing.T) {
+
+	tests := []struct {
+		name             string
+		dataStruct       cns.Chain
+		chainName        string
+		expectedHttpCode int
+		expectedResponse chains.StatusResponse
+		success          bool
+	}{
+		{
+			"Get Chain Status - Without PublicEndpoint",
+			chainWithoutPublicEndpoints,
+			chainWithoutPublicEndpoints.ChainName,
+			200,
+			chains.StatusResponse{Online: false},
+			true,
+		},
+		// {
+		// 	"Get Chain Status - Enabled",
+		// 	chainWithPublicEndpoints,
+		// 	chainWithPublicEndpoints.ChainName,
+		// 	200,
+		// 	chains.StatusResponse{Online: true},
+		// 	true,
+		// },
+		{
+			"Get Chain Status - Disabled",
+			disabledChain,
+			disabledChain.ChainName,
+			400,
+			chains.StatusResponse{Online: false},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			// arrange
+			// if we have a populated Chain store, add it
+			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
+				err := testingCtx.CnsDB.AddChain(tt.dataStruct)
+				require.NoError(t, err)
+			}
+
+			// act
+			resp, err := http.Get(fmt.Sprintf(chainStatusUrl, testingCtx.Cfg.ListenAddr, tt.chainName))
+			require.NoError(t, err)
+			defer func() { _ = resp.Body.Close() }()
+
+			// assert
+			if !tt.success {
+				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+				return
+			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			respStruct := chains.StatusResponse{}
+			err = json.Unmarshal(body, &respStruct)
+			require.NoError(t, err)
+
+			require.Equal(t, tt.expectedResponse, respStruct)
+
+			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+		})
+	}
+	utils.TruncateDB(testingCtx, t)
 }
