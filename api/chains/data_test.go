@@ -1,9 +1,57 @@
 package chains_test
 
 import (
+	"time"
+
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/lib/pq"
 )
+
+type tracelistenerData struct {
+	denoms      []denomTrace
+	channels    []channel
+	connections []connection
+	clients     []client
+	blockTimes  []blockTime
+}
+
+type denomTrace struct {
+	path      string
+	baseDenom string
+	hash      string
+	chainName string
+}
+
+type channel struct {
+	channelID        string
+	counterChannelID string
+	port             string
+	state            int
+	hops             []string
+	chainName        string
+}
+
+type connection struct {
+	chainName           string
+	connectionID        string
+	clientID            string
+	state               string
+	counterConnectionID string
+	counterClientID     string
+}
+
+type client struct {
+	sourceChainName string
+	destChainID     string
+	clientID        string
+	latestHeight    string
+	trustingPeriod  string
+}
+
+type blockTime struct {
+	chainName string
+	time      time.Time
+}
 
 var relayerBalance = int64(30000)
 
@@ -102,5 +150,78 @@ var chainWithPublicEndpoints = cns.Chain{
 	PublicNodeEndpoints: cns.PublicNodeEndpoints{
 		TendermintRPC: []string{"https://www.host.com:1234"},
 		CosmosAPI:     []string{"https://host.foo.bar:2345"},
+	},
+}
+
+var verifyTraceData = tracelistenerData{
+	denoms: []denomTrace{
+		{
+			path:      "transfer/ch1",
+			baseDenom: "denom2",
+			hash:      "12345",
+			chainName: "chain1",
+		},
+	},
+
+	channels: []channel{
+		{
+			channelID:        "ch1",
+			counterChannelID: "ch2",
+			port:             "transfer",
+			state:            3,
+			hops:             []string{"conn1", "conn2"},
+			chainName:        "chain1",
+		},
+		{
+			channelID:        "ch2",
+			counterChannelID: "ch1",
+			port:             "transfer",
+			state:            3,
+			hops:             []string{"conn2", "conn1"},
+			chainName:        "chain2",
+		},
+	},
+
+	connections: []connection{
+		{
+			chainName:           "chain1",
+			connectionID:        "conn1",
+			clientID:            "cl1",
+			state:               "ready",
+			counterConnectionID: "conn2",
+			counterClientID:     "cl2",
+		},
+		{
+			chainName:           "chain2",
+			connectionID:        "conn2",
+			clientID:            "cl2",
+			state:               "ready",
+			counterConnectionID: "conn1",
+			counterClientID:     "cl1",
+		},
+	},
+
+	clients: []client{
+		{
+			sourceChainName: "chain1",
+			destChainID:     "chain_2",
+			clientID:        "cl1",
+			latestHeight:    "99",
+			trustingPeriod:  "10",
+		},
+		{
+			sourceChainName: "chain2",
+			destChainID:     "chain_1",
+			clientID:        "cl2",
+			latestHeight:    "99",
+			trustingPeriod:  "10",
+		},
+	},
+
+	blockTimes: []blockTime{
+		{
+			chainName: "chain2",
+			time:      time.Now(),
+		},
 	},
 }
