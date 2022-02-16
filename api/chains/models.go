@@ -115,3 +115,12 @@ type Coin struct {
 type SupplyResponse struct {
 	Supply []Coin `json:"supply,omitempty"`
 }
+
+type ChainsStatusResponseRow struct {
+	ChainName string `json:"chain"`
+	Online    bool   `json:"online"`
+}
+
+type ChainsStatusResponse struct {
+	ChainsStatusResponses []ChainsStatusResponseRow `json:"chains"`
+}

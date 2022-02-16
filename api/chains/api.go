@@ -4,6 +4,7 @@ import "github.com/gin-gonic/gin"
 
 func Register(router *gin.Engine) {
 	router.GET("/chains", GetChains)
+	router.GET("/chains/status", GetChainsStatus)
 	router.GET("/chains/fee/addresses", GetFeeAddresses)
 
 	chain := router.Group("/chain/:chain")

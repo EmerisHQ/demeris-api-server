@@ -67,6 +67,49 @@ func GetChains(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// GetChainsStatus returns the status of a given chain.
+// @Summary Gets status of a given chain.
+// @Tags Chain
+// @ID status
+// @Description Gets status of all chains.
+// @Produce json
+// @Success 200 {object} ChainsStatusResponse
+// @Failure 500,403 {object} deps.Error
+// @Router /chains/status [get]
+func GetChainsStatus(c *gin.Context) {
+	var res ChainsStatusResponse
+
+	d := deps.GetDeps(c)
+
+	chains, err := d.Database.Chains()
+	// chain query checks for enabled by default
+	// err would assume chain
+	if err != nil {
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	for _, ch := range chains {
+		row := ChainsStatusResponseRow{ChainName: ch.ChainName}
+		cbt, err := d.Database.ChainLastBlock(ch.ChainName)
+		if err != nil {
+			row.Online = false
+		}
+
+		d.Logger.Debugw("last block time", "chain", ch.ChainName, "time", cbt, "threshold_for_chain", ch.ValidBlockThresh.Duration())
+
+		if time.Since(cbt.BlockTime) > ch.ValidBlockThresh.Duration() {
+			row.Online = false
+		}
+
+		row.Online = true
+
+		res.ChainsStatusResponses = append(res.ChainsStatusResponses, row)
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
 // GetChain returns chain information by specifying its name.
 // @Summary Gets chain by name.
 // @Tags Chain
