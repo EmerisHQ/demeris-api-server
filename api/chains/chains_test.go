@@ -18,6 +18,7 @@ import (
 const (
 	chainEndpointUrl  = "http://%s/chain/%s"
 	chainsEndpointUrl = "http://%s/chains"
+	chainsStatusUrl   = "http://%s/chains/status"
 )
 
 func TestGetChain(t *testing.T) {
@@ -154,4 +155,78 @@ func toSupportedChain(c cns.Chain) chains.SupportedChain {
 		DisplayName: c.DisplayName,
 		Logo:        c.Logo,
 	}
+}
+
+func TestGetChainsStatus(t *testing.T) {
+
+	tests := []struct {
+		name             string
+		dataStruct       []cns.Chain
+		expectedHttpCode int
+		expectedResponse chains.ChainsStatusResponse
+		success          bool
+	}{
+		{
+			"Get Chains - Nothing in DB",
+			[]cns.Chain{}, // ignored
+			200,
+			chains.ChainsStatusResponse{},
+			true,
+		},
+		{
+			"Get Chains - 2 Chains (With & Without)",
+			[]cns.Chain{chainWithoutPublicEndpoints, chainWithPublicEndpoints},
+			200,
+			chains.ChainsStatusResponse{
+				ChainsStatusResponses: []chains.ChainsStatusResponseRow{
+					chains.ChainsStatusResponseRow{
+						ChainName: chainWithoutPublicEndpoints.ChainName,
+						Online:    true,
+					},
+					chains.ChainsStatusResponseRow{
+						ChainName: chainWithPublicEndpoints.ChainName,
+						Online:    true,
+					},
+				},
+			},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			// arrange
+			// if we have a populated Chain store, add it
+			if len(tt.dataStruct) != 0 {
+				for _, c := range tt.dataStruct {
+					err := testingCtx.CnsDB.AddChain(c)
+					require.NoError(t, err)
+				}
+			}
+
+			// act
+			resp, err := http.Get(fmt.Sprintf(chainsStatusUrl, testingCtx.Cfg.ListenAddr))
+			require.NoError(t, err)
+			defer func() { _ = resp.Body.Close() }()
+
+			// assert
+			if !tt.success {
+				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+			} else {
+				body, err := ioutil.ReadAll(resp.Body)
+				require.NoError(t, err)
+
+				respStruct := chains.ChainsStatusResponse{}
+				err = json.Unmarshal(body, &respStruct)
+				require.NoError(t, err)
+
+				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+				for _, c := range respStruct.ChainsStatusResponses {
+					require.Contains(t, tt.expectedResponse.ChainsStatusResponses, c)
+				}
+			}
+		})
+	}
+	utils.TruncateDB(testingCtx, t)
 }
