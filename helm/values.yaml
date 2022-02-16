@@ -22,5 +22,6 @@ redisUrl: redis-master:6379
 
 debug: true
 
+serviceMonitorEnabled: true
 serviceMonitorLabels:
   release: monitoring-stack
