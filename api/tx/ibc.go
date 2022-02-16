@@ -24,6 +24,20 @@ const (
 	timeout = 10 * time.Second
 )
 
+// getIBCSeqFromTx returns a list of sequence numbers gotten from data,
+// from the sent IBC packet event.
+// If no IBC sequence numbers are found, the resulting slice is empty.
+func getIBCSeqFromTx(data []byte) []string {
+	raw := gjson.GetBytes(data, packetSequencePath).Array()
+
+	ret := make([]string, 0, len(raw))
+	for _, r := range raw {
+		ret = append(ret, r.String())
+	}
+
+	return ret
+}
+
 // GetDestTx returns tx hash on destination chain.
 // @Summary Gets tx hash on destination chain.
 // @Tags Tx
@@ -139,7 +153,7 @@ func GetDestTx(c *gin.Context) {
 	// there are no more than 1 IBC transfer per tx.
 	// This code is ready to be adapted to support multiple IBC transfer/transaction, but
 	// for now we just get the first seq number found and roll with it.
-	r := gjson.GetBytes(sdkRes, packetSequencePath).Array()
+	r := getIBCSeqFromTx(sdkRes)
 	if len(r) == 0 {
 		e := deps.NewError(
 			"chains",
@@ -162,7 +176,7 @@ func GetDestTx(c *gin.Context) {
 		return
 	}
 
-	seqNum := r[0].String()
+	seqNum := r[0]
 	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, seqNum)
 
 	httpClient := &http.Client{
