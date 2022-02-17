@@ -226,6 +226,35 @@ func TestVerifyTrace(t *testing.T) {
 			false,
 			200,
 		},
+		// {
+		// 	"Channels.hops incorrect conn",
+		// 	tracelistenerData{
+		// 		denoms: verifyTraceData.denoms,
+		// 		channels: []channel{
+		// 			{
+		// 				channelID:        "ch1",
+		// 				counterChannelID: "ch2",
+		// 				hops:             []string{},
+		// 				chainName:        "chain1",
+		// 			},
+		// 			{
+		// 				channelID:        "ch2",
+		// 				counterChannelID: "ch1",
+		// 				hops:             []string{},
+		// 				chainName:        "chain2",
+		// 			},
+		// 		},
+		// 		connections: verifyTraceData.connections,
+		// 		clients:     verifyTraceData.clients,
+		// 		blockTimes:  verifyTraceData.blockTimes,
+		// 	},
+		// 	[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		// 	"chain1",
+		// 	"12345",
+		// 	"",
+		// 	false,
+		// 	200,
+		// },
 	}
 
 	runTraceListnerMigrations(t)
@@ -252,7 +281,7 @@ func TestVerifyTrace(t *testing.T) {
 			require.NoError(t, err)
 
 			result := data["verify_trace"]
-			fmt.Println(result)
+			// fmt.Println(result)
 
 			if tt.cause != "" {
 				require.Contains(t, result["cause"], tt.cause)
