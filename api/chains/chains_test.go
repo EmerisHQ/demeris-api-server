@@ -178,7 +178,7 @@ func TestVerifyTrace(t *testing.T) {
 			"xyz",
 			"token hash xyz not found on chain chain1",
 			false,
-			500,
+			200,
 		},
 		{
 			"denom doesn't exist on dest chain",
@@ -219,7 +219,7 @@ func TestVerifyTrace(t *testing.T) {
 			require.NoError(t, err)
 			defer func() { _ = resp.Body.Close() }()
 
-			// require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 
 			b, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err)
@@ -231,7 +231,7 @@ func TestVerifyTrace(t *testing.T) {
 			result := data["verify_trace"]
 			// fmt.Println(result)
 
-			if tt.expectedHttpCode != 200 {
+			if tt.cause != "" {
 				require.Contains(t, result["cause"], tt.cause)
 			}
 

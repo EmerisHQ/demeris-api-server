@@ -69,7 +69,7 @@ func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (cns.Ibc
 	// 	AND c2.chain_id = ?
 
 	// `
-	x := `SELECT
+	subQ := `SELECT
 	tracelistener.channels.chain_name,
 	tracelistener.channels.channel_id,
 	tracelistener.channels.counter_channel_id,
@@ -89,7 +89,7 @@ FROM
 		tracelistener.clients.chain_name
 		= tracelistener.channels.chain_name`
 
-	y := `
+	q := `
 	SELECT
 		c1.chain_name AS chain_a_chain_name,
 		c1.channel_id AS chain_a_channel_id,
@@ -101,24 +101,24 @@ FROM
 		c2.chain_id AS chain_b_chain_id
 	FROM
 		(
-			` + x + `
+			` + subQ + `
 		) c1	
 			INNER	JOIN
 		(
-			` + x + `
+			` + subQ + `
 		) c2
 		ON c1.channel_id = c2.counter_channel_id
 		AND c1.counter_channel_id = c2.channel_id	
 			
 	WHERE
-		AND c1.chain_name != c2.chain_name
+		c1.chain_name != c2.chain_name
 		AND c1.chain_name = ?
 		AND c1.channel_id = ?
 		AND c2.chain_id = ?
 
 	`
 
-	q := d.dbi.DB.Rebind(y)
+	q = d.dbi.DB.Rebind(q)
 
 	err := d.dbi.DB.Select(&c, q, chain, channel, chainID)
 	if err != nil {
