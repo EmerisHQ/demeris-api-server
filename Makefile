@@ -25,6 +25,7 @@ generate-mocks:
 	@rm mocks/*.go || true
 	mockery --srcpkg sigs.k8s.io/controller-runtime/pkg/client --name Client
 	mockery --srcpkg k8s.io/client-go/informers --name GenericInformer
+	mockery -r --dir lib --all --with-expecter
 
 $(OBJS):
 	go build -o build/$@ -ldflags='-X main.Version=${BRANCH}-${COMMIT}' ${EXTRAFLAGS} ${BASEPKG}/cmd/$@
