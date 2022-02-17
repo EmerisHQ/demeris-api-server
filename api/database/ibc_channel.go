@@ -126,10 +126,9 @@ FROM
 	}
 
 	if len(c) == 0 {
-		return nil, ErrNoMatchingChannel{
-			Chain_a: chainID,
+		return nil, ErrNoDestChain{
+			Chain_a: chain,
 			Channel: channel,
-			Chain_b: chain,
 		}
 	}
 

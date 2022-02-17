@@ -457,7 +457,7 @@ func VerifyTrace(c *gin.Context) {
 		channelInfo, err = d.Database.GetIbcChannelToChain(nextChain, channel, chainID)
 
 		if err != nil {
-			if errors.As(err, &database.ErrNoMatchingChannel{}) {
+			if errors.As(err, &database.ErrNoDestChain{}) {
 				d.LogError(
 					err.Error(),
 					"hash",
