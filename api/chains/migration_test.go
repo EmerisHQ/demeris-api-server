@@ -68,6 +68,12 @@ const (
 	insertConnection = "INSERT INTO tracelistener.connections (chain_name, connection_id, client_id, state, counter_connection_id, counter_client_id) VALUES (($1), ($2), ($3), ($4), ($5), ($6)) ON CONFLICT (chain_name, connection_id, client_id) DO UPDATE SET chain_name=($1),state=($4),counter_connection_id=($5),counter_client_id=($6)"
 	insertClient     = "INSERT INTO tracelistener.clients (chain_name, chain_id, client_id, latest_height, trusting_period) VALUES (($1), ($2), ($3), ($4), ($5)) ON CONFLICT (chain_name, chain_id, client_id) DO UPDATE SET chain_id=($2),client_id=($3),latest_height=($4),trusting_period=($5)"
 	insertBlocktime  = "INSERT INTO tracelistener.blocktime (chain_name, block_time) VALUES (($1), ($2)) ON CONFLICT (chain_name) DO UPDATE SET chain_name=($1),block_time=($2);"
+
+	truncateDenomTraces = `TRUNCATE tracelistener.denom_traces`
+	truncateChannels    = `TRUNCATE tracelistener.channels`
+	truncateConnections = `TRUNCATE tracelistener.connections`
+	truncateClients     = `TRUNCATE tracelistener.clients`
+	truncateBlocktimes  = `TRUNCATE tracelistener.blocktime`
 )
 
 var migrations = []string{
@@ -79,8 +85,23 @@ var migrations = []string{
 	createBlockTimeTable,
 }
 
+var truncating = []string{
+	truncateDenomTraces,
+	truncateChannels,
+	truncateConnections,
+	truncateClients,
+	truncateBlocktimes,
+}
+
 func runTraceListnerMigrations(t *testing.T) {
 	for _, m := range migrations {
+		_, err := testingCtx.CnsDB.Instance.DB.Exec(m)
+		require.NoError(t, err)
+	}
+}
+
+func truncateTracelistener(t *testing.T) {
+	for _, m := range truncating {
 		_, err := testingCtx.CnsDB.Instance.DB.Exec(m)
 		require.NoError(t, err)
 	}

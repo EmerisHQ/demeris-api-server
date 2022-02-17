@@ -530,26 +530,25 @@ func VerifyTrace(c *gin.Context) {
 
 		if primaryChannelInfo.ChannelName != channel {
 
-			// save this for the error message when the cause pr is merged
-			// e := deps.NewError(
-			// 	"denom/verify-trace",
-			// 	fmt.Errorf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo, channel),
-			// 	http.StatusBadRequest,
-			// )
+			e := deps.NewError(
+				"denom/verify-trace",
+				fmt.Errorf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo, channel),
+				http.StatusBadRequest,
+			)
 
-			// d.WriteError(c, e,
-			// 	"not primary channel",
-			// 	"id",
-			// 	e.ID,
-			// 	"hash",
-			// 	hash,
-			// 	"channel",
-			// 	channel,
-			// 	"chain",
-			// 	chainName,
-			// 	"err",
-			// 	err,
-			// )
+			d.WriteError(c, e,
+				"not primary channel",
+				"id",
+				e.ID,
+				"hash",
+				hash,
+				"channel",
+				channel,
+				"chain",
+				chainName,
+				"err",
+				err,
+			)
 
 			res.VerifiedTrace.Verified = false
 

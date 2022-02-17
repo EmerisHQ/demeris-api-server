@@ -226,45 +226,80 @@ func TestVerifyTrace(t *testing.T) {
 			false,
 			200,
 		},
-		// {
-		// 	"Channels.hops incorrect conn",
-		// 	tracelistenerData{
-		// 		denoms: verifyTraceData.denoms,
-		// 		channels: []channel{
-		// 			{
-		// 				channelID:        "ch1",
-		// 				counterChannelID: "ch2",
-		// 				hops:             []string{},
-		// 				chainName:        "chain1",
-		// 			},
-		// 			{
-		// 				channelID:        "ch2",
-		// 				counterChannelID: "ch1",
-		// 				hops:             []string{},
-		// 				chainName:        "chain2",
-		// 			},
-		// 		},
-		// 		connections: verifyTraceData.connections,
-		// 		clients:     verifyTraceData.clients,
-		// 		blockTimes:  verifyTraceData.blockTimes,
-		// 	},
-		// 	[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
-		// 	"chain1",
-		// 	"12345",
-		// 	"",
-		// 	false,
-		// 	200,
-		// },
+		{
+			"destination chain doesn't exist",
+			verifyTraceData,
+			[]cns.Chain{chainWithoutPublicEndpoints},
+			"chain1",
+			"12345",
+			"no chain with name chain2 found",
+			false,
+			200,
+		},
+		{
+			"no matching connection id",
+			tracelistenerData{
+				denoms:   verifyTraceData.denoms,
+				channels: verifyTraceData.channels,
+				connections: []connection{
+					{
+						chainName:           "chain1",
+						connectionID:        "testconn",
+						clientID:            "cl1",
+						state:               "ready",
+						counterConnectionID: "conn2",
+						counterClientID:     "cl2",
+					},
+					verifyTraceData.connections[1],
+				},
+				clients:    verifyTraceData.clients,
+				blockTimes: verifyTraceData.blockTimes,
+			},
+			[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+			"chain1",
+			"12345",
+			"no destination chain found",
+			false,
+			200,
+		},
+		{
+			"Channels.hops incorrect conn",
+			tracelistenerData{
+				denoms: verifyTraceData.denoms,
+				channels: []channel{
+					{
+						channelID:        "ch1",
+						counterChannelID: "ch2",
+						hops:             []string{},
+						chainName:        "chain1",
+					},
+					{
+						channelID:        "ch2",
+						counterChannelID: "ch1",
+						hops:             []string{},
+						chainName:        "chain2",
+					},
+				},
+				connections: verifyTraceData.connections,
+				clients:     verifyTraceData.clients,
+				blockTimes:  verifyTraceData.blockTimes,
+			},
+			[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+			"chain1",
+			"12345",
+			"no destination chain found",
+			false,
+			200,
+		},
 	}
 
 	runTraceListnerMigrations(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("%d %s", i, tt.name), func(t *testing.T) {
 			insertTraceListnerData(t, tt.dataStruct)
 			for _, chain := range tt.chains {
 				testingCtx.CnsDB.AddChain(chain)
-
 			}
 
 			resp, err := http.Get(fmt.Sprintf(verifyTraceEndpointUrl, testingCtx.Cfg.ListenAddr, tt.sourceChain, tt.hash))
@@ -289,6 +324,8 @@ func TestVerifyTrace(t *testing.T) {
 
 			require.Equal(t, tt.verified, result["verified"])
 		})
+		truncateTracelistener(t)
+		utils.TruncateDB(testingCtx, t)
 	}
 }
 
