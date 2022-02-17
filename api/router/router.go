@@ -8,11 +8,11 @@ import (
 	"github.com/allinbits/demeris-api-server/api/block"
 	"github.com/allinbits/demeris-api-server/api/cached"
 	"github.com/allinbits/demeris-api-server/api/liquidity"
-	"github.com/allinbits/emeris-utils/logging"
 	"k8s.io/client-go/informers"
 
 	"github.com/allinbits/demeris-api-server/api/relayer"
 
+	"github.com/allinbits/emeris-utils/logging"
 	"github.com/allinbits/emeris-utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
@@ -57,6 +57,7 @@ func New(
 
 	engine := gin.New()
 
+	engine.Use(logging.CorrelationIDMiddleware(l))
 	r := &Router{
 		g:                engine,
 		DB:               db,
@@ -71,10 +72,11 @@ func New(
 
 	validation.JSONFields(binding.Validator)
 
-	engine.Use(r.catchPanicsFunc)
 	if debug {
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
+	engine.Use(r.setLoggerFromContext)
+	engine.Use(r.catchPanicsFunc)
 	engine.Use(r.decorateCtxWithDeps)
 	engine.Use(r.handleErrors)
 	engine.RedirectTrailingSlash = false
@@ -87,6 +89,16 @@ func New(
 
 func (r *Router) Serve(address string) error {
 	return r.g.Run(address)
+}
+
+func (r *Router) setLoggerFromContext(c *gin.Context) {
+	l, err := logging.GetLoggerFromContext(c)
+	if err != nil && r.l == nil {
+		panic("cant get logger from context")
+	}
+	if l != nil {
+		r.l = l
+	}
 }
 
 func (r *Router) catchPanicsFunc(c *gin.Context) {

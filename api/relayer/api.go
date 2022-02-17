@@ -33,11 +33,11 @@ func Register(router *gin.Engine) {
 // @ID relayer-status
 // @Description gets relayer status
 // @Produce json
-// @Success 200 {object} relayerStatusResponse
+// @Success 200 {object} RelayerStatusResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /relayer/status [get]
 func getRelayerStatus(c *gin.Context) {
-	var res relayerStatusResponse
+	var res RelayerStatusResponse
 
 	d := deps.GetDeps(c)
 
@@ -100,11 +100,11 @@ func getRelayerStatus(c *gin.Context) {
 // @ID relayer-balance
 // @Description gets relayer balance for the various relayer accounts
 // @Produce json
-// @Success 200 {object} relayerBalances
+// @Success 200 {object} RelayerBalances
 // @Failure 500,403 {object} deps.Error
 // @Router /relayer/balance [get]
 func getRelayerBalance(c *gin.Context) {
-	var res relayerBalances
+	var res RelayerBalances
 
 	d := deps.GetDeps(c)
 
@@ -203,7 +203,7 @@ func getRelayerBalance(c *gin.Context) {
 			return
 		}
 
-		res.Balances = append(res.Balances, relayerBalance{
+		res.Balances = append(res.Balances, RelayerBalance{
 			Address:       addresses[i],
 			ChainName:     chains[i],
 			EnoughBalance: enough,

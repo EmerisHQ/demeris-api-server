@@ -14,7 +14,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 		rawBalance tracelistener.BalanceRow
 		vd         map[string]bool
 		dt         denomTraceFunc
-		want       balance
+		want       Balance
 	}{
 		{
 			"verified IBC balance returns verified balance",
@@ -33,13 +33,13 @@ func Test_balanceRespForBalance(t *testing.T) {
 					Hash:      "hash",
 				}, nil
 			},
-			balance{
+			Balance{
 				Address:   "address",
 				BaseDenom: "uatom",
 				Verified:  true,
 				Amount:    "42",
 				OnChain:   "",
-				Ibc: ibcInfo{
+				Ibc: IbcInfo{
 					Path: "path",
 					Hash: "hash",
 				},
@@ -62,13 +62,13 @@ func Test_balanceRespForBalance(t *testing.T) {
 					Hash:      "hash",
 				}, nil
 			},
-			balance{
+			Balance{
 				Address:   "address",
 				BaseDenom: "uatom",
 				Verified:  false,
 				Amount:    "42",
 				OnChain:   "",
-				Ibc: ibcInfo{
+				Ibc: IbcInfo{
 					Path: "path",
 					Hash: "hash",
 				},
@@ -87,13 +87,13 @@ func Test_balanceRespForBalance(t *testing.T) {
 			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, fmt.Errorf("error")
 			},
-			balance{
+			Balance{
 				Address:   "address",
 				BaseDenom: "ibc/hash",
 				Verified:  false,
 				Amount:    "42",
 				OnChain:   "",
-				Ibc: ibcInfo{
+				Ibc: IbcInfo{
 					Hash: "hash",
 				},
 			},
@@ -111,7 +111,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, nil
 			},
-			balance{
+			Balance{
 				Address:   "address",
 				BaseDenom: "denom",
 				Verified:  true,
@@ -131,7 +131,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, nil
 			},
-			balance{
+			Balance{
 				Address:   "address",
 				BaseDenom: "denom",
 				Verified:  false,

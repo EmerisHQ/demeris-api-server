@@ -14,11 +14,11 @@ import (
 // @ID validators
 // @Description Gets list of validators for a chain.
 // @Produce json
-// @Success 200 {object} validatorsResponse
+// @Success 200 {object} ValidatorsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /validators [get]
 func GetValidators(c *gin.Context) {
-	var res validatorsResponse
+	var res ValidatorsResponse
 
 	d := deps.GetDeps(c)
 	chainName := c.Param("chain")

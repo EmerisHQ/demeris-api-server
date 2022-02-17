@@ -118,11 +118,11 @@ func GetChain(c *gin.Context) {
 // @Description Gets chain bech32 configuration by chain name..
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} bech32ConfigResponse
+// @Success 200 {object} Bech32ConfigResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/bech32 [get]
 func GetChainBech32Config(c *gin.Context) {
-	var res bech32ConfigResponse
+	var res Bech32ConfigResponse
 
 	d := deps.GetDeps(c)
 
@@ -163,11 +163,11 @@ func GetChainBech32Config(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Param counterparty path string true "counterparty chain name"
 // @Produce json
-// @Success 200 {object} primaryChannelResponse
+// @Success 200 {object} PrimaryChannelResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/primary_channel/{counterparty} [get]
 func GetPrimaryChannelWithCounterparty(c *gin.Context) {
-	var res primaryChannelResponse
+	var res PrimaryChannelResponse
 
 	d := deps.GetDeps(c)
 
@@ -222,7 +222,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 		return
 	}
 
-	res.Channel = primaryChannel{
+	res.Channel = PrimaryChannel{
 		Counterparty: counterparty,
 		ChannelName:  chain.ChannelName,
 	}
@@ -237,11 +237,11 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 // @Description Gets the channel mapping of a chain with all the other chains it is connected to.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} primaryChannelsResponse
+// @Success 200 {object} PrimaryChannelsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/primary_channel [get]
 func GetPrimaryChannels(c *gin.Context) {
-	var res primaryChannelsResponse
+	var res PrimaryChannelsResponse
 
 	d := deps.GetDeps(c)
 
@@ -294,7 +294,7 @@ func GetPrimaryChannels(c *gin.Context) {
 	}
 
 	for _, cc := range chain {
-		res.Channels = append(res.Channels, primaryChannel{
+		res.Channels = append(res.Channels, PrimaryChannel{
 			Counterparty: cc.Counterparty,
 			ChannelName:  cc.ChannelName,
 		})
@@ -311,11 +311,11 @@ func GetPrimaryChannels(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Param hash path string true "trace hash"
 // @Produce json
-// @Success 200 {object} verifiedTraceResponse
+// @Success 200 {object} VerifiedTraceResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
 func VerifyTrace(c *gin.Context) {
-	var res verifiedTraceResponse
+	var res VerifiedTraceResponse
 
 	d := deps.GetDeps(c)
 
@@ -431,7 +431,7 @@ func VerifyTrace(c *gin.Context) {
 		channel := strings.TrimPrefix(element, "transfer/")
 
 		var channelInfo cns.IbcChannelsInfo
-		var trace trace
+		var trace Trace
 
 		chainID, ok := chainIDsMap[nextChain]
 		if !ok {
@@ -692,11 +692,11 @@ func paths(path string) ([]string, error) {
 // @Description Gets status of a given chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} statusResponse
+// @Success 200 {object} StatusResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/status [get]
 func GetChainStatus(c *gin.Context) {
-	var res statusResponse
+	var res StatusResponse
 
 	d := deps.GetDeps(c)
 
@@ -764,7 +764,7 @@ func GetChainStatus(c *gin.Context) {
 // @Description Gets supply of a given chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} supplyResponse
+// @Success 200 {object} SupplyResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/supply [get]
 func GetChainSupply(c *gin.Context) {
@@ -838,10 +838,10 @@ func GetChainSupply(c *gin.Context) {
 		return
 	}
 
-	res := supplyResponse{}
+	res := SupplyResponse{}
 
 	for _, s := range sdkRes.Coins {
-		res.Supply = append(res.Supply, coin{
+		res.Supply = append(res.Supply, Coin{
 			Denom:  s.Denom,
 			Amount: s.Amount,
 		})
@@ -999,7 +999,7 @@ func GetNumbersByAddress(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, numbersResponse{Numbers: resp})
+	c.JSON(http.StatusOK, NumbersResponse{Numbers: resp})
 }
 
 // GetInflation returns the inflation of a specific chain

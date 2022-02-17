@@ -18,11 +18,11 @@ func Register(router *gin.Engine) {
 // @ID verified-denoms
 // @Description gets verified denoms
 // @Produce json
-// @Success 200 {object} verifiedDenomsResponse
+// @Success 200 {object} VerifiedDenomsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /verified_denoms [get]
 func GetVerifiedDenoms(c *gin.Context) {
-	var res verifiedDenomsResponse
+	var res VerifiedDenomsResponse
 
 	d := deps.GetDeps(c)
 
@@ -48,7 +48,7 @@ func GetVerifiedDenoms(c *gin.Context) {
 
 	for _, cc := range chains {
 		for _, vd := range cc.VerifiedTokens() {
-			res.VerifiedDenoms = append(res.VerifiedDenoms, verifiedDenom{
+			res.VerifiedDenoms = append(res.VerifiedDenoms, VerifiedDenom{
 				Denom:     vd,
 				ChainName: cc.ChainName,
 			})
