@@ -203,6 +203,29 @@ func TestVerifyTrace(t *testing.T) {
 			false,
 			200,
 		},
+		{
+			"incorrect channel name in path",
+			tracelistenerData{
+				denoms: []denomTrace{
+					{
+						path:      "transfer/ch2",
+						baseDenom: "denom2",
+						hash:      "12345",
+						chainName: "chain1",
+					},
+				},
+				channels:    verifyTraceData.channels,
+				connections: verifyTraceData.connections,
+				clients:     verifyTraceData.clients,
+				blockTimes:  verifyTraceData.blockTimes,
+			},
+			[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+			"chain1",
+			"12345",
+			"no destination chain found",
+			false,
+			200,
+		},
 	}
 
 	runTraceListnerMigrations(t)
@@ -229,7 +252,7 @@ func TestVerifyTrace(t *testing.T) {
 			require.NoError(t, err)
 
 			result := data["verify_trace"]
-			// fmt.Println(result)
+			fmt.Println(result)
 
 			if tt.cause != "" {
 				require.Contains(t, result["cause"], tt.cause)
