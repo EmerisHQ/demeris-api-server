@@ -122,7 +122,6 @@ func TestVerifyTrace(t *testing.T) {
 			require.NoError(t, err)
 
 			result := data["verify_trace"]
-			fmt.Println(result)
 
 			if tt.cause != "" {
 				require.Contains(t, result["cause"], tt.cause)
