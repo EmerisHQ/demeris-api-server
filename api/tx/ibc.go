@@ -19,11 +19,25 @@ import (
 // can be updated to more readable format after typed events are introduced in sdk
 const (
 	// packetSequencePath may need updates if ibc-go/transfer events change
-	packetSequencePath = "tx_response.logs.0.events.2.attributes.3.value"
+	packetSequencePath = `tx_response.logs.#.events.#(type=="send_packet").attributes.#(key=="packet_sequence").value`
 	// txPath may need updates if tendermint response changes
 	txPath  = "result.txs.0.hash"
 	timeout = 10 * time.Second
 )
+
+// getIBCSeqFromTx returns a list of sequence numbers gotten from data,
+// from the sent IBC packet event.
+// If no IBC sequence numbers are found, the resulting slice is empty.
+func getIBCSeqFromTx(data []byte) []string {
+	raw := gjson.GetBytes(data, packetSequencePath).Array()
+
+	ret := make([]string, 0, len(raw))
+	for _, r := range raw {
+		ret = append(ret, r.String())
+	}
+
+	return ret
+}
 
 // GetDestTx returns tx hash on destination chain.
 // @Summary Gets tx hash on destination chain.
@@ -135,8 +149,36 @@ func GetDestTx(c *gin.Context) {
 		return
 	}
 
-	r := gjson.GetBytes(sdkRes, packetSequencePath)
-	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, r.String())
+	// This query always returns an array of sequence numbers.
+	// Emeris-generated IBC transfers are always sent out alone, meaning that
+	// there are no more than 1 IBC transfer per tx.
+	// This code is ready to be adapted to support multiple IBC transfer/transaction, but
+	// for now we just get the first seq number found and roll with it.
+	r := getIBCSeqFromTx(sdkRes)
+	if len(r) == 0 {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("provided transaction is not ibc transfer"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"provided transaction is not ibc transfer",
+			"id",
+			e.ID,
+			"txHash",
+			txHash,
+			"src srcChainInfo name",
+			srcChain,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	seqNum := r[0]
+	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, seqNum)
 
 	httpClient := &http.Client{
 		Timeout: timeout,
@@ -144,10 +186,10 @@ func GetDestTx(c *gin.Context) {
 
 	// we're validating inputs and hence gosec-G107 can be ignored
 	resp, err := httpClient.Get(url) // nolint: gosec
-	if err != nil {
+	if err != nil || resp.StatusCode != http.StatusOK {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", r.String(), destChain),
+			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
 			http.StatusBadRequest,
 		)
 
@@ -161,6 +203,8 @@ func GetDestTx(c *gin.Context) {
 			destChain,
 			"error",
 			err,
+			"status_code",
+			resp.Status,
 		)
 
 		return
@@ -171,7 +215,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", r.String(), destChain),
+			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
 			http.StatusBadRequest,
 		)
 
@@ -190,9 +234,9 @@ func GetDestTx(c *gin.Context) {
 		return
 	}
 
-	r = gjson.GetBytes(bz, txPath)
+	otherSideTxHash := gjson.GetBytes(bz, txPath)
 	c.JSON(http.StatusOK, apimodels.DestTxResponse{
 		DestChain: destChain,
-		TxHash:    r.String(),
+		TxHash:    otherSideTxHash.String(),
 	})
 }
