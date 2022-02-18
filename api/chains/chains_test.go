@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/allinbits/demeris-api-server/api/chains"
 	utils "github.com/allinbits/demeris-api-server/api/test_utils"
 
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/google/go-cmp/cmp"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
 
@@ -227,16 +229,6 @@ func TestVerifyTrace(t *testing.T) {
 			200,
 		},
 		{
-			"destination chain doesn't exist",
-			verifyTraceData,
-			[]cns.Chain{chainWithoutPublicEndpoints},
-			"chain1",
-			"12345",
-			"no chain with name chain2 found",
-			false,
-			200,
-		},
-		{
 			"no matching connection id",
 			tracelistenerData{
 				denoms:   verifyTraceData.denoms,
@@ -291,6 +283,121 @@ func TestVerifyTrace(t *testing.T) {
 			false,
 			200,
 		},
+		{
+			"destination chain doesn't exist",
+			verifyTraceData,
+			[]cns.Chain{chainWithoutPublicEndpoints},
+			"chain1",
+			"12345",
+			"no chain with name chain2 found",
+			false,
+			200,
+		},
+		{
+			"dest chain not enabled",
+			verifyTraceData,
+			[]cns.Chain{
+				chainWithoutPublicEndpoints,
+				{
+					Enabled:          false,
+					ChainName:        "chain2",
+					DemerisAddresses: []string{"12345"},
+					SupportedWallets: pq.StringArray([]string{"keplr"}),
+					PrimaryChannel:   map[string]string{"chain2": "chXYZ"},
+					Denoms: []cns.Denom{
+						{
+							Name:     "denom2",
+							Verified: true,
+						},
+					},
+					NodeInfo: cns.NodeInfo{
+						ChainID: "chain_2",
+					},
+				},
+			},
+			"chain1",
+			"12345",
+			"no chain with name chain2 found",
+			false,
+			200,
+		},
+		{
+			"dest chain offline",
+			tracelistenerData{
+				denoms:      verifyTraceData.denoms,
+				channels:    verifyTraceData.channels,
+				connections: verifyTraceData.connections,
+				clients:     verifyTraceData.clients,
+				blockTimes: []blockTime{
+					{
+						chainName: "chain2",
+						time:      time.Now().Add(time.Hour * -24),
+					},
+				},
+			},
+			[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+			"chain1",
+			"12345",
+			"status offline",
+			false,
+			200,
+		},
+		{
+			"primary channel mismatch in chains data",
+			verifyTraceData,
+			[]cns.Chain{
+				chainWithPublicEndpoints,
+				{
+					Enabled:          true,
+					ChainName:        "chain1",
+					DemerisAddresses: []string{"12345"},
+					SupportedWallets: pq.StringArray([]string{"keplr"}),
+					PrimaryChannel:   map[string]string{"chain2": "chXYZ"},
+					Denoms: []cns.Denom{
+						{
+							Name:     "denom1",
+							Verified: true,
+						},
+					},
+					NodeInfo: cns.NodeInfo{
+						ChainID: "chain_1",
+					},
+				},
+			},
+			"chain1",
+			"12345",
+			"not primary channel for chain",
+			false,
+			200,
+		},
+		{
+			"primary channel mismatch in chains data",
+			verifyTraceData,
+			[]cns.Chain{
+				chainWithPublicEndpoints,
+				{
+					Enabled:          true,
+					ChainName:        "chain1",
+					DemerisAddresses: []string{"12345"},
+					SupportedWallets: pq.StringArray([]string{"keplr"}),
+					PrimaryChannel:   map[string]string{"chain1": "ch1"},
+					Denoms: []cns.Denom{
+						{
+							Name:     "denom1",
+							Verified: true,
+						},
+					},
+					NodeInfo: cns.NodeInfo{
+						ChainID: "chain_1",
+					},
+				},
+			},
+			"chain1",
+			"12345",
+			"chain1 doesnt have primary channel for chain2",
+			false,
+			200,
+		},
 	}
 
 	runTraceListnerMigrations(t)
@@ -299,7 +406,7 @@ func TestVerifyTrace(t *testing.T) {
 		t.Run(fmt.Sprintf("%d %s", i, tt.name), func(t *testing.T) {
 			insertTraceListnerData(t, tt.dataStruct)
 			for _, chain := range tt.chains {
-				testingCtx.CnsDB.AddChain(chain)
+				require.NoError(t, testingCtx.CnsDB.AddChain(chain))
 			}
 
 			resp, err := http.Get(fmt.Sprintf(verifyTraceEndpointUrl, testingCtx.Cfg.ListenAddr, tt.sourceChain, tt.hash))
@@ -316,7 +423,7 @@ func TestVerifyTrace(t *testing.T) {
 			require.NoError(t, err)
 
 			result := data["verify_trace"]
-			// fmt.Println(result)
+			fmt.Println(result)
 
 			if tt.cause != "" {
 				require.Contains(t, result["cause"], tt.cause)

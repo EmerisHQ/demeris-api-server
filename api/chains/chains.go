@@ -503,54 +503,73 @@ func VerifyTrace(c *gin.Context) {
 		primaryChannelInfo, err := d.Database.PrimaryChannelCounterparty(chainName, nextChain)
 
 		if err != nil {
-			e := deps.NewError(
-				"denom/verify-trace",
-				fmt.Errorf("failed to get primary channel for %s", hash),
-				http.StatusBadRequest,
-			)
+			if errors.Is(err, sql.ErrNoRows) {
+				cause := fmt.Sprintf("%s doesnt have primary channel for %s", chainName, nextChain)
 
-			d.WriteError(c, e,
-				"cannot query primary channel information",
-				"id",
-				e.ID,
-				"hash",
-				hash,
-				"path",
-				res.VerifiedTrace.Path,
-				"chain",
-				chainName,
-				"nextChain",
-				nextChain,
-				"err",
-				err,
-			)
+				d.LogError(
+					"channel not found",
+					"hash",
+					hash,
+					"path",
+					res.VerifiedTrace.Path,
+					"channel",
+					channel,
+					"chain",
+					chainName,
+					"err",
+					cause,
+				)
 
+				res.VerifiedTrace.Verified = false
+				res.VerifiedTrace.Cause = cause
+
+				c.JSON(http.StatusOK, res)
+			} else {
+				e := deps.NewError(
+					"denom/verify-trace",
+					fmt.Errorf("failed to get primary channel for %s", hash),
+					http.StatusBadRequest,
+				)
+
+				d.WriteError(c, e,
+					"cannot query primary channel information",
+					"id",
+					e.ID,
+					"hash",
+					hash,
+					"path",
+					res.VerifiedTrace.Path,
+					"chain",
+					chainName,
+					"nextChain",
+					nextChain,
+					"err",
+					err,
+				)
+			}
 			return
 		}
 
 		if primaryChannelInfo.ChannelName != channel {
 
-			e := deps.NewError(
-				"denom/verify-trace",
-				fmt.Errorf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo, channel),
-				http.StatusBadRequest,
-			)
+			cause := fmt.Sprintf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo.ChannelName, channel)
 
-			d.WriteError(c, e,
+			d.LogError(
 				"not primary channel",
-				"id",
-				e.ID,
 				"hash",
 				hash,
+				"path",
+				res.VerifiedTrace.Path,
 				"channel",
 				channel,
 				"chain",
 				chainName,
 				"err",
-				err,
+				cause,
 			)
 
 			res.VerifiedTrace.Verified = false
+			res.VerifiedTrace.Cause = cause
 
 			c.JSON(http.StatusOK, res)
 			return
