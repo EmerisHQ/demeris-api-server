@@ -29,7 +29,7 @@ import (
 // @ID chains
 // @Description Gets list of supported chains.
 // @Produce json
-// @Success 200 {object} ChainsResponse
+// @Success 200 {object} apimodels.ChainsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chains [get]
 func GetChains(c *gin.Context) {
@@ -75,7 +75,7 @@ func GetChains(c *gin.Context) {
 // @Description Gets chain by name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} ChainResponse
+// @Success 200 {object} apimodels.ChainResponse
 // @Failure 500,400 {object} deps.Error
 // @Router /chain/{chainName} [get]
 func GetChain(c *gin.Context) {
@@ -119,7 +119,7 @@ func GetChain(c *gin.Context) {
 // @Description Gets chain bech32 configuration by chain name..
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} Bech32ConfigResponse
+// @Success 200 {object} apimodels.Bech32ConfigResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/bech32 [get]
 func GetChainBech32Config(c *gin.Context) {
@@ -164,7 +164,7 @@ func GetChainBech32Config(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Param counterparty path string true "counterparty chain name"
 // @Produce json
-// @Success 200 {object} PrimaryChannelResponse
+// @Success 200 {object} apimodels.PrimaryChannelResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/primary_channel/{counterparty} [get]
 func GetPrimaryChannelWithCounterparty(c *gin.Context) {
@@ -238,7 +238,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 // @Description Gets the channel mapping of a chain with all the other chains it is connected to.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} PrimaryChannelsResponse
+// @Success 200 {object} apimodels.PrimaryChannelsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/primary_channel [get]
 func GetPrimaryChannels(c *gin.Context) {
@@ -312,7 +312,7 @@ func GetPrimaryChannels(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Param hash path string true "trace hash"
 // @Produce json
-// @Success 200 {object} VerifiedTraceResponse
+// @Success 200 {object} apimodels.VerifiedTraceResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
 func VerifyTrace(c *gin.Context) {
@@ -656,7 +656,7 @@ func paths(path string) ([]string, error) {
 // @Description Gets status of a given chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} StatusResponse
+// @Success 200 {object} apimodels.StatusResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/status [get]
 func GetChainStatus(c *gin.Context) {
@@ -728,7 +728,7 @@ func GetChainStatus(c *gin.Context) {
 // @Description Gets supply of a given chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} SupplyResponse
+// @Success 200 {object} apimodels.SupplyResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/supply [get]
 func GetChainSupply(c *gin.Context) {

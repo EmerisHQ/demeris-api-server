@@ -27,7 +27,7 @@ func Register(router *gin.Engine) {
 // @Description Relays a transaction to the relevant chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} TxResponse
+// @Success 200 {object} apimodels.TxResponse
 // @Failure 500,400 {object} deps.Error
 // @Router /tx/{chainName} [post]
 func Tx(c *gin.Context) {
@@ -189,7 +189,7 @@ func GetTicket(c *gin.Context) {
 // @Description estimate transaction fees for the relevant chain.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} TxFeeEstimateRes
+// @Success 200 {object} apimodels.TxFeeEstimateRes
 // @Failure 500,400 {object} deps.Error
 // @Router /tx/fees/{chainName} [post]
 func GetTxFeeEstimate(c *gin.Context) {

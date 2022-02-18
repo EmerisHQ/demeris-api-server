@@ -15,7 +15,7 @@ import (
 // @ID validators
 // @Description Gets list of validators for a chain.
 // @Produce json
-// @Success 200 {object} ValidatorsResponse
+// @Success 200 {object} apimodels.ValidatorsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /validators [get]
 func GetValidators(c *gin.Context) {

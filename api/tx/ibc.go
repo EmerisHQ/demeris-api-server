@@ -48,7 +48,7 @@ func getIBCSeqFromTx(data []byte) []string {
 // @Param destChainName path string true "destination chain name"
 // @Param txHash path string true "tx hash on src chain"
 // @Produce json
-// @Success 200 {object} DestTxResponse
+// @Success 200 {object} apimodels.DestTxResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /tx/{srcChain}/{destChain}/{txHash} [get]
 func GetDestTx(c *gin.Context) {

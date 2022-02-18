@@ -16,7 +16,7 @@ import (
 // @Description Gets average fee in dollar by chain name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} FeeResponse
+// @Success 200 {object} apimodels.FeeResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/fee [get]
 func GetFee(c *gin.Context) {
@@ -62,7 +62,7 @@ func GetFee(c *gin.Context) {
 // @Description Gets address to pay fee for by chain name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} FeeAddressResponse
+// @Success 200 {object} apimodels.FeeAddressResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/address [get]
 func GetFeeAddress(c *gin.Context) {
@@ -107,7 +107,7 @@ func GetFeeAddress(c *gin.Context) {
 // @ID feeaddresses
 // @Description Gets all addresses to pay fee for.
 // @Produce json
-// @Success 200 {object} FeeAddressesResponse
+// @Success 200 {object} apimodels.FeeAddressesResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chains/fee/addresses [get]
 func GetFeeAddresses(c *gin.Context) {
@@ -155,7 +155,7 @@ func GetFeeAddresses(c *gin.Context) {
 // @Description Gets token used to pay fees by chain name.
 // @Param chainName path string true "chain name"
 // @Produce json
-// @Success 200 {object} FeeTokenResponse
+// @Success 200 {object} apimodels.FeeTokenResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /chain/{chainName}/token [get]
 func GetFeeToken(c *gin.Context) {

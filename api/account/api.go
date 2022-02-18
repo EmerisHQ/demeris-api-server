@@ -37,7 +37,7 @@ func Register(router *gin.Engine) {
 // @Description gets address balance
 // @Produce json
 // @Param address path string true "address to query balance for"
-// @Success 200 {object} BalancesResponse
+// @Success 200 {object} apimodels.BalancesResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/balance [get]
 func GetBalancesByAddress(c *gin.Context) {
@@ -169,7 +169,7 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @ID get-staking-account
 // @Produce json
 // @Param address path string true "address to query staking for"
-// @Success 200 {object} StakingBalancesResponse
+// @Success 200 {object} apimodels.StakingBalancesResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/stakingbalance [get]
 func GetDelegationsByAddress(c *gin.Context) {
@@ -219,7 +219,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 // @ID get-unbonding-delegations-account
 // @Produce json
 // @Param address path string true "address to query unbonding delegations for"
-// @Success 200 {object} UnbondingDelegationsResponse
+// @Success 200 {object} apimodels.UnbondingDelegationsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/unbondingdelegations [get]
 func GetUnbondingDelegationsByAddress(c *gin.Context) {
@@ -270,7 +270,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 // @Produce json
 // @Param address path string true "address to query delegation rewards for"
 // @Param chain path string true "chain to query delegation rewards for"
-// @Success 200 {object} DelegatorRewardsResponse
+// @Success 200 {object} apimodels.DelegatorRewardsResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/delegatorrewards/{chain} [get]
 func GetDelegatorRewards(c *gin.Context) {
@@ -388,7 +388,7 @@ func GetDelegatorRewards(c *gin.Context) {
 // @ID get-all-numbers-account
 // @Produce json
 // @Param address path string true "address to query numbers for"
-// @Success 200 {object} AccountNumbersResponse
+// @Success 200 {object} apimodels.AccountNumbersResponse
 // @Failure 500,403 {object} deps.Error
 // @Router /account/{address}/numbers [get]
 func GetNumbersByAddress(c *gin.Context) {
