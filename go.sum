@@ -153,8 +153,8 @@ github.com/alicebob/miniredis/v2 v2.18.0 h1:EPUGD69ou4Uw4c81t9NLh0+dSou46k4tFEvf
 github.com/alicebob/miniredis/v2 v2.18.0/go.mod h1:gquAfGbzn92jvtrSC69+6zZnwSODVXVpYDRaGhWaL6I=
 github.com/allegro/bigcache v1.2.1-0.20190218064605-e24eb225f156/go.mod h1:Cb/ax3seSYIx7SuZdm2G2xzfwmv3TPSk2ucNfQESPXM=
 github.com/allinbits/demeris-backend-models v0.0.0-20211116145636-4485bb7af3c0/go.mod h1:qloDLoSG+TzdDoayuxEUbygiQZlrV/WYcWHafEoXM/I=
-github.com/allinbits/demeris-backend-models v1.0.2-0.20220214093947-8c4541cccad4 h1:YYQjcioi2FkMFCBimjdPqgX8oE7PWU4MVszhZy+EaHI=
-github.com/allinbits/demeris-backend-models v1.0.2-0.20220214093947-8c4541cccad4/go.mod h1:QPKxm9tGHF8+jKwBx8fqOmHqkXVwkvvgsncBQ7ha5S0=
+github.com/allinbits/demeris-backend-models v1.1.0 h1:yumzcdjlVDO2yCFc2t7BhFTwqFBFwOkW2pqyEJb6q+M=
+github.com/allinbits/demeris-backend-models v1.1.0/go.mod h1:QPKxm9tGHF8+jKwBx8fqOmHqkXVwkvvgsncBQ7ha5S0=
 github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded h1:AD2UB10Bx7QgStLnJ6Jp1XQD2Y2u9Js0TMCJIhd61n8=
 github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded/go.mod h1:FuP1e/sGgjXI/pJ0ipHmEWLHHQWMPwnT8rDFz2WKKUE=
 github.com/allinbits/emeris-utils v1.0.1 h1:zFmyLoE6a1RqaY863oM66kBeuPIGVm2uyv9H/axhjbg=
