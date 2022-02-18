@@ -97,6 +97,8 @@ func TestGetChains(t *testing.T) {
 }
 
 func TestVerifyTrace(t *testing.T) {
+	t.Parallel()
+
 	runTraceListnerMigrations(t)
 
 	for i, tt := range verifyTraceTestCases {

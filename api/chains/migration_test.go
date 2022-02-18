@@ -93,6 +93,7 @@ var truncating = []string{
 	truncateBlocktimes,
 }
 
+// Creates tracelistner database and required tables only if they dont exist
 func runTraceListnerMigrations(t *testing.T) {
 	for _, m := range migrations {
 		_, err := testingCtx.CnsDB.Instance.DB.Exec(m)
@@ -100,6 +101,7 @@ func runTraceListnerMigrations(t *testing.T) {
 	}
 }
 
+// Empties all tracelistner tables
 func truncateTracelistener(t *testing.T) {
 	for _, m := range truncating {
 		_, err := testingCtx.CnsDB.Instance.DB.Exec(m)
@@ -107,6 +109,7 @@ func truncateTracelistener(t *testing.T) {
 	}
 }
 
+// runs the given qurey with args and checks affected rows != 0
 func insertRow(t *testing.T, query string, args ...interface{}) {
 
 	res, err := testingCtx.CnsDB.Instance.DB.Exec(query, args...)
@@ -117,6 +120,7 @@ func insertRow(t *testing.T, query string, args ...interface{}) {
 	require.NotEqual(t, 0, rows)
 }
 
+//	inserts data from given struct into respective tracelistener tables
 func insertTraceListnerData(t *testing.T, data tracelistenerData) {
 	for _, d := range data.denoms {
 		insertRow(t, insertDenomTrace, d.path, d.baseDenom, d.hash, d.chainName)
