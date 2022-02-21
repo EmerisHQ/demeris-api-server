@@ -62,6 +62,7 @@ func TestGetChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
 			// arrange
 			// if we have a populated Chain store, add it
@@ -122,6 +123,7 @@ func TestGetChains(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
 			// arrange
 			// if we have a populated Chain store, add it
@@ -185,14 +187,14 @@ func TestGetChainStatus(t *testing.T) {
 			chains.StatusResponse{Online: false},
 			true,
 		},
-		// {
-		// 	"Get Chain Status - Enabled",
-		// 	chainWithPublicEndpoints,
-		// 	chainWithPublicEndpoints.ChainName,
-		// 	200,
-		// 	chains.StatusResponse{Online: true},
-		// 	true,
-		// },
+		{
+			"Get Chain Status - Enabled",
+			chainWithPublicEndpoints,
+			chainWithPublicEndpoints.ChainName,
+			200,
+			chains.StatusResponse{Online: true},
+			true,
+		},
 		{
 			"Get Chain Status - Disabled",
 			disabledChain,
@@ -205,7 +207,7 @@ func TestGetChainStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
+			t.Parallel()
 			// arrange
 			// if we have a populated Chain store, add it
 			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
