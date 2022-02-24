@@ -552,7 +552,8 @@ func VerifyTrace(c *gin.Context) {
 
 		if primaryChannelInfo.ChannelName != channel {
 
-			cause := fmt.Sprintf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo.ChannelName, channel)
+			cause := fmt.Sprintf("%s : not primary channel for chain %s- expecting %s got %s",
+				hash, chainName, primaryChannelInfo.ChannelName, channel)
 
 			d.LogError(
 				"not primary channel",
