@@ -721,45 +721,18 @@ func GetChainStatus(c *gin.Context) {
 
 	chainName := c.Param("chain")
 
-	cbt, err := d.Database.ChainLastBlock(chainName)
+	chain, err := d.Database.Chain(chainName)
+	// chain query checks for enabled by default
+	// err would assume chain
 	if err != nil {
-		e := deps.NewError(
-			"status",
-			fmt.Errorf("cannot retrieve chain status for %v", chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain last block time",
-			"id",
-			e.ID,
-			"name",
-			chainName,
-			"error",
-			err,
-		)
-
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	chain, err := d.Database.Chain(chainName)
+	cbt, err := d.Database.ChainLastBlock(chainName)
 	if err != nil {
-		e := deps.NewError(
-			"status",
-			fmt.Errorf("cannot retrieve chain status for %v", chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id",
-			e.ID,
-			"name",
-			chainName,
-			"error",
-			err,
-		)
-
+		res.Online = false
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
