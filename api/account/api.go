@@ -331,23 +331,15 @@ func GetDelegatorRewards(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
-			"chains",
-			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
-			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
+		d.LogError(
 			"cannot retrieve delegator rewards from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
 			err,
 		)
 
-		return
+		c.JSON(http.StatusOK, res)
 	}
 
 	coinsSlice := func(in []*sdkutilities.Coin) sdktypes.DecCoins {
