@@ -355,7 +355,6 @@ func VerifyTrace(c *gin.Context) {
 	res.VerifiedTrace.BaseDenom = denomTrace.BaseDenom
 
 	pathsElements, err := paths(res.VerifiedTrace.Path)
-
 	if err != nil {
 
 		cause := fmt.Sprintf("unsupported path %s", res.VerifiedTrace.Path)
@@ -379,21 +378,11 @@ func VerifyTrace(c *gin.Context) {
 	}
 
 	chainIDsMap, err := d.Database.ChainIDs()
-
 	if err != nil {
+		cause := fmt.Sprintf("cannot query list of chain ids, %s", err)
 
-		err = fmt.Errorf("cannot query list of chain ids, %w", err)
-
-		e := deps.NewError(
-			"denom/verify-trace",
-			fmt.Errorf("cannot query list of chain ids"),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
+		d.LogError(
 			"cannot query list of chain ids",
-			"id",
-			e.ID,
 			"hash",
 			hash,
 			"path",
@@ -401,6 +390,12 @@ func VerifyTrace(c *gin.Context) {
 			"err",
 			err,
 		)
+
+		res.VerifiedTrace.Verified = false
+		res.VerifiedTrace.Cause = cause
+
+		c.JSON(http.StatusOK, res)
+
 		return
 	}
 
@@ -473,19 +468,18 @@ func VerifyTrace(c *gin.Context) {
 
 				c.JSON(http.StatusOK, res)
 			} else {
-				e1 := deps.NewError(
-					"denom/verify-trace",
-					fmt.Errorf("failed querying for %s", hash),
-					http.StatusBadRequest,
-				)
+				cause := fmt.Sprintf("invalid number of query responses")
 
-				d.WriteError(c, e1,
+				d.LogError(
 					"invalid number of query responses",
-					"id",
-					e1.ID,
 					"hash",
 					hash,
 				)
+
+				res.VerifiedTrace.Verified = false
+				res.VerifiedTrace.Cause = cause
+
+				c.JSON(http.StatusOK, res)
 			}
 
 			return
@@ -503,16 +497,10 @@ func VerifyTrace(c *gin.Context) {
 		primaryChannelInfo, err := d.Database.PrimaryChannelCounterparty(chainName, nextChain)
 
 		if err != nil {
-			e := deps.NewError(
-				"denom/verify-trace",
-				fmt.Errorf("failed to get primary channel for %s", hash),
-				http.StatusBadRequest,
-			)
+			cause := fmt.Sprintf("invalid number of query responses")
 
-			d.WriteError(c, e,
-				"cannot query primary channel information",
-				"id",
-				e.ID,
+			d.LogError(
+				cause,
 				"hash",
 				hash,
 				"path",
@@ -525,33 +513,28 @@ func VerifyTrace(c *gin.Context) {
 				err,
 			)
 
+			res.VerifiedTrace.Verified = false
+			res.VerifiedTrace.Cause = cause
+
+			c.JSON(http.StatusOK, res)
 			return
 		}
 
 		if primaryChannelInfo.ChannelName != channel {
+			cause := fmt.Sprintf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo, channel)
 
-			// save this for the error message when the cause pr is merged
-			// e := deps.NewError(
-			// 	"denom/verify-trace",
-			// 	fmt.Errorf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo, channel),
-			// 	http.StatusBadRequest,
-			// )
-
-			// d.WriteError(c, e,
-			// 	"not primary channel",
-			// 	"id",
-			// 	e.ID,
-			// 	"hash",
-			// 	hash,
-			// 	"channel",
-			// 	channel,
-			// 	"chain",
-			// 	chainName,
-			// 	"err",
-			// 	err,
-			// )
+			d.LogError(
+				cause,
+				"hash",
+				hash,
+				"channel",
+				channel,
+				"chain",
+				chainName,
+			)
 
 			res.VerifiedTrace.Verified = false
+			res.VerifiedTrace.Cause = cause
 
 			c.JSON(http.StatusOK, res)
 			return
@@ -560,6 +543,7 @@ func VerifyTrace(c *gin.Context) {
 
 	nextChainData, err := d.Database.Chain(nextChain)
 	if err != nil {
+		res.VerifiedTrace.Verified = false
 
 		d.LogError(
 			"cannot query chain",
@@ -582,16 +566,10 @@ func VerifyTrace(c *gin.Context) {
 			return
 		}
 
-		e := deps.NewError(
-			"denom/verify-trace",
-			fmt.Errorf("database error, %w", err),
-			http.StatusInternalServerError,
-		)
+		cause := fmt.Sprintf("cannot query chain with name %s", nextChain)
 
-		d.WriteError(c, e,
-			fmt.Sprintf("cannot query chain with name %s", nextChain),
-			"id",
-			e.ID,
+		d.LogError(
+			cause,
 			"hash",
 			hash,
 			"path",
@@ -600,10 +578,10 @@ func VerifyTrace(c *gin.Context) {
 			chainName,
 			"nextChain",
 			nextChain,
-			"err",
-			err,
 		)
 
+		res.VerifiedTrace.Cause = cause
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
