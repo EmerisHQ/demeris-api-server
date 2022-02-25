@@ -13,7 +13,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.18.0
 	github.com/allinbits/demeris-backend-models v1.0.0
 	github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded
-	github.com/allinbits/emeris-utils v1.0.1
+	github.com/allinbits/emeris-utils v1.1.1
 	github.com/allinbits/sdk-service-meta v0.0.0-20220225063547-1a52f5fc65ba
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cockroachdb/cockroach-go/v2 v2.2.8
