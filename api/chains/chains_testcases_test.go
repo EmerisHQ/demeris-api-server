@@ -3,6 +3,7 @@ package chains_test
 import (
 	"time"
 
+	utils "github.com/allinbits/demeris-api-server/api/test_utils"
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/lib/pq"
 )
@@ -59,7 +60,7 @@ var getChainsTestCases = []struct {
 
 var verifyTraceTestCases = []struct {
 	name             string
-	dataStruct       tracelistenerData
+	dataStruct       utils.TracelistenerData
 	chains           []cns.Chain
 	sourceChain      string
 	hash             string
@@ -89,19 +90,19 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"denom doesn't exist on dest chain",
-		tracelistenerData{
-			denoms: []denomTrace{
+		utils.TracelistenerData{
+			Denoms: []utils.DenomTrace{
 				{
-					path:      "transfer/ch1",
-					baseDenom: "denomXYZ",
-					hash:      "12345",
-					chainName: "chain1",
+					Path:      "transfer/ch1",
+					BaseDenom: "denomXYZ",
+					Hash:      "12345",
+					ChainName: "chain1",
 				},
 			},
-			channels:    verifyTraceData.channels,
-			connections: verifyTraceData.connections,
-			clients:     verifyTraceData.clients,
-			blockTimes:  verifyTraceData.blockTimes,
+			Channels:    verifyTraceData.Channels,
+			Connections: verifyTraceData.Connections,
+			Clients:     verifyTraceData.Clients,
+			BlockTimes:  verifyTraceData.BlockTimes,
 		},
 		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
 		"chain1",
@@ -112,19 +113,19 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"incorrect channel name in path",
-		tracelistenerData{
-			denoms: []denomTrace{
+		utils.TracelistenerData{
+			Denoms: []utils.DenomTrace{
 				{
-					path:      "transfer/ch2",
-					baseDenom: "denom2",
-					hash:      "12345",
-					chainName: "chain1",
+					Path:      "transfer/ch2",
+					BaseDenom: "denom2",
+					Hash:      "12345",
+					ChainName: "chain1",
 				},
 			},
-			channels:    verifyTraceData.channels,
-			connections: verifyTraceData.connections,
-			clients:     verifyTraceData.clients,
-			blockTimes:  verifyTraceData.blockTimes,
+			Channels:    verifyTraceData.Channels,
+			Connections: verifyTraceData.Connections,
+			Clients:     verifyTraceData.Clients,
+			BlockTimes:  verifyTraceData.BlockTimes,
 		},
 		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
 		"chain1",
@@ -135,22 +136,22 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"no matching connection id",
-		tracelistenerData{
-			denoms:   verifyTraceData.denoms,
-			channels: verifyTraceData.channels,
-			connections: []connection{
+		utils.TracelistenerData{
+			Denoms:   verifyTraceData.Denoms,
+			Channels: verifyTraceData.Channels,
+			Connections: []utils.Connection{
 				{
-					chainName:           "chain1",
-					connectionID:        "testconn",
-					clientID:            "cl1",
-					state:               "ready",
-					counterConnectionID: "conn2",
-					counterClientID:     "cl2",
+					ChainName:           "chain1",
+					ConnectionID:        "testconn",
+					ClientID:            "cl1",
+					State:               "ready",
+					CounterConnectionID: "conn2",
+					CounterClientID:     "cl2",
 				},
-				verifyTraceData.connections[1],
+				verifyTraceData.Connections[1],
 			},
-			clients:    verifyTraceData.clients,
-			blockTimes: verifyTraceData.blockTimes,
+			Clients:    verifyTraceData.Clients,
+			BlockTimes: verifyTraceData.BlockTimes,
 		},
 		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
 		"chain1",
@@ -161,25 +162,25 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"Channels.hops incorrect conn",
-		tracelistenerData{
-			denoms: verifyTraceData.denoms,
-			channels: []channel{
+		utils.TracelistenerData{
+			Denoms: verifyTraceData.Denoms,
+			Channels: []utils.Channel{
 				{
-					channelID:        "ch1",
-					counterChannelID: "ch2",
-					hops:             []string{},
-					chainName:        "chain1",
+					ChannelID:        "ch1",
+					CounterChannelID: "ch2",
+					Hops:             []string{},
+					ChainName:        "chain1",
 				},
 				{
-					channelID:        "ch2",
-					counterChannelID: "ch1",
-					hops:             []string{},
-					chainName:        "chain2",
+					ChannelID:        "ch2",
+					CounterChannelID: "ch1",
+					Hops:             []string{},
+					ChainName:        "chain2",
 				},
 			},
-			connections: verifyTraceData.connections,
-			clients:     verifyTraceData.clients,
-			blockTimes:  verifyTraceData.blockTimes,
+			Connections: verifyTraceData.Connections,
+			Clients:     verifyTraceData.Clients,
+			BlockTimes:  verifyTraceData.BlockTimes,
 		},
 		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
 		"chain1",
@@ -228,15 +229,15 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"dest chain offline",
-		tracelistenerData{
-			denoms:      verifyTraceData.denoms,
-			channels:    verifyTraceData.channels,
-			connections: verifyTraceData.connections,
-			clients:     verifyTraceData.clients,
-			blockTimes: []blockTime{
+		utils.TracelistenerData{
+			Denoms:      verifyTraceData.Denoms,
+			Channels:    verifyTraceData.Channels,
+			Connections: verifyTraceData.Connections,
+			Clients:     verifyTraceData.Clients,
+			BlockTimes: []utils.BlockTime{
 				{
-					chainName: "chain2",
-					time:      time.Now().Add(time.Hour * -24),
+					ChainName: "chain2",
+					Time:      time.Now().Add(time.Hour * -24),
 				},
 			},
 		},

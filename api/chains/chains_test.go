@@ -97,7 +97,7 @@ func TestGetChain(t *testing.T) {
 			}
 		})
 	}
-	utils.TruncateDB(testingCtx, t)
+	utils.TruncateCNSDB(testingCtx, t)
 }
 
 func TestGetChains(t *testing.T) {
@@ -137,17 +137,17 @@ func TestGetChains(t *testing.T) {
 			}
 		})
 	}
-	utils.TruncateDB(testingCtx, t)
+	utils.TruncateCNSDB(testingCtx, t)
 }
 
 func TestVerifyTrace(t *testing.T) {
 	t.Parallel()
 
-	runTraceListnerMigrations(t)
+	utils.RunTraceListnerMigrations(testingCtx, t)
 
 	for i, tt := range verifyTraceTestCases {
 		t.Run(fmt.Sprintf("%d %s", i, tt.name), func(t *testing.T) {
-			insertTraceListnerData(t, tt.dataStruct)
+			utils.InsertTraceListnerData(testingCtx, t, tt.dataStruct)
 			for _, chain := range tt.chains {
 				require.NoError(t, testingCtx.CnsDB.AddChain(chain))
 			}
@@ -173,8 +173,8 @@ func TestVerifyTrace(t *testing.T) {
 
 			require.Equal(t, tt.verified, result["verified"])
 		})
-		truncateTracelistener(t)
-		utils.TruncateDB(testingCtx, t)
+		utils.TruncateTracelistener(testingCtx, t)
+		utils.TruncateCNSDB(testingCtx, t)
 	}
 }
 
@@ -256,5 +256,5 @@ func TestGetChainStatus(t *testing.T) {
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 		})
 	}
-	utils.TruncateDB(testingCtx, t)
+	utils.TruncateCNSDB(testingCtx, t)
 }

@@ -3,55 +3,10 @@ package chains_test
 import (
 	"time"
 
+	utils "github.com/allinbits/demeris-api-server/api/test_utils"
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/lib/pq"
 )
-
-type tracelistenerData struct {
-	denoms      []denomTrace
-	channels    []channel
-	connections []connection
-	clients     []client
-	blockTimes  []blockTime
-}
-
-type denomTrace struct {
-	path      string
-	baseDenom string
-	hash      string
-	chainName string
-}
-
-type channel struct {
-	channelID        string
-	counterChannelID string
-	port             string
-	state            int
-	hops             []string
-	chainName        string
-}
-
-type connection struct {
-	chainName           string
-	connectionID        string
-	clientID            string
-	state               string
-	counterConnectionID string
-	counterClientID     string
-}
-
-type client struct {
-	sourceChainName string
-	destChainID     string
-	clientID        string
-	latestHeight    string
-	trustingPeriod  string
-}
-
-type blockTime struct {
-	chainName string
-	time      time.Time
-}
 
 var relayerBalance = int64(30000)
 
@@ -153,75 +108,75 @@ var chainWithPublicEndpoints = cns.Chain{
 	},
 }
 
-var verifyTraceData = tracelistenerData{
-	denoms: []denomTrace{
+var verifyTraceData = utils.TracelistenerData{
+	Denoms: []utils.DenomTrace{
 		{
-			path:      "transfer/ch1",
-			baseDenom: "denom2",
-			hash:      "12345",
-			chainName: "chain1",
+			Path:      "transfer/ch1",
+			BaseDenom: "denom2",
+			Hash:      "12345",
+			ChainName: "chain1",
 		},
 	},
 
-	channels: []channel{
+	Channels: []utils.Channel{
 		{
-			channelID:        "ch1",
-			counterChannelID: "ch2",
-			port:             "transfer",
-			state:            3,
-			hops:             []string{"conn1", "conn2"},
-			chainName:        "chain1",
+			ChannelID:        "ch1",
+			CounterChannelID: "ch2",
+			Port:             "transfer",
+			State:            3,
+			Hops:             []string{"conn1", "conn2"},
+			ChainName:        "chain1",
 		},
 		{
-			channelID:        "ch2",
-			counterChannelID: "ch1",
-			port:             "transfer",
-			state:            3,
-			hops:             []string{"conn2", "conn1"},
-			chainName:        "chain2",
-		},
-	},
-
-	connections: []connection{
-		{
-			chainName:           "chain1",
-			connectionID:        "conn1",
-			clientID:            "cl1",
-			state:               "ready",
-			counterConnectionID: "conn2",
-			counterClientID:     "cl2",
-		},
-		{
-			chainName:           "chain2",
-			connectionID:        "conn2",
-			clientID:            "cl2",
-			state:               "ready",
-			counterConnectionID: "conn1",
-			counterClientID:     "cl1",
+			ChannelID:        "ch2",
+			CounterChannelID: "ch1",
+			Port:             "transfer",
+			State:            3,
+			Hops:             []string{"conn2", "conn1"},
+			ChainName:        "chain2",
 		},
 	},
 
-	clients: []client{
+	Connections: []utils.Connection{
 		{
-			sourceChainName: "chain1",
-			destChainID:     "chain_2",
-			clientID:        "cl1",
-			latestHeight:    "99",
-			trustingPeriod:  "10",
+			ChainName:           "chain1",
+			ConnectionID:        "conn1",
+			ClientID:            "cl1",
+			State:               "ready",
+			CounterConnectionID: "conn2",
+			CounterClientID:     "cl2",
 		},
 		{
-			sourceChainName: "chain2",
-			destChainID:     "chain_1",
-			clientID:        "cl2",
-			latestHeight:    "99",
-			trustingPeriod:  "10",
+			ChainName:           "chain2",
+			ConnectionID:        "conn2",
+			ClientID:            "cl2",
+			State:               "ready",
+			CounterConnectionID: "conn1",
+			CounterClientID:     "cl1",
 		},
 	},
 
-	blockTimes: []blockTime{
+	Clients: []utils.Client{
 		{
-			chainName: "chain2",
-			time:      time.Now(),
+			SourceChainName: "chain1",
+			DestChainID:     "chain_2",
+			ClientID:        "cl1",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+		{
+			SourceChainName: "chain2",
+			DestChainID:     "chain_1",
+			ClientID:        "cl2",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+	},
+
+	BlockTimes: []utils.BlockTime{
+		{
+			ChainName: "chain2",
+			Time:      time.Now(),
 		},
 	},
 }
