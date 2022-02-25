@@ -468,7 +468,7 @@ func VerifyTrace(c *gin.Context) {
 
 				c.JSON(http.StatusOK, res)
 			} else {
-				cause := fmt.Sprintf("invalid number of query responses")
+				cause := "invalid number of query responses"
 
 				d.LogError(
 					"invalid number of query responses",
@@ -497,7 +497,7 @@ func VerifyTrace(c *gin.Context) {
 		primaryChannelInfo, err := d.Database.PrimaryChannelCounterparty(chainName, nextChain)
 
 		if err != nil {
-			cause := fmt.Sprintf("invalid number of query responses")
+			cause := "invalid number of query responses"
 
 			d.LogError(
 				cause,
