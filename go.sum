@@ -157,8 +157,8 @@ github.com/allinbits/demeris-backend-models v1.0.0 h1:USjPbAeHpaqO1Gg1GrseQif33S
 github.com/allinbits/demeris-backend-models v1.0.0/go.mod h1:P/PDgyB6Y/GcBcODjzHDfAT+WtDl86Qqq/LIbwHJAPI=
 github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded h1:AD2UB10Bx7QgStLnJ6Jp1XQD2Y2u9Js0TMCJIhd61n8=
 github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded/go.mod h1:FuP1e/sGgjXI/pJ0ipHmEWLHHQWMPwnT8rDFz2WKKUE=
-github.com/allinbits/emeris-utils v1.0.1 h1:zFmyLoE6a1RqaY863oM66kBeuPIGVm2uyv9H/axhjbg=
-github.com/allinbits/emeris-utils v1.0.1/go.mod h1:tMkUvBItgKYJZJUx8zpE9QWm+lqUb4MvT3fKohYOoHI=
+github.com/allinbits/emeris-utils v1.1.1 h1:x9oEPATvNvRkMVVoewLXlo+5rULpiEygvjH7MBwCv2c=
+github.com/allinbits/emeris-utils v1.1.1/go.mod h1:tMkUvBItgKYJZJUx8zpE9QWm+lqUb4MvT3fKohYOoHI=
 github.com/allinbits/sdk-service-meta v0.0.0-20220114142340-a44e073d0b27 h1:7HQKXS3wg2EXMh6l7/1hrCec7dwukvizvh+g2zU+/mo=
 github.com/allinbits/sdk-service-meta v0.0.0-20220114142340-a44e073d0b27/go.mod h1:ZOehmlZy3nTRgpDE6hImQ5TzwXF8B4QIypYzOMgcO4Q=
 github.com/allinbits/starport-operator v0.0.1-alpha.26/go.mod h1:rhYpjy5c3QXjSS0SGxeDU/vVuxwLFeni1MJbpBTKXqo=
