@@ -1022,6 +1022,80 @@ func GetInflation(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintInflation)
 }
 
+func GetStakingParams(c *gin.Context) {
+	d := deps.GetDeps(c)
+
+	chainName := c.Param("chain")
+
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain's sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	sdkRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve inflation from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve inflation from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingParams)
+}
+
 // GetMintParams returns the minting parameters of a specific chain
 // @Summary Gets the minting params of a chain
 // @Description Gets minting params
