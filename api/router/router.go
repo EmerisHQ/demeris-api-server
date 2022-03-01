@@ -99,7 +99,8 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 				errors.New("internal server error"),
 				http.StatusInternalServerError)
 
-			r.l.Errorw(
+			logger := logging.AddCorrelationIDToLogger(c, r.l)
+			logger.Errorw(
 				"panic handler triggered while handling call",
 				"endpoint", c.Request.RequestURI,
 				"error", fmt.Sprint(rval),
