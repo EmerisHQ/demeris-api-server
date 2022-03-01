@@ -688,6 +688,8 @@ func GetChainSupply(c *gin.Context) {
 
 	chainName := c.Param("chain")
 
+	// paginationKey, exists := c.GetQuery("key")
+
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
 		e := deps.NewError(
@@ -730,10 +732,15 @@ func GetChainSupply(c *gin.Context) {
 		return
 	}
 
-	sdkRes, err := client.Supply(context.Background(), &sdkutilities.SupplyPayload{
+	payload := &sdkutilities.SupplyPayload{
 		ChainName: chainName,
-	})
+	}
 
+	// if exists {
+	// 	payload.PaginationKey = paginationKey
+	// }
+
+	sdkRes, err := client.Supply(context.Background(), payload)
 	if err != nil {
 		e := deps.NewError(
 			"chains",
@@ -755,6 +762,11 @@ func GetChainSupply(c *gin.Context) {
 	}
 
 	res := SupplyResponse{}
+
+	res.Pagination = Pagination{
+		// NextKey: sdkRes.Pagination.NextKey,
+		// Total:   sdkRes.Pagination.total,
+	}
 
 	for _, s := range sdkRes.Coins {
 		res.Supply = append(res.Supply, Coin{
