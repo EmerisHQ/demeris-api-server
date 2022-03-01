@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	chainEndpointUrl  = "http://%s/chain/%s"
-	chainsEndpointUrl = "http://%s/chains"
-	chainStatusUrl    = "http://%s/chain/%s/status"
+	chainEndpointUrl    = "http://%s/chain/%s"
+	chainsEndpointUrl   = "http://%s/chains"
+	chainStatusUrl      = "http://%s/chain/%s/status"
+	denomVerifyTraceUrl = "http://%s/chain/%s/denom/verify_trace/%s"
 )
 
 func TestGetChain(t *testing.T) {
@@ -235,6 +236,79 @@ func TestGetChainStatus(t *testing.T) {
 
 			require.Equal(t, tt.expectedResponse, respStruct)
 
+			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+		})
+	}
+	utils.TruncateDB(testingCtx, t)
+}
+
+func TestDenomVerifyTrace(t *testing.T) {
+
+	tests := []struct {
+		name             string
+		dataStruct       cns.Chain
+		chainName        string
+		denomTrace       string
+		expectedHttpCode int
+		expectedResponse chains.VerifiedTraceResponse
+		success          bool
+	}{
+		{
+			"Get Verified Trace",
+			chainWithPublicEndpoints,
+			chainWithPublicEndpoints.ChainName,
+			"123",
+			200,
+			chains.VerifiedTraceResponse{VerifiedTrace: chains.VerifiedTrace{
+				IbcDenom: "ibc/123",
+				Verified: false,
+			}},
+			true,
+		},
+		{
+			"Get Verified Trace - Disabled Chain",
+			disabledChain,
+			disabledChain.ChainName,
+			"123",
+			200,
+			chains.VerifiedTraceResponse{VerifiedTrace: chains.VerifiedTrace{
+				IbcDenom: "ibc/123",
+				Verified: false,
+			}},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			// arrange
+			// if we have a populated Chain store, add it
+			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
+				err := testingCtx.CnsDB.AddChain(tt.dataStruct)
+				require.NoError(t, err)
+			}
+
+			// act
+			resp, err := http.Get(fmt.Sprintf(denomVerifyTraceUrl, testingCtx.Cfg.ListenAddr, tt.chainName, tt.denomTrace))
+			require.NoError(t, err)
+			defer func() { _ = resp.Body.Close() }()
+
+			// assert
+			if !tt.success {
+				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+				return
+			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			respStruct := chains.VerifiedTraceResponse{}
+			err = json.Unmarshal(body, &respStruct)
+			require.NoError(t, err)
+
+			require.Equal(t, tt.expectedResponse.VerifiedTrace.IbcDenom, respStruct.VerifiedTrace.IbcDenom)
+			require.Equal(t, tt.expectedResponse.VerifiedTrace.Verified, respStruct.VerifiedTrace.Verified)
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 		})
 	}
