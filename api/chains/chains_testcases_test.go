@@ -272,8 +272,8 @@ var verifyTraceTestCases = []struct {
 		},
 		"chain1",
 		"12345",
-		"not primary channel for chain",
-		false,
+		"",
+		true,
 		200,
 	},
 	{
@@ -300,8 +300,8 @@ var verifyTraceTestCases = []struct {
 		},
 		"chain1",
 		"12345",
-		"chain1 doesnt have primary channel for chain2",
-		false,
+		"",
+		true,
 		200,
 	},
 }
