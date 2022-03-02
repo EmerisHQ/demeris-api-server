@@ -82,7 +82,12 @@ type NumbersResponse struct {
 }
 
 type ValidatorsResponse struct {
-	Validators []tracelistener.ValidatorRow `json:"validators"`
+	Validators []*Validator `json:"validators"`
+}
+
+type Validator struct {
+	tracelistener.ValidatorRow
+	Avatar string `json:"avatar,omitempty"`
 }
 
 //nolint //deadcode but used in swagger generation

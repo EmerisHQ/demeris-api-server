@@ -30,7 +30,7 @@ func TestCorrelationIDMiddleWare(t *testing.T) {
 	client := http.Client{
 		Timeout: 2 * time.Second,
 	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s%s", cfg.ListenAddr, "/chains"), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s%s", cfg.ListenAddr, "/chain/foo"), nil)
 	require.NoError(t, err)
 
 	id, err := uuid.NewV4()
