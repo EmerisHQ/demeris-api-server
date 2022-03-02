@@ -475,7 +475,7 @@ func VerifyTrace(c *gin.Context) {
 			} else {
 				e1 := deps.NewError(
 					"denom/verify-trace",
-					fmt.Errorf("failed querying for %s, error:%w", hash, err),
+					fmt.Errorf("failed querying for %s, error: %w", hash, err),
 					http.StatusBadRequest,
 				)
 
