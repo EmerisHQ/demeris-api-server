@@ -34,10 +34,18 @@ func GetDeps(c *gin.Context) *Deps {
 		panic(fmt.Sprintf("deps not of the expected type, found %T", deps))
 	}
 
+	// override logger with the one from the gin.context
+	logger, err := logging.GetLoggerFromContext(c)
+	if err == nil {
+		deps.Logger = logger
+	} else {
+		deps.Logger.Warnw("couldn't get logger from context, using fallback", "error", err)
+	}
+
 	return deps
 }
 
-// WriteError lgos and return client-facing errors
+// WriteError logs and return client-facing errors
 func (d *Deps) WriteError(c *gin.Context, err Error, logMessage string, keyAndValues ...interface{}) {
 
 	// setting error id
