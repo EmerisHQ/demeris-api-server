@@ -171,7 +171,7 @@ func TestVerifyTrace(t *testing.T) {
 				require.Contains(t, result["cause"], tt.cause)
 			}
 
-			require.Equal(t, tt.verified, result["verified"])
+			require.Equal(t, tt.verified, result["verified"], "result cause=%s", result["cause"])
 		})
 		utils.TruncateTracelistener(testingCtx, t)
 		utils.TruncateCNSDB(testingCtx, t)
