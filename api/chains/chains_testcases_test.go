@@ -304,4 +304,60 @@ var verifyTraceTestCases = []struct {
 		true,
 		200,
 	},
+	{
+		"akash->cosmoshub->regen",
+		verifyTraceData3Chains,
+		[]cns.Chain{
+			{
+				Enabled:          true,
+				ChainName:        "akash",
+				DemerisAddresses: []string{"12345"},
+				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				Denoms: []cns.Denom{
+					{
+						Name:     "uakt",
+						Verified: true,
+					},
+				},
+				NodeInfo: cns.NodeInfo{
+					ChainID: "akashnet-2",
+				},
+			},
+			{
+				Enabled:          true,
+				ChainName:        "cosmoshub",
+				DemerisAddresses: []string{"12345"},
+				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				Denoms: []cns.Denom{
+					{
+						Name:     "uatom",
+						Verified: true,
+					},
+				},
+				NodeInfo: cns.NodeInfo{
+					ChainID: "cosmoshub-4",
+				},
+			},
+			{
+				Enabled:          true,
+				ChainName:        "regen",
+				DemerisAddresses: []string{"12345"},
+				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				Denoms: []cns.Denom{
+					{
+						Name:     "uregen",
+						Verified: true,
+					},
+				},
+				NodeInfo: cns.NodeInfo{
+					ChainID: "regen-1",
+				},
+			},
+		},
+		"regen",
+		"12345",
+		"",
+		true,
+		200,
+	},
 }
