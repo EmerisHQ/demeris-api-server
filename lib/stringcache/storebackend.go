@@ -27,7 +27,7 @@ func (s *StoreBackend) Get(ctx context.Context, key string) (string, error) {
 		return "", fmt.Errorf("reading store: %w", err)
 	}
 
-	return cmd.String(), nil
+	return cmd.Val(), nil
 }
 
 func (s *StoreBackend) Set(ctx context.Context, key, value string, expiration time.Duration) error {
