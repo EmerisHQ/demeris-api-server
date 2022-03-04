@@ -12,6 +12,7 @@ type Config struct {
 	DatabaseConnectionURL string `validate:"required"`
 	ListenAddr            string `validate:"required"`
 	RedisAddr             string `validate:"required"`
+	KubernetesConfigMode  string
 	KubernetesNamespace   string `validate:"required"`
 	Debug                 bool
 }
