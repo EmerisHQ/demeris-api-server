@@ -457,7 +457,7 @@ func VerifyTrace(c *gin.Context) {
 		channelInfo, err = d.Database.GetIbcChannelToChain(nextChain, channel, chainID)
 
 		if err != nil {
-			if errors.As(err, &database.ErrNoMatchingChannel{}) {
+			if errors.As(err, &database.ErrNoDestChain{}) {
 				d.LogError(
 					err.Error(),
 					"hash",
@@ -475,7 +475,7 @@ func VerifyTrace(c *gin.Context) {
 			} else {
 				e1 := deps.NewError(
 					"denom/verify-trace",
-					fmt.Errorf("failed querying for %s", hash),
+					fmt.Errorf("failed querying for %s, error: %w", hash, err),
 					http.StatusBadRequest,
 				)
 
@@ -503,55 +503,74 @@ func VerifyTrace(c *gin.Context) {
 		primaryChannelInfo, err := d.Database.PrimaryChannelCounterparty(chainName, nextChain)
 
 		if err != nil {
-			e := deps.NewError(
-				"denom/verify-trace",
-				fmt.Errorf("failed to get primary channel for %s", hash),
-				http.StatusBadRequest,
-			)
+			if errors.Is(err, sql.ErrNoRows) {
+				cause := fmt.Sprintf("%s doesnt have primary channel for %s", chainName, nextChain)
 
-			d.WriteError(c, e,
-				"cannot query primary channel information",
-				"id",
-				e.ID,
-				"hash",
-				hash,
-				"path",
-				res.VerifiedTrace.Path,
-				"chain",
-				chainName,
-				"nextChain",
-				nextChain,
-				"err",
-				err,
-			)
+				d.LogError(
+					"channel not found",
+					"hash",
+					hash,
+					"path",
+					res.VerifiedTrace.Path,
+					"channel",
+					channel,
+					"chain",
+					chainName,
+					"err",
+					cause,
+				)
 
+				res.VerifiedTrace.Verified = false
+				res.VerifiedTrace.Cause = cause
+
+				c.JSON(http.StatusOK, res)
+			} else {
+				e := deps.NewError(
+					"denom/verify-trace",
+					fmt.Errorf("failed to get primary channel for %s", hash),
+					http.StatusBadRequest,
+				)
+
+				d.WriteError(c, e,
+					"cannot query primary channel information",
+					"id",
+					e.ID,
+					"hash",
+					hash,
+					"path",
+					res.VerifiedTrace.Path,
+					"chain",
+					chainName,
+					"nextChain",
+					nextChain,
+					"err",
+					err,
+				)
+			}
 			return
 		}
 
 		if primaryChannelInfo.ChannelName != channel {
 
-			// save this for the error message when the cause pr is merged
-			// e := deps.NewError(
-			// 	"denom/verify-trace",
-			// 	fmt.Errorf("%s : not primary channel for chain %s- expecting %s got %s", hash, chainName, primaryChannelInfo, channel),
-			// 	http.StatusBadRequest,
-			// )
+			cause := fmt.Sprintf("%s : not primary channel for chain %s- expecting %s got %s",
+				hash, chainName, primaryChannelInfo.ChannelName, channel)
 
-			// d.WriteError(c, e,
-			// 	"not primary channel",
-			// 	"id",
-			// 	e.ID,
-			// 	"hash",
-			// 	hash,
-			// 	"channel",
-			// 	channel,
-			// 	"chain",
-			// 	chainName,
-			// 	"err",
-			// 	err,
-			// )
+			d.LogError(
+				"not primary channel",
+				"hash",
+				hash,
+				"path",
+				res.VerifiedTrace.Path,
+				"channel",
+				channel,
+				"chain",
+				chainName,
+				"err",
+				cause,
+			)
 
 			res.VerifiedTrace.Verified = false
+			res.VerifiedTrace.Cause = cause
 
 			c.JSON(http.StatusOK, res)
 			return
@@ -603,6 +622,43 @@ func VerifyTrace(c *gin.Context) {
 			"err",
 			err,
 		)
+
+		return
+	}
+
+	cbt, err := d.Database.ChainLastBlock(nextChain)
+	if err != nil {
+		e := deps.NewError(
+			"denom/verify-trace",
+			fmt.Errorf("cannot retrieve chain status for %v", nextChain),
+			http.StatusInternalServerError,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain last block time",
+			"id",
+			e.ID,
+			"hash",
+			hash,
+			"path",
+			res.VerifiedTrace.Path,
+			"chainName",
+			chainName,
+			"nextChain",
+			nextChain,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	d.Logger.Debugw("last block time", "chain", nextChain, "time", cbt, "threshold_for_chain", nextChainData.ValidBlockThresh.Duration())
+
+	if time.Since(cbt.BlockTime) > nextChainData.ValidBlockThresh.Duration() {
+		res.VerifiedTrace.Verified = false
+		res.VerifiedTrace.Cause = fmt.Sprintf("chain %s status offline", nextChain)
+		c.JSON(http.StatusOK, res)
 
 		return
 	}

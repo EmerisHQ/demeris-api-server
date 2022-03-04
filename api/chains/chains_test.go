@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	chainEndpointUrl  = "http://%s/chain/%s"
-	chainsEndpointUrl = "http://%s/chains"
-	chainStatusUrl    = "http://%s/chain/%s/status"
+	chainEndpointUrl       = "http://%s/chain/%s"
+	chainsEndpointUrl      = "http://%s/chains"
+	chainStatusUrl         = "http://%s/chain/%s/status"
+	verifyTraceEndpointUrl = "http://%s/chain/%s/denom/verify_trace/%s"
 )
 
 func TestGetChain(t *testing.T) {
@@ -96,32 +97,11 @@ func TestGetChain(t *testing.T) {
 			}
 		})
 	}
-	utils.TruncateDB(testingCtx, t)
+	utils.TruncateCNSDB(testingCtx, t)
 }
 
 func TestGetChains(t *testing.T) {
-
-	tests := []struct {
-		name             string
-		dataStruct       []cns.Chain
-		expectedHttpCode int
-		success          bool
-	}{
-		{
-			"Get Chains - Nothing in DB",
-			[]cns.Chain{}, // ignored
-			200,
-			true,
-		},
-		{
-			"Get Chains - 2 Chains (With & Without)",
-			[]cns.Chain{chainWithoutPublicEndpoints, chainWithPublicEndpoints},
-			200,
-			true,
-		},
-	}
-
-	for _, tt := range tests {
+	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -157,7 +137,45 @@ func TestGetChains(t *testing.T) {
 			}
 		})
 	}
-	utils.TruncateDB(testingCtx, t)
+	utils.TruncateCNSDB(testingCtx, t)
+}
+
+func TestVerifyTrace(t *testing.T) {
+	t.Parallel()
+
+	utils.RunTraceListnerMigrations(testingCtx, t)
+
+	for i, tt := range verifyTraceTestCases {
+		t.Run(fmt.Sprintf("%d %s", i, tt.name), func(t *testing.T) {
+			utils.InsertTraceListnerData(testingCtx, t, tt.dataStruct)
+			for _, chain := range tt.chains {
+				require.NoError(t, testingCtx.CnsDB.AddChain(chain))
+			}
+
+			resp, err := http.Get(fmt.Sprintf(verifyTraceEndpointUrl, testingCtx.Cfg.ListenAddr, tt.sourceChain, tt.hash))
+			require.NoError(t, err)
+			defer func() { _ = resp.Body.Close() }()
+
+			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+
+			b, err := ioutil.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			var data map[string]map[string]interface{}
+			err = json.Unmarshal(b, &data)
+			require.NoError(t, err)
+
+			result := data["verify_trace"]
+
+			if tt.cause != "" {
+				require.Contains(t, result["cause"], tt.cause)
+			}
+
+			require.Equal(t, tt.verified, result["verified"])
+		})
+		utils.TruncateTracelistener(testingCtx, t)
+		utils.TruncateCNSDB(testingCtx, t)
+	}
 }
 
 func toSupportedChain(c cns.Chain) chains.SupportedChain {
@@ -238,5 +256,5 @@ func TestGetChainStatus(t *testing.T) {
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 		})
 	}
-	utils.TruncateDB(testingCtx, t)
+	utils.TruncateCNSDB(testingCtx, t)
 }

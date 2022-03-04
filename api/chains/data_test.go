@@ -1,6 +1,9 @@
 package chains_test
 
 import (
+	"time"
+
+	utils "github.com/allinbits/demeris-api-server/api/test_utils"
 	"github.com/allinbits/demeris-backend-models/cns"
 	"github.com/lib/pq"
 )
@@ -12,7 +15,7 @@ var chainWithoutPublicEndpoints = cns.Chain{
 	ChainName:      "chain1",
 	Logo:           "http://logo.com",
 	DisplayName:    "Chain 1",
-	PrimaryChannel: map[string]string{"key": "value"},
+	PrimaryChannel: map[string]string{"key": "value", "chain2": "ch1"},
 	Denoms: []cns.Denom{
 		{
 			Name:        "denom1",
@@ -38,7 +41,7 @@ var chainWithoutPublicEndpoints = cns.Chain{
 	GenesisHash:      "hash",
 	NodeInfo: cns.NodeInfo{
 		Endpoint: "http://endpoint",
-		ChainID:  "chain_123",
+		ChainID:  "chain_1",
 		Bech32Config: cns.Bech32Config{
 			MainPrefix:      "prefix",
 			PrefixAccount:   "acc",
@@ -85,7 +88,7 @@ var chainWithPublicEndpoints = cns.Chain{
 	GenesisHash:      "hash",
 	NodeInfo: cns.NodeInfo{
 		Endpoint: "http://endpoint",
-		ChainID:  "chain_123",
+		ChainID:  "chain_2",
 		Bech32Config: cns.Bech32Config{
 			MainPrefix:      "prefix",
 			PrefixAccount:   "acc",
@@ -105,6 +108,78 @@ var chainWithPublicEndpoints = cns.Chain{
 	},
 }
 
+var verifyTraceData = utils.TracelistenerData{
+	Denoms: []utils.DenomTrace{
+		{
+			Path:      "transfer/ch1",
+			BaseDenom: "denom2",
+			Hash:      "12345",
+			ChainName: "chain1",
+		},
+	},
+
+	Channels: []utils.Channel{
+		{
+			ChannelID:        "ch1",
+			CounterChannelID: "ch2",
+			Port:             "transfer",
+			State:            3,
+			Hops:             []string{"conn1", "conn2"},
+			ChainName:        "chain1",
+		},
+		{
+			ChannelID:        "ch2",
+			CounterChannelID: "ch1",
+			Port:             "transfer",
+			State:            3,
+			Hops:             []string{"conn2", "conn1"},
+			ChainName:        "chain2",
+		},
+	},
+
+	Connections: []utils.Connection{
+		{
+			ChainName:           "chain1",
+			ConnectionID:        "conn1",
+			ClientID:            "cl1",
+			State:               "ready",
+			CounterConnectionID: "conn2",
+			CounterClientID:     "cl2",
+		},
+		{
+			ChainName:           "chain2",
+			ConnectionID:        "conn2",
+			ClientID:            "cl2",
+			State:               "ready",
+			CounterConnectionID: "conn1",
+			CounterClientID:     "cl1",
+		},
+	},
+
+	Clients: []utils.Client{
+		{
+			SourceChainName: "chain1",
+			DestChainID:     "chain_2",
+			ClientID:        "cl1",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+		{
+			SourceChainName: "chain2",
+			DestChainID:     "chain_1",
+			ClientID:        "cl2",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+	},
+
+	BlockTimes: []utils.BlockTime{
+		{
+			ChainName: "chain2",
+			Time:      time.Now(),
+		},
+	},
+}
 var disabledChain = cns.Chain{
 	Enabled:        false,
 	ChainName:      "chain3",
