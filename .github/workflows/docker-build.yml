@@ -56,4 +56,12 @@ jobs:
           token: ${{ secrets.TENDERBOT_GIT_TOKEN }}
           repository: allinbits/demeris-backend
           event-type: dev-push-api-server
-          client-payload: '{"repo_name":"demeris-api-server","branch_name":"main","image_name":"emeris-api-server","image_sha":"${{ github.sha }}","service_name":"api-server"}'
+          client-payload: |
+            {
+              "repo_name":"demeris-api-server",
+              "branch_name":"main",
+              "image_name":"emeris-api-server",
+              "image_sha":"${{ github.sha }}",
+              "service_name":"api-server",
+              "deploy_type":"deploy_dev"
+            }

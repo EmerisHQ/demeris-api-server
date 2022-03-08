@@ -75,7 +75,6 @@ func New(
 	if debug {
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
-	engine.Use(r.setLoggerFromContext)
 	engine.Use(r.catchPanicsFunc)
 	engine.Use(r.decorateCtxWithDeps)
 	engine.Use(r.handleErrors)
@@ -91,16 +90,6 @@ func (r *Router) Serve(address string) error {
 	return r.g.Run(address)
 }
 
-func (r *Router) setLoggerFromContext(c *gin.Context) {
-	l, err := logging.GetLoggerFromContext(c)
-	if err != nil && r.l == nil {
-		panic("cant get logger from context")
-	}
-	if l != nil {
-		r.l = l
-	}
-}
-
 func (r *Router) catchPanicsFunc(c *gin.Context) {
 	defer func() {
 		if rval := recover(); rval != nil {
@@ -110,7 +99,8 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 				errors.New("internal server error"),
 				http.StatusInternalServerError)
 
-			r.l.Errorw(
+			logger := logging.AddCorrelationIDToLogger(c, r.l)
+			logger.Errorw(
 				"panic handler triggered while handling call",
 				"endpoint", c.Request.RequestURI,
 				"error", fmt.Sprint(rval),
