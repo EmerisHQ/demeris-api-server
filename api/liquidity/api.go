@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/gin-gonic/gin"
 )
 

@@ -5,27 +5,27 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/allinbits/demeris-api-server/api/block"
-	"github.com/allinbits/demeris-api-server/api/cached"
-	"github.com/allinbits/demeris-api-server/api/liquidity"
+	"github.com/emerishq/demeris-api-server/api/block"
+	"github.com/emerishq/demeris-api-server/api/cached"
+	"github.com/emerishq/demeris-api-server/api/liquidity"
 	"k8s.io/client-go/informers"
 
-	"github.com/allinbits/demeris-api-server/api/relayer"
+	"github.com/emerishq/demeris-api-server/api/relayer"
 
-	"github.com/allinbits/emeris-utils/logging"
-	"github.com/allinbits/emeris-utils/validation"
+	"github.com/emerishq/emeris-utils/logging"
+	"github.com/emerishq/emeris-utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/allinbits/demeris-api-server/api/chains"
-	"github.com/allinbits/demeris-api-server/api/tx"
-	"github.com/allinbits/demeris-api-server/api/verifieddenoms"
+	"github.com/emerishq/demeris-api-server/api/chains"
+	"github.com/emerishq/demeris-api-server/api/tx"
+	"github.com/emerishq/demeris-api-server/api/verifieddenoms"
 
-	"github.com/allinbits/demeris-api-server/api/account"
-	"github.com/allinbits/demeris-api-server/api/database"
-	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/emeris-utils/store"
+	"github.com/emerishq/demeris-api-server/api/account"
+	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

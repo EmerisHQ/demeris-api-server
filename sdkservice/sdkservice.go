@@ -3,8 +3,8 @@ package sdkservice
 import (
 	"fmt"
 
-	sdkserviceclient "github.com/allinbits/sdk-service-meta/gen/grpc/sdk_utilities/client"
-	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
+	sdkserviceclient "github.com/emerishq/sdk-service-meta/gen/grpc/sdk_utilities/client"
+	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	"google.golang.org/grpc"
 )
 

@@ -1,6 +1,6 @@
 package database
 
-import "github.com/allinbits/demeris-backend-models/tracelistener"
+import "github.com/emerishq/demeris-backend-models/tracelistener"
 
 func (d *Database) Connection(chain string, connection_id string) (tracelistener.IBCConnectionRow, error) {
 	var connection tracelistener.IBCConnectionRow

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/allinbits/demeris-backend-models/tracelistener"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/stretchr/testify/require"
 )
 

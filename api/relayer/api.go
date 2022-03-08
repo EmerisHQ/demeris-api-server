@@ -11,12 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
-	"github.com/allinbits/demeris-api-server/api/database"
-	cnsmodels "github.com/allinbits/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-api-server/api/database"
+	cnsmodels "github.com/emerishq/demeris-backend-models/cns"
 
-	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/emeris-utils/k8s"
 	v1 "github.com/allinbits/starport-operator/api/v1"
+	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/gin-gonic/gin"
 )
 

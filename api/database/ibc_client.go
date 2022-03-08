@@ -1,6 +1,6 @@
 package database
 
-import "github.com/allinbits/demeris-backend-models/cns"
+import "github.com/emerishq/demeris-backend-models/cns"
 
 func (d *Database) QueryIBCClientTrace(chain string, channel string) (cns.IbcClientInfo, error) {
 	var client cns.IbcClientInfo

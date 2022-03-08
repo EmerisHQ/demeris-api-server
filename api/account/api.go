@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/allinbits/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/allinbits/demeris-api-server/api/apiutils"
-	"github.com/allinbits/demeris-api-server/api/database"
-	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/demeris-api-server/sdkservice"
-	"github.com/allinbits/demeris-backend-models/cns"
-	"github.com/allinbits/demeris-backend-models/tracelistener"
-	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
+	"github.com/emerishq/demeris-api-server/api/apiutils"
+	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/sdkservice"
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
+	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
 func Register(router *gin.Engine) {

@@ -3,8 +3,8 @@ package database
 import (
 	"database/sql"
 
-	"github.com/allinbits/demeris-backend-models/cns"
-	"github.com/allinbits/demeris-backend-models/tracelistener"
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
 func (d *Database) Chain(name string) (cns.Chain, error) {
