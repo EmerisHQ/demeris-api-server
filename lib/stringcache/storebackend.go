@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/allinbits/emeris-utils/store"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/go-redis/redis/v8"
 )
 

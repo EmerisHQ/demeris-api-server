@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/demeris-api-server/lib/keybase"
-	"github.com/allinbits/demeris-api-server/lib/stringcache"
-	"github.com/allinbits/demeris-backend-models/tracelistener"
+	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/keybase"
+	"github.com/emerishq/demeris-api-server/lib/stringcache"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/gin-gonic/gin"
 )
 

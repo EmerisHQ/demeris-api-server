@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/allinbits/demeris-backend-models/tracelistener"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
 func (d *Database) DenomTrace(chain string, hash string) (tracelistener.IBCDenomTraceRow, error) {

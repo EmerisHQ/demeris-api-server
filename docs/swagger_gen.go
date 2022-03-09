@@ -17,13 +17,13 @@ package docs
 
 import (
 	// imports needed to make swagger generation run
-	_ "github.com/allinbits/demeris-backend-models/cns"
-	_ "github.com/allinbits/demeris-backend-models/tracelistener"
-	_ "github.com/allinbits/emeris-utils/exported/sdktypes"
-	_ "github.com/allinbits/emeris-utils/store"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/emerishq/demeris-backend-models/cns"
+	_ "github.com/emerishq/demeris-backend-models/tracelistener"
+	_ "github.com/emerishq/emeris-utils/exported/sdktypes"
+	_ "github.com/emerishq/emeris-utils/store"
 	_ "github.com/gravity-devs/liquidity/x/liquidity/types"
 	_ "github.com/swaggo/swag"
 	_ "github.com/tendermint/tendermint/proto/tendermint/version"

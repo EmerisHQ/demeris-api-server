@@ -6,12 +6,12 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"github.com/allinbits/demeris-api-server/api/config"
-	"github.com/allinbits/demeris-api-server/api/database"
-	"github.com/allinbits/demeris-api-server/api/router"
-	"github.com/allinbits/emeris-utils/k8s"
-	"github.com/allinbits/emeris-utils/logging"
-	"github.com/allinbits/emeris-utils/store"
+	"github.com/emerishq/demeris-api-server/api/config"
+	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/api/router"
+	"github.com/emerishq/emeris-utils/k8s"
+	"github.com/emerishq/emeris-utils/logging"
+	"github.com/emerishq/emeris-utils/store"
 	_ "github.com/lib/pq"
 	"k8s.io/client-go/rest"
 )
@@ -57,18 +57,26 @@ func main() {
 		l.Panicw("unable to start redis client", "error", err)
 	}
 
-	kubeClient, err := k8s.NewInCluster()
+	var k8sCfg *rest.Config
+	if cfg.KubernetesConfigMode == "kubectl" {
+		k8sCfg, err = k8s.KubectlConfig()
+		if err != nil {
+			l.Panicw("cannot get kubernetes config using kubectl", "error", err)
+		}
+	} else {
+		k8sCfg, err = k8s.InClusterConfig()
+		if err != nil {
+			l.Panicw("cannot get kubernetes config. Are you running this service inside a pod?", "error", err)
+		}
+	}
+
+	kubeClient, err := k8s.NewClient(k8sCfg)
 	if err != nil {
-		l.Panicw("cannot initialize k8s", "error", err)
+		l.Panicw("cannot initialize kubernetes client", "error", err)
 	}
 
 	l.Infow("setup relayers informer", "namespace", cfg.KubernetesNamespace)
-	infConfig, err := rest.InClusterConfig()
-	if err != nil {
-		l.Panicw("k8s server panic", "error", err)
-	}
-
-	informer, err := k8s.GetInformer(infConfig, cfg.KubernetesNamespace, "relayers")
+	informer, err := k8s.GetInformer(k8sCfg, cfg.KubernetesNamespace, "relayers")
 	if err != nil {
 		l.Panicw("k8s server panic", "error", err)
 	}

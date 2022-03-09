@@ -7,18 +7,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/allinbits/emeris-utils/store"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/stretchr/testify/require"
 
-	"github.com/allinbits/demeris-api-server/api/config"
-	apiDb "github.com/allinbits/demeris-api-server/api/database"
-	cnsDb "github.com/allinbits/emeris-cns-server/cns/database"
+	"github.com/emerishq/demeris-api-server/api/config"
+	apiDb "github.com/emerishq/demeris-api-server/api/database"
+	cnsDb "github.com/emerishq/emeris-cns-server/cns/database"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/allinbits/demeris-api-server/api/router"
-	"github.com/allinbits/demeris-api-server/mocks"
-	"github.com/allinbits/emeris-utils/logging"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
+	"github.com/emerishq/demeris-api-server/api/router"
+	"github.com/emerishq/demeris-api-server/mocks"
+	"github.com/emerishq/emeris-utils/logging"
 	"go.uber.org/zap"
 )
 
