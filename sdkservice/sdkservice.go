@@ -40,6 +40,7 @@ func Client(sdkVersion string) (sdkutilities.Client, error) {
 		EstimateFeesEndpoint:        client.EstimateFees(),
 		DelegatorRewardsEndpoint:    client.DelegatorRewards(),
 		StakingParamsEndpoint:       client.StakingParams(),
+		StakingPoolEndpoint:         client.StakingPool(),
 	}
 
 	return cc, nil
