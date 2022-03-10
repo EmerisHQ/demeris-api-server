@@ -1,9 +1,9 @@
 package config
 
 import (
-	"github.com/allinbits/emeris-utils/validation"
+	"github.com/emerishq/emeris-utils/validation"
 
-	"github.com/allinbits/emeris-utils/configuration"
+	"github.com/emerishq/emeris-utils/configuration"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -12,6 +12,7 @@ type Config struct {
 	DatabaseConnectionURL string `validate:"required"`
 	ListenAddr            string `validate:"required"`
 	RedisAddr             string `validate:"required"`
+	KubernetesConfigMode  string
 	KubernetesNamespace   string `validate:"required"`
 	Debug                 bool
 }

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	utils "github.com/allinbits/demeris-api-server/api/test_utils"
+	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 )
 
 var testingCtx *utils.TestingCtx

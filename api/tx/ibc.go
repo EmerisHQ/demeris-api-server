@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/allinbits/demeris-api-server/api/router/deps"
-	"github.com/allinbits/demeris-api-server/sdkservice"
-	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
+	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/sdkservice"
+	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 )

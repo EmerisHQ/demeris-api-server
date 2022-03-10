@@ -1,8 +1,8 @@
 package chains
 
 import (
-	"github.com/allinbits/demeris-backend-models/cns"
-	"github.com/allinbits/demeris-backend-models/tracelistener"
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
 type ChainsResponse struct {

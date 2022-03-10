@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/allinbits/demeris-api-server/mocks"
+	"github.com/emerishq/demeris-api-server/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"

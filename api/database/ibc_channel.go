@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/allinbits/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-backend-models/cns"
 )
 
 func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (cns.IbcChannelsInfo, error) {

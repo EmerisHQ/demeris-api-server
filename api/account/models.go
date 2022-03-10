@@ -1,7 +1,7 @@
 package account
 
 import (
-	"github.com/allinbits/demeris-backend-models/tracelistener"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
 type BalancesResponse struct {

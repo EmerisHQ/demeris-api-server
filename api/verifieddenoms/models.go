@@ -1,6 +1,6 @@
 package verifieddenoms
 
-import "github.com/allinbits/demeris-backend-models/cns"
+import "github.com/emerishq/demeris-backend-models/cns"
 
 type VerifiedDenom struct {
 	cns.Denom

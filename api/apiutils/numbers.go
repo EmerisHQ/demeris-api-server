@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/allinbits/demeris-api-server/sdkservice"
-	"github.com/allinbits/demeris-backend-models/cns"
-	"github.com/allinbits/demeris-backend-models/tracelistener"
-	sdkutilities "github.com/allinbits/sdk-service-meta/gen/sdk_utilities"
+	"github.com/emerishq/demeris-api-server/sdkservice"
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
+	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
 // FetchAccountNumbers returns a tracelistener.AuthRow containing sequence

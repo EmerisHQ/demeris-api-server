@@ -3,8 +3,8 @@ package chains_test
 import (
 	"time"
 
-	utils "github.com/allinbits/demeris-api-server/api/test_utils"
-	"github.com/allinbits/demeris-backend-models/cns"
+	utils "github.com/emerishq/demeris-api-server/api/test_utils"
+	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/lib/pq"
 )
 
@@ -51,7 +51,7 @@ var chainWithoutPublicEndpoints = cns.Chain{
 			PrefixOperator:  "oper",
 		},
 	},
-	ValidBlockThresh: cns.Threshold(30),
+	ValidBlockThresh: cns.Threshold(30 * time.Minute),
 	DerivationPath:   "m/44'/60'/0'/1",
 	SupportedWallets: pq.StringArray([]string{"keplr"}),
 	BlockExplorer:    "http://explorer.com",
@@ -98,7 +98,7 @@ var chainWithPublicEndpoints = cns.Chain{
 			PrefixOperator:  "oper",
 		},
 	},
-	ValidBlockThresh: cns.Threshold(30),
+	ValidBlockThresh: cns.Threshold(30 * time.Minute),
 	DerivationPath:   "m/44'/60'/0'/1",
 	SupportedWallets: pq.StringArray([]string{"keplr"}),
 	BlockExplorer:    "http://explorer.com",

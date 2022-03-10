@@ -1,8 +1,8 @@
 package tx
 
 import (
-	"github.com/allinbits/demeris-backend-models/cns"
-	"github.com/allinbits/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
 )
 
 type TxRequest struct {

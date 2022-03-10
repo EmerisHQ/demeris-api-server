@@ -1,6 +1,6 @@
 package database
 
-import "github.com/allinbits/demeris-backend-models/tracelistener"
+import "github.com/emerishq/demeris-backend-models/tracelistener"
 
 func (d *Database) Balances(address string) ([]tracelistener.BalanceRow, error) {
 	var balances []tracelistener.BalanceRow

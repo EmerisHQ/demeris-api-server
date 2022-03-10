@@ -8,9 +8,9 @@ import (
 	// needed for swagger gen
 	_ "encoding/json"
 
-	"github.com/allinbits/emeris-utils/store"
+	"github.com/emerishq/emeris-utils/store"
 
-	"github.com/allinbits/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,4 +1,4 @@
-module github.com/allinbits/demeris-api-server
+module github.com/emerishq/demeris-api-server
 
 go 1.17
 
@@ -11,13 +11,12 @@ replace (
 
 require (
 	github.com/alicebob/miniredis/v2 v2.18.0
-	github.com/allinbits/demeris-backend-models v1.0.0
-	github.com/allinbits/emeris-cns-server v0.0.0-20211201093144-fa626186dded
-	github.com/allinbits/emeris-utils v1.1.2
-	github.com/allinbits/sdk-service-meta v0.0.0-20220225122854-eb00092170cc
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cockroachdb/cockroach-go/v2 v2.2.8
 	github.com/cosmos/cosmos-sdk v0.42.8
+	github.com/emerishq/demeris-backend-models v1.2.0
+	github.com/emerishq/emeris-utils v1.3.0
+	github.com/emerishq/sdk-service-meta v0.0.0-20220308092725-c969850e820c
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/go-redis/redis/v8 v8.11.4
@@ -27,7 +26,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/lib/pq v1.10.4
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	github.com/swaggo/swag v1.7.9
+	github.com/swaggo/swag v1.8.0
 	github.com/tendermint/tendermint v0.34.11
 	github.com/tidwall/gjson v1.14.0
 	github.com/zsais/go-gin-prometheus v0.1.0
@@ -48,6 +47,8 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
+	github.com/allinbits/demeris-backend-models v1.0.1 // indirect
+	github.com/allinbits/emeris-utils v0.1.0 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -69,6 +70,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v0.0.0-20200901110807-248326c1351b // indirect
+	github.com/emerishq/emeris-cns-server v0.0.0-20220309095629-a492f8569484 // indirect
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25 // indirect
 	github.com/ethereum/go-ethereum v1.10.15 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
@@ -179,19 +181,19 @@ require (
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
-	goa.design/goa/v3 v3.5.5 // indirect
+	goa.design/goa/v3 v3.6.1 // indirect
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272 // indirect
 	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7 // indirect
+	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/tools v0.1.9 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
+	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
