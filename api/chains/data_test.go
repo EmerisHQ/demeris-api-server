@@ -180,6 +180,122 @@ var verifyTraceData = utils.TracelistenerData{
 		},
 	},
 }
+
+var verifyTraceData3Chains = utils.TracelistenerData{
+	Denoms: []utils.DenomTrace{
+		{
+			Path:      "transfer/channel-11/transfer/channel-184",
+			BaseDenom: "uakt",
+			Hash:      "12345",
+			ChainName: "regen",
+		},
+	},
+	Channels: []utils.Channel{
+		{
+			ChannelID:        "channel-11",
+			CounterChannelID: "channel-185",
+			Port:             "port",
+			State:            3,
+			Hops:             []string{"conn1", "conn2"},
+			ChainName:        "regen",
+		},
+		{
+			ChannelID:        "channel-185",
+			CounterChannelID: "channel-11",
+			Port:             "port",
+			State:            3,
+			Hops:             []string{"conn2", "conn1"},
+			ChainName:        "cosmoshub",
+		},
+		{
+			ChannelID:        "channel-184",
+			CounterChannelID: "channel-17",
+			Port:             "port",
+			State:            3,
+			Hops:             []string{"conn3", "conn4"},
+			ChainName:        "cosmoshub",
+		},
+		{
+			ChannelID:        "channel-17",
+			CounterChannelID: "channel-184",
+			Port:             "port",
+			State:            3,
+			Hops:             []string{"conn4", "conn3"},
+			ChainName:        "akash",
+		},
+	},
+	Connections: []utils.Connection{
+		{
+			ChainName:           "regen",
+			ConnectionID:        "conn1",
+			ClientID:            "cl1",
+			State:               "ready",
+			CounterConnectionID: "conn2",
+			CounterClientID:     "cl2",
+		},
+		{
+			ChainName:           "cosmoshub",
+			ConnectionID:        "conn2",
+			ClientID:            "cl2",
+			State:               "ready",
+			CounterConnectionID: "conn2",
+			CounterClientID:     "cl1",
+		},
+		{
+			ChainName:           "cosmoshub",
+			ConnectionID:        "conn3",
+			ClientID:            "cl2",
+			State:               "ready",
+			CounterConnectionID: "conn4",
+			CounterClientID:     "cl3",
+		},
+		{
+			ChainName:           "akash",
+			ConnectionID:        "conn4",
+			ClientID:            "cl3",
+			State:               "ready",
+			CounterConnectionID: "conn3",
+			CounterClientID:     "cl2",
+		},
+	},
+	Clients: []utils.Client{
+		{
+			SourceChainName: "regen",
+			DestChainID:     "cosmoshub-4",
+			ClientID:        "cl1",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+		{
+			SourceChainName: "cosmoshub",
+			DestChainID:     "regen-1",
+			ClientID:        "cl2",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+		{
+			SourceChainName: "cosmoshub",
+			DestChainID:     "akashnet-2",
+			ClientID:        "cl2",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+		{
+			SourceChainName: "akash",
+			DestChainID:     "cosmoshub-4",
+			ClientID:        "cl3",
+			LatestHeight:    "99",
+			TrustingPeriod:  "10",
+		},
+	},
+	BlockTimes: []utils.BlockTime{
+		{
+			ChainName: "akash",
+			Time:      time.Now(),
+		},
+	},
+}
+
 var disabledChain = cns.Chain{
 	Enabled:        false,
 	ChainName:      "chain3",

@@ -272,8 +272,8 @@ var verifyTraceTestCases = []struct {
 		},
 		"chain1",
 		"12345",
-		"not primary channel for chain",
-		false,
+		"",
+		true,
 		200,
 	},
 	{
@@ -300,8 +300,67 @@ var verifyTraceTestCases = []struct {
 		},
 		"chain1",
 		"12345",
-		"chain1 doesnt have primary channel for chain2",
-		false,
+		"",
+		true,
+		200,
+	},
+	{
+		"akash->cosmoshub->regen",
+		verifyTraceData3Chains,
+		[]cns.Chain{
+			{
+				Enabled:          true,
+				ChainName:        "akash",
+				DemerisAddresses: []string{"12345"},
+				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				ValidBlockThresh: cns.Threshold(30 * time.Minute),
+				Denoms: []cns.Denom{
+					{
+						Name:     "uakt",
+						Verified: true,
+					},
+				},
+				NodeInfo: cns.NodeInfo{
+					ChainID: "akashnet-2",
+				},
+			},
+			{
+				Enabled:          true,
+				ChainName:        "cosmoshub",
+				DemerisAddresses: []string{"12345"},
+				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				ValidBlockThresh: cns.Threshold(30 * time.Minute),
+				Denoms: []cns.Denom{
+					{
+						Name:     "uatom",
+						Verified: true,
+					},
+				},
+				NodeInfo: cns.NodeInfo{
+					ChainID: "cosmoshub-4",
+				},
+			},
+			{
+				Enabled:          true,
+				ChainName:        "regen",
+				DemerisAddresses: []string{"12345"},
+				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				ValidBlockThresh: cns.Threshold(30 * time.Minute),
+				Denoms: []cns.Denom{
+					{
+						Name:     "uregen",
+						Verified: true,
+					},
+				},
+				NodeInfo: cns.NodeInfo{
+					ChainID: "regen-1",
+				},
+			},
+		},
+		"regen",
+		"12345",
+		"",
+		true,
 		200,
 	},
 }
