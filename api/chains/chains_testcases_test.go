@@ -313,6 +313,7 @@ var verifyTraceTestCases = []struct {
 				ChainName:        "akash",
 				DemerisAddresses: []string{"12345"},
 				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				ValidBlockThresh: cns.Threshold(30 * time.Minute),
 				Denoms: []cns.Denom{
 					{
 						Name:     "uakt",
@@ -328,6 +329,7 @@ var verifyTraceTestCases = []struct {
 				ChainName:        "cosmoshub",
 				DemerisAddresses: []string{"12345"},
 				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				ValidBlockThresh: cns.Threshold(30 * time.Minute),
 				Denoms: []cns.Denom{
 					{
 						Name:     "uatom",
