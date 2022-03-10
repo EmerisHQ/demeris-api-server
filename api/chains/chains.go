@@ -1141,12 +1141,12 @@ func GetStakingParams(c *gin.Context) {
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve inflation from sdk-service"),
+			fmt.Errorf("cannot retrieve staking params from sdk-service"),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve inflation from sdk-service",
+			"cannot retrieve staking params from sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -1224,12 +1224,12 @@ func GetStakingPool(c *gin.Context) {
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve inflation from sdk-service"),
+			fmt.Errorf("cannot retrieve staking pool from sdk-service"),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve inflation from sdk-service",
+			"cannot retrieve staking pool from sdk-service",
 			"id",
 			e.ID,
 			"name",
