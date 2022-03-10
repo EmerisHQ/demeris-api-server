@@ -343,6 +343,7 @@ var verifyTraceTestCases = []struct {
 				ChainName:        "regen",
 				DemerisAddresses: []string{"12345"},
 				SupportedWallets: pq.StringArray([]string{"keplr"}),
+				ValidBlockThresh: cns.Threshold(30 * time.Minute),
 				Denoms: []cns.Denom{
 					{
 						Name:     "uregen",
