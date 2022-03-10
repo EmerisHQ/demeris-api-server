@@ -1078,6 +1078,15 @@ func GetInflation(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintInflation)
 }
 
+// GetStakingParams returns the staking parameters of a specific chain
+// @Summary Gets the staking parameters of a chain
+// @Description Gets staking parameters
+// @Tags Chain
+// @ID get-staking-params
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 400 {object} deps.Error
+// @Router /chain/{chainName}/staking/params [get]
 func GetStakingParams(c *gin.Context) {
 	d := deps.GetDeps(c)
 
@@ -1152,6 +1161,15 @@ func GetStakingParams(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingParams)
 }
 
+// GetStakingPool returns the staking pool of a specific chain
+// @Summary Gets the staking pool of a chain
+// @Description Gets staking pool
+// @Tags Chain
+// @ID get-staking-pool
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 400 {object} deps.Error
+// @Router /chain/{chainName}/staking/pool [get]
 func GetStakingPool(c *gin.Context) {
 	d := deps.GetDeps(c)
 
