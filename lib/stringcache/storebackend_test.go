@@ -9,7 +9,7 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // NewStore returns an initialized test *Store connected to a miniredis instance.
@@ -24,60 +24,60 @@ func NewStore(t *testing.T) (*store.Store, *miniredis.Miniredis) {
 }
 
 func TestStoreBackend_SetNewKey(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	s, _ := NewStore(t)
 
 	back := NewStoreBackend(s)
 	err := back.Set(context.Background(), "key", "value", 10*time.Minute)
-	assert.NoError(err)
+	require.NoError(err)
 }
 
 func TestStoreBackend_ReplaceKey(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	s, miniredis := NewStore(t)
 	_ = miniredis.Set("key", "something")
 
 	back := NewStoreBackend(s)
 	err := back.Set(context.Background(), "key", "value", 10*time.Minute)
 
-	assert.NoError(err)
+	require.NoError(err)
 
 	val, _ := miniredis.Get("key")
-	assert.Equal("value", val)
+	require.Equal("value", val)
 }
 
 func TestStoreBackend_GetKey(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	s, miniredis := NewStore(t)
 	_ = miniredis.Set("key", "something")
 
 	back := NewStoreBackend(s)
 	res, err := back.Get(context.Background(), "key")
 
-	assert.NoError(err)
-	assert.Equal("something", res)
+	require.NoError(err)
+	require.Equal("something", res)
 }
 
 func TestStoreBackend_GetUnsetKey(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	s, _ := NewStore(t)
 
 	back := NewStoreBackend(s)
 	_, err := back.Get(context.Background(), "key")
 
-	assert.ErrorIs(ErrCacheMiss, err)
+	require.ErrorIs(ErrCacheMiss, err)
 }
 
 func TestStoreBackend_GetAfterExpiration(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	s, miniredis := NewStore(t)
 
 	back := NewStoreBackend(s)
 	err := back.Set(context.Background(), "key", "value", 60*time.Second)
-	assert.NoError(err)
+	require.NoError(err)
 
 	miniredis.FastForward(10 * time.Minute)
 
 	res, err := back.Get(context.Background(), "key")
-	assert.ErrorIsf(ErrCacheMiss, err, "expected cache miss, actual cache value was: %s", res)
+	require.ErrorIsf(ErrCacheMiss, err, "expected cache miss, actual cache value was: %s", res)
 }
