@@ -1002,6 +1002,15 @@ func GetInflation(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintInflation)
 }
 
+// GetStakingParams returns the staking parameters of a specific chain
+// @Summary Gets the staking parameters of a chain
+// @Description Gets staking parameters
+// @Tags Chain
+// @ID get-staking-params
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 400 {object} deps.Error
+// @Router /chain/{chainName}/staking/params [get]
 func GetStakingParams(c *gin.Context) {
 	d := deps.GetDeps(c)
 
@@ -1056,12 +1065,12 @@ func GetStakingParams(c *gin.Context) {
 	if err != nil {
 		e := deps.NewError(
 			"chains",
-			fmt.Errorf("cannot retrieve inflation from sdk-service"),
+			fmt.Errorf("cannot retrieve staking params from sdk-service"),
 			http.StatusBadRequest,
 		)
 
 		d.WriteError(c, e,
-			"cannot retrieve inflation from sdk-service",
+			"cannot retrieve staking params from sdk-service",
 			"id",
 			e.ID,
 			"name",
@@ -1074,6 +1083,89 @@ func GetStakingParams(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingParams)
+}
+
+// GetStakingPool returns the staking pool of a specific chain
+// @Summary Gets the staking pool of a chain
+// @Description Gets staking pool
+// @Tags Chain
+// @ID get-staking-pool
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 400 {object} deps.Error
+// @Router /chain/{chainName}/staking/pool [get]
+func GetStakingPool(c *gin.Context) {
+	d := deps.GetDeps(c)
+
+	chainName := c.Param("chain")
+
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain's sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	sdkRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve staking pool from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve staking pool from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingPool)
 }
 
 // GetMintParams returns the minting parameters of a specific chain
