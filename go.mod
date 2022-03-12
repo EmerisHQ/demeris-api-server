@@ -17,6 +17,7 @@ require (
 	github.com/emerishq/demeris-backend-models v1.2.0
 	github.com/emerishq/emeris-cns-server v0.0.0-20220309095629-a492f8569484
 	github.com/emerishq/emeris-utils v1.3.0
+	github.com/emerishq/sdk-service-meta v0.0.0-20220312063413-09a3229c4633
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/go-redis/redis/v8 v8.11.4
@@ -69,7 +70,6 @@ require (
 	github.com/dimfeld/httppath v0.0.0-20170720192232-ee938bf73598 // indirect
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v0.0.0-20200901110807-248326c1351b // indirect
-	github.com/emerishq/sdk-service-meta v0.0.0-20220312063413-09a3229c4633 // indirect
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25 // indirect
 	github.com/ethereum/go-ethereum v1.10.15 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
