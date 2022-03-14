@@ -12,7 +12,15 @@ const (
 	sdkServiceURLFmt = "sdk-service-v%s:9090"
 )
 
+// map of sdk versions to sdk service versions in case of any exceptions
+var sdkExceptionMappings = map[string]string{
+	"45": "44",
+}
+
 func sdkServiceURL(version string) string {
+	if v, ok := sdkExceptionMappings[version]; ok {
+		version = v
+	}
 	return fmt.Sprintf(sdkServiceURLFmt, version)
 }
 
