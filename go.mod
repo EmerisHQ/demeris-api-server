@@ -17,7 +17,7 @@ require (
 	github.com/emerishq/demeris-backend-models v1.2.0
 	github.com/emerishq/emeris-cns-server v0.0.0-20220309095629-a492f8569484
 	github.com/emerishq/emeris-utils v1.3.0
-	github.com/emerishq/sdk-service-meta v0.0.0-20220312063413-09a3229c4633
+	github.com/emerishq/sdk-service-meta v0.0.0-20220315104039-187a656fb017
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/go-redis/redis/v8 v8.11.4
@@ -183,8 +183,8 @@ require (
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
-	goa.design/goa/v3 v3.6.1 // indirect
-	goa.design/plugins/v3 v3.5.5 // indirect
+	goa.design/goa/v3 v3.6.2 // indirect
+	goa.design/plugins/v3 v3.6.2 // indirect
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
