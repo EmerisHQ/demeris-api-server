@@ -45,6 +45,7 @@ func Client(sdkVersion string) (sdkutilities.Client, error) {
 		MintInflationEndpoint:       client.MintInflation(),
 		MintParamsEndpoint:          client.MintParams(),
 		MintAnnualProvisionEndpoint: client.MintAnnualProvision(),
+		MintEpochProvisionsEndpoint: client.MintEpochProvisions(),
 		EstimateFeesEndpoint:        client.EstimateFees(),
 		DelegatorRewardsEndpoint:    client.DelegatorRewards(),
 		StakingParamsEndpoint:       client.StakingParams(),
