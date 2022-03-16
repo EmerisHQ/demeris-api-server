@@ -23,8 +23,8 @@ func TestSdkServiceURL(t *testing.T) {
 		},
 	}
 
-	for i, tt := range testCases {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+	for _, tt := range testCases {
+		t.Run(tt.sdkVersion, func(t *testing.T) {
 			actual := sdkservice.SdkServiceURL(tt.sdkVersion)
 			require.Equal(t, tt.sdkService, actual)
 		})
