@@ -1343,7 +1343,7 @@ func GetAnnualProvisions(c *gin.Context) {
 // @ID get-epoch-provisions
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 500,403 {object} deps.Error
+// @Failure 400 {object} deps.Error
 // @Router /chain/{chainName}/mint/epoch_provisions [get]
 func GetEpochProvisions(c *gin.Context) {
 
