@@ -118,5 +118,11 @@ type Coin struct {
 }
 
 type SupplyResponse struct {
-	Supply []Coin `json:"supply,omitempty"`
+	Supply     []Coin     `json:"supply,omitempty"`
+	Pagination Pagination `json:"pagination,omitempty"`
+}
+
+type Pagination struct {
+	NextKey string `json:"next_key,omitempty"`
+	Total   string `json:"total,omitempty"`
 }
