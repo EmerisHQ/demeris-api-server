@@ -763,11 +763,14 @@ func GetChainSupply(c *gin.Context) {
 
 	sup := make([]Coin, 0)
 
-	res := SupplyResponse{Supply: sup}
+	res := SupplyResponse{Supply: sup, Pagination: Pagination{}}
 
-	res.Pagination = Pagination{
-		NextKey: *sdkRes.Pagination.NextKey,
-		Total:   *sdkRes.Pagination.Total,
+	if sdkRes.Pagination.NextKey != nil {
+		res.Pagination.NextKey = *sdkRes.Pagination.NextKey
+	}
+
+	if sdkRes.Pagination.Total != nil {
+		res.Pagination.Total = *sdkRes.Pagination.Total
 	}
 
 	for _, s := range sdkRes.Coins {
