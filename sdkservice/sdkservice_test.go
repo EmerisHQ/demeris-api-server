@@ -1,7 +1,6 @@
 package sdkservice_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/sdkservice"
