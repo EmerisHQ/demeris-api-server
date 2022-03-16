@@ -12,15 +12,23 @@ const (
 	sdkServiceURLFmt = "sdk-service-v%s:9090"
 )
 
-func sdkServiceURL(version string) string {
+// map of sdk versions to sdk service versions in case of any exceptions
+var sdkExceptionMappings = map[string]string{
+	"45": "44",
+}
+
+func SdkServiceURL(version string) string {
+	if v, ok := sdkExceptionMappings[version]; ok {
+		version = v
+	}
 	return fmt.Sprintf(sdkServiceURLFmt, version)
 }
 
 // Client returns a sdkutilities.Client for the given SDK version ready to be used.
 func Client(sdkVersion string) (sdkutilities.Client, error) {
-	conn, err := grpc.Dial(sdkServiceURL(sdkVersion), grpc.WithInsecure())
+	conn, err := grpc.Dial(SdkServiceURL(sdkVersion), grpc.WithInsecure())
 	if err != nil {
-		return sdkutilities.Client{}, fmt.Errorf("cannot connect to endpoint %s: %w", sdkServiceURL(sdkVersion), err)
+		return sdkutilities.Client{}, fmt.Errorf("cannot connect to endpoint %s: %w", SdkServiceURL(sdkVersion), err)
 	}
 
 	client := sdkserviceclient.NewClient(conn)
