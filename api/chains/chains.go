@@ -1335,3 +1335,87 @@ func GetAnnualProvisions(c *gin.Context) {
 
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintAnnualProvision)
 }
+
+// GetEpochProvisions returns the epoch provisions of a specific chain
+// @Summary Gets the epoch provisions of a chain
+// @Description Gets epoch provisions
+// @Tags Chain
+// @ID get-epoch-provisions
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 500,403 {object} deps.Error
+// @Router /chain/{chainName}/mint/epoch_provisions [get]
+func GetEpochProvisions(c *gin.Context) {
+
+	d := deps.GetDeps(c)
+
+	chainName := c.Param("chain")
+
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain's sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	sdkRes, err := client.MintEpochProvisions(context.Background(), &sdkutilities.MintEpochProvisionsPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve mint epoch provisions from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve mint epoch provisions from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintEpochProvisions)
+}
