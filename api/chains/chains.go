@@ -783,6 +783,91 @@ func GetChainSupply(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// GetDenomSupply returns the total supply of a given denom.
+// @Summary Gets supply of a denom of a given chain.
+// @Tags Chain
+// @ID supply
+// @Description Gets supply of a given denom.
+// @Param chainName path string true "chain name"
+// @Param denom path string true "denom name"
+// @Produce json
+// @Success 200 {object} SupplyResponse
+// @Failure 400 {object} deps.Error
+// @Router /chain/{chainName}/supply/:denom [get]
+func GetDenomSupply(c *gin.Context) {
+	d := deps.GetDeps(c)
+
+	chainName := c.Param("chain")
+	denom := c.Param("denom")
+
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id", e.ID,
+			"name", chainName,
+			"error", err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain's sdk-service",
+			"id", e.ID,
+			"name", chainName,
+			"error", err,
+		)
+
+		return
+	}
+
+	payload := &sdkutilities.SupplyDenomPayload{
+		ChainName: chainName,
+		Denom:     &denom,
+	}
+
+	sdkRes, err := client.SupplyDenom(context.Background(), payload)
+	if err != nil || len(sdkRes.Coins) != 1 { // Expected at least one response
+		cause := fmt.Errorf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
+		if len(sdkRes.Coins) != 1 {
+			cause = fmt.Errorf("expected 1 demon for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
+		}
+		e := deps.NewError(
+			"chains",
+			cause,
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve denom supply from sdk-service",
+			"id", e.ID,
+			"chain name", chainName,
+			"denom name", denom,
+			"error", err,
+		)
+
+		return
+	}
+
+	res := SupplyResponse{Supply: []Coin{{Denom: denom, Amount: sdkRes.Coins[0].Amount}}}
+	c.JSON(http.StatusOK, res)
+}
+
 // GetChainTx returns the tx info of a given chain.
 // @Summary Gets tx info of a given tx.
 // @Tags Chain
