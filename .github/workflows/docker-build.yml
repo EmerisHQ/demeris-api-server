@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Call repository_dispatch on demeris-backend
-        uses: peter-evans/repository-dispatch@v1
+        uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.TENDERBOT_GIT_TOKEN }}
           repository: emerishq/demeris-backend
