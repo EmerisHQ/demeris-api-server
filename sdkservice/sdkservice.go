@@ -36,6 +36,7 @@ func Client(sdkVersion string) (sdkutilities.Client, error) {
 	cc := sdkutilities.Client{
 		AccountNumbersEndpoint:      client.AccountNumbers(),
 		SupplyEndpoint:              client.Supply(),
+		SupplyDenomEndpoint:         client.SupplyDenom(),
 		QueryTxEndpoint:             client.QueryTx(),
 		BroadcastTxEndpoint:         client.BroadcastTx(),
 		TxMetadataEndpoint:          client.TxMetadata(),
@@ -46,10 +47,11 @@ func Client(sdkVersion string) (sdkutilities.Client, error) {
 		MintParamsEndpoint:          client.MintParams(),
 		MintAnnualProvisionEndpoint: client.MintAnnualProvision(),
 		MintEpochProvisionsEndpoint: client.MintEpochProvisions(),
-		EstimateFeesEndpoint:        client.EstimateFees(),
 		DelegatorRewardsEndpoint:    client.DelegatorRewards(),
+		EstimateFeesEndpoint:        client.EstimateFees(),
 		StakingParamsEndpoint:       client.StakingParams(),
 		StakingPoolEndpoint:         client.StakingPool(),
+		EmoneyInflationEndpoint:     client.EmoneyInflation(),
 	}
 
 	return cc, nil
