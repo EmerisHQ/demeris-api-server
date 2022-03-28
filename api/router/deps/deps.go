@@ -1,12 +1,11 @@
 package deps
 
 import (
-	"fmt"
-
 	"k8s.io/client-go/informers"
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
@@ -24,15 +23,7 @@ type Deps struct {
 }
 
 func GetDeps(c *gin.Context) *Deps {
-	d, ok := c.Get("deps")
-	if !ok {
-		panic("deps not set in context")
-	}
-
-	deps, ok := d.(*Deps)
-	if !ok {
-		panic(fmt.Sprintf("deps not of the expected type, found %T", deps))
-	}
+	deps := ginutils.GetValue[*Deps](c, "deps")
 
 	// override logger with the one from the gin.context
 	logger, err := logging.GetLoggerFromContext(c)
