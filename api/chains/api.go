@@ -83,7 +83,7 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 	}
 }
 
-// hainMiddleware checks if the chain exists and it's enabled in the database,
+// RequireChainEnabled checks if the chain exists and it's enabled in the database,
 // if it's not it returns an error to the user.
 func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
