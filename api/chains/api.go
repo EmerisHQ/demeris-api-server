@@ -28,6 +28,7 @@ func Register(router *gin.Engine) {
 		GET("/bech32", GetChainBech32Config).
 		GET("/status", GetChainStatus).
 		GET("/supply", GetChainSupply).
+		GET("/supply/:denom", GetDenomSupply).
 		GET("/txs/:tx", GetChainTx).
 		GET("/numbers/:address", GetNumbersByAddress).
 		GET("/mint/inflation", GetInflation).

@@ -662,26 +662,8 @@ func GetChainSupply(c *gin.Context) {
 func GetDenomSupply(c *gin.Context) {
 	d := deps.GetDeps(c)
 
-	chainName := c.Param("chain")
 	denom := c.Param("denom")
-
-	chain, err := d.Database.Chain(chainName)
-	if err != nil {
-		e := deps.NewError(
-			"chains",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id", e.ID,
-			"name", chainName,
-			"error", err,
-		)
-
-		return
-	}
+	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
@@ -694,7 +676,7 @@ func GetDenomSupply(c *gin.Context) {
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
 			"id", e.ID,
-			"name", chainName,
+			"name", chain.ChainName,
 			"error", err,
 		)
 
@@ -702,7 +684,7 @@ func GetDenomSupply(c *gin.Context) {
 	}
 
 	payload := &sdkutilities.SupplyDenomPayload{
-		ChainName: chainName,
+		ChainName: chain.ChainName,
 		Denom:     &denom,
 	}
 
@@ -721,7 +703,7 @@ func GetDenomSupply(c *gin.Context) {
 		d.WriteError(c, e,
 			"cannot retrieve denom supply from sdk-service",
 			"id", e.ID,
-			"chain name", chainName,
+			"chain name", chain.ChainName,
 			"denom name", denom,
 			"error", err,
 		)
