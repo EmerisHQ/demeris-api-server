@@ -24,6 +24,7 @@ func Register(router *gin.Engine) {
 	chain.GET("/mint/epoch_provisions", GetEpochProvisions)
 	chain.GET("/staking/params", GetStakingParams)
 	chain.GET("/staking/pool", GetStakingPool)
+	chain.GET("/APR", GetStakingAPR)
 
 	fee := chain.Group("/fee")
 

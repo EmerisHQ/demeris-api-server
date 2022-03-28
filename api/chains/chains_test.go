@@ -21,6 +21,7 @@ const (
 	chainStatusUrl         = "http://%s/chain/%s/status"
 	chainSupplyUrl         = "http://%s/chain/%s/supply"
 	verifyTraceEndpointUrl = "http://%s/chain/%s/denom/verify_trace/%s"
+	chainAPREndpoint       = "http://%s/chain/%s/APR"
 )
 
 func TestGetChain(t *testing.T) {
@@ -308,6 +309,63 @@ func TestGetChainSupply(t *testing.T) {
 			err = json.Unmarshal(body, &respStruct)
 			require.NoError(t, err)
 
+			require.Equal(t, tt.expectedResponse, respStruct)
+
+			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+		})
+	}
+	utils.TruncateCNSDB(testingCtx, t)
+}
+
+func TestGetChainStakingAPR(t *testing.T) {
+	tests := []struct {
+		name             string
+		dataStruct       cns.Chain
+		chainName        string
+		expectedHttpCode int
+		expectedResponse chains.SupplyResponse
+		success          bool
+	}{
+		{
+			"Get Chain Supply - Enabled",
+			chainWithPublicEndpoints,
+			chainWithPublicEndpoints.ChainName,
+			500,
+			chains.SupplyResponse{Supply: []chains.Coin(nil), Pagination: chains.Pagination{}},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			// arrange
+			// if we have a populated Chain store, add it
+			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
+				tt.dataStruct.CosmosSDKVersion = "v0.44.2"
+				err := testingCtx.CnsDB.AddChain(tt.dataStruct)
+				require.NoError(t, err)
+			}
+
+			// act
+			resp, err := http.Get(fmt.Sprintf(chainAPREndpoint, testingCtx.Cfg.ListenAddr, tt.chainName))
+			require.NoError(t, err)
+			defer func() { _ = resp.Body.Close() }()
+
+			// assert
+			if !tt.success {
+				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
+				return
+			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			var respStruct map[string]interface{}
+			err = json.Unmarshal(body, &respStruct)
+			require.NoError(t, err)
+
+			fmt.Println(respStruct)
 			require.Equal(t, tt.expectedResponse, respStruct)
 
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)

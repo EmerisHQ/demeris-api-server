@@ -126,3 +126,7 @@ type Pagination struct {
 	NextKey string `json:"next_key,omitempty"`
 	Total   string `json:"total,omitempty"`
 }
+
+type APRResponse struct {
+	APR float64 `json:"apr,omitempty"`
+}

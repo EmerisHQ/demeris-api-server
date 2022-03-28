@@ -3,14 +3,15 @@ package chains
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	// needed for swagger gen
-	_ "encoding/json"
 
 	"github.com/gin-gonic/gin"
 
@@ -1435,4 +1436,314 @@ func GetEpochProvisions(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintEpochProvisions)
+}
+
+func GetStakingAPR(c *gin.Context) {
+	d := deps.GetDeps(c)
+
+	chainName := c.Param("chain")
+
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain's sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve inflation from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve inflation from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	var inflationData InflationResponse
+	err = json.Unmarshal(inflationRes.MintInflation, &inflationData)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot unmarshal inflation"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot unmarshal inflation",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	inflation, err := strconv.ParseFloat(inflationData.Inflation, 64)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot convert inflation to float64"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot convert inflation to float64",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	stakingPoolRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve staking pool from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve staking pool from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	var stakingPoolData map[string]interface{}
+	err = json.Unmarshal(stakingPoolRes.StakingPool, &stakingPoolData)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot unmarshal staking pool"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot unmarshal staking pool",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	bondedTokens, err := strconv.Atoi(stakingPoolData["pool"].(map[string]interface{})["bonded_tokens"].(string))
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot convert bonded_tokens to int"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot convert bonded_tokens to int",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	stakingParamsRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve staking params from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve staking params from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	var stakingParamsData map[string]interface{}
+	err = json.Unmarshal(stakingParamsRes.StakingParams, &stakingParamsData)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot unmarshal staking params"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot unmarshal staking params",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	bond_denom := stakingParamsData["params"].(map[string]interface{})["bond_denom"].(string)
+
+	var supply int
+	payload := &sdkutilities.SupplyPayload{
+		ChainName: chainName,
+	}
+	for supply == 0 {
+		supplyRes, err := client.Supply(context.Background(), payload)
+		if err != nil {
+			e := deps.NewError(
+				"chains",
+				fmt.Errorf("cannot retrieve supply from sdk-service"),
+				http.StatusBadRequest,
+			)
+
+			d.WriteError(c, e,
+				"cannot retrieve supply from sdk-service",
+				"id",
+				e.ID,
+				"name",
+				chainName,
+				"error",
+				err,
+			)
+
+			return
+		}
+		for _, s := range supplyRes.Coins {
+			if s.Denom == bond_denom {
+				supply, err = strconv.Atoi(s.Amount)
+				if err != nil {
+					e := deps.NewError(
+						"chains",
+						fmt.Errorf("cannot convert supply to int"),
+						http.StatusBadRequest,
+					)
+
+					d.WriteError(c, e,
+						"cannot convert supply to int",
+						"id",
+						e.ID,
+						"name",
+						chainName,
+						"error",
+						err,
+					)
+
+					return
+				}
+				break
+			}
+		}
+		if supply == 0 {
+			if supplyRes.Pagination.NextKey != nil {
+				payload.PaginationKey = supplyRes.Pagination.NextKey
+			} else {
+				e := deps.NewError(
+					"chains",
+					fmt.Errorf("cannot find supply of denom: %s", bond_denom),
+					http.StatusBadRequest,
+				)
+
+				d.WriteError(c, e,
+					fmt.Sprintf("cannot find supply of denom: %s", bond_denom),
+					"id",
+					e.ID,
+					"name",
+					chainName,
+					"error",
+					err,
+				)
+
+				return
+			}
+		}
+	}
+
+	apr := (inflation * 100) / (float64(bondedTokens) / float64(supply))
+	res := APRResponse{APR: apr}
+
+	c.JSON(http.StatusOK, res)
 }
