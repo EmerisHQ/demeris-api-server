@@ -842,10 +842,10 @@ func GetDenomSupply(c *gin.Context) {
 	}
 
 	sdkRes, err := client.SupplyDenom(context.Background(), payload)
-	if err != nil || len(sdkRes.Coins) != 1 { // Expected at least one response
+	if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 		cause := fmt.Errorf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
 		if len(sdkRes.Coins) != 1 {
-			cause = fmt.Errorf("expected 1 demon for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
+			cause = fmt.Errorf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
 		}
 		e := deps.NewError(
 			"chains",
