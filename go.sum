@@ -400,8 +400,8 @@ github.com/emerishq/emeris-cns-server v0.0.0-20220309095629-a492f8569484 h1:UOvd
 github.com/emerishq/emeris-cns-server v0.0.0-20220309095629-a492f8569484/go.mod h1:BYciyChqW2Odw8LHvACNznByJtI3D9xOuKwQyyFz1rA=
 github.com/emerishq/emeris-utils v1.3.0 h1:dVWtigVeUb7h/jQL2ofu1YZy61jxJ76BY9+fpzuEOmc=
 github.com/emerishq/emeris-utils v1.3.0/go.mod h1:rZguErkL/bsJ1Nj0LN5Rfm9qcI1XIwHpr5XwSJwSvN0=
-github.com/emerishq/sdk-service-meta v0.0.0-20220321130059-95f24d8b493f h1:duaSm1MucVfqc3KvdP6ZkbRxf0cklON9D/PB4oRN7uY=
-github.com/emerishq/sdk-service-meta v0.0.0-20220321130059-95f24d8b493f/go.mod h1:kDThe+pyl/SNUWnrJlsGO1hmhQR4Ql7RlkXIl0aForM=
+github.com/emerishq/sdk-service-meta v0.0.0-20220328083553-90cbbcc4202e h1:Nk0AR6vqWZDHzYKa93+2xgHeXUVCjfhcXql0A0leIgw=
+github.com/emerishq/sdk-service-meta v0.0.0-20220328083553-90cbbcc4202e/go.mod h1:kDThe+pyl/SNUWnrJlsGO1hmhQR4Ql7RlkXIl0aForM=
 github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
 github.com/emicklei/go-restful v2.9.5+incompatible/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
 github.com/emicklei/proto v1.9.0/go.mod h1:rn1FgRS/FANiZdD2djyH7TMA9jdRDcYQ9IEN9yvjX0A=
