@@ -1442,6 +1442,34 @@ func GetStakingAPR(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	chainName := c.Param("chain")
+	aprRedisKey := chainName + "APR"
+
+	aprRedis, _ := d.Store.Client.Get(context.Background(), aprRedisKey).Result()
+	if aprRedis != "" {
+		apr, err := strconv.ParseFloat(aprRedis, 64)
+		if err != nil {
+			e := deps.NewError(
+				"chains",
+				fmt.Errorf("cannot convert redis apr to float64"),
+				http.StatusBadRequest,
+			)
+
+			d.WriteError(c, e,
+				"cannot convert redis apr to float64",
+				"id",
+				e.ID,
+				"name",
+				chainName,
+				"error",
+				err,
+			)
+
+			return
+		}
+		res := APRResponse{APR: apr}
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
@@ -1743,7 +1771,25 @@ func GetStakingAPR(c *gin.Context) {
 	}
 
 	apr := (inflation * 100) / (float64(bondedTokens) / float64(supply))
-	res := APRResponse{APR: apr}
 
+	if err = d.Store.Client.Set(context.Background(), aprRedisKey, apr, time.Hour*24).Err(); err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot set apr to in redis chain:%s apr:%f", chainName, apr),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			fmt.Sprintf("cannot set apr to in redis chain:%s apr:%f", chainName, apr),
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+	}
+
+	res := APRResponse{APR: apr}
 	c.JSON(http.StatusOK, res)
 }
