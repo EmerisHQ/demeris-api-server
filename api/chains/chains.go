@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router/deps"
@@ -1199,28 +1200,8 @@ func GetStakingAPR(c *gin.Context) {
 	chainName := c.Param("chain")
 	aprRedisKey := chainName + "APR"
 
-	chain, err := d.Database.Chain(chainName)
-	if err != nil {
-		e := deps.NewError(
-			"chains",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id",
-			e.ID,
-			"name",
-			chainName,
-			"error",
-			err,
-		)
-
-		return
-	}
-
-	aprRedis, _ := d.Store.Client.Get(context.Background(), aprRedisKey).Result()
+	// get apr from redis
+	aprRedis, err := d.Store.Client.Get(context.Background(), aprRedisKey).Result()
 	if aprRedis != "" {
 		apr, err := strconv.ParseFloat(aprRedis, 64)
 		if err != nil {
@@ -1247,6 +1228,7 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
+	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
@@ -1268,6 +1250,7 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
+	// get number of bonded tokens from staking/pool data
 	stakingPoolRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
 		ChainName: chainName,
 	})
@@ -1335,6 +1318,7 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
+	// get staking coin denom from staking params
 	stakingParamsRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
 		ChainName: chainName,
 	})
@@ -1383,81 +1367,60 @@ func GetStakingAPR(c *gin.Context) {
 
 	bond_denom := stakingParamsData["params"].(map[string]interface{})["bond_denom"].(string)
 
-	var supply int
-	payload := &sdkutilities.SupplyPayload{
-		ChainName: chainName,
-	}
-	for supply == 0 {
-		supplyRes, err := client.Supply(context.Background(), payload)
-		if err != nil {
-			e := deps.NewError(
-				"chains",
-				fmt.Errorf("cannot retrieve supply from sdk-service"),
-				http.StatusBadRequest,
-			)
-
-			d.WriteError(c, e,
-				"cannot retrieve supply from sdk-service",
-				"id",
-				e.ID,
-				"name",
-				chainName,
-				"error",
-				err,
-			)
-
-			return
-		}
-		for _, s := range supplyRes.Coins {
-			if s.Denom == bond_denom {
-				supply, err = strconv.Atoi(s.Amount)
-				if err != nil {
-					e := deps.NewError(
-						"chains",
-						fmt.Errorf("cannot convert supply to int"),
-						http.StatusBadRequest,
-					)
-
-					d.WriteError(c, e,
-						"cannot convert supply to int",
-						"id",
-						e.ID,
-						"name",
-						chainName,
-						"error",
-						err,
-					)
-
-					return
-				}
-				break
-			}
-		}
-		if supply == 0 {
-			if supplyRes.Pagination.NextKey != nil {
-				payload.PaginationKey = supplyRes.Pagination.NextKey
-			} else {
-				e := deps.NewError(
-					"chains",
-					fmt.Errorf("cannot find supply of denom: %s", bond_denom),
-					http.StatusBadRequest,
-				)
-
-				d.WriteError(c, e,
-					fmt.Sprintf("cannot find supply of denom: %s", bond_denom),
-					"id",
-					e.ID,
-					"name",
-					chainName,
-					"error",
-					err,
-				)
-
-				return
-			}
-		}
+	// get supply of staking denom
+	payload := &sdkutilities.SupplyDenomPayload{
+		ChainName: chain.ChainName,
+		Denom:     &bond_denom,
 	}
 
+	denomSupplyRes, err := client.SupplyDenom(context.Background(), payload)
+	if err != nil || len(denomSupplyRes.Coins) != 1 { // Expected exactly one response
+		cause := fmt.Errorf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, bond_denom)
+		if len(denomSupplyRes.Coins) != 1 {
+			cause = fmt.Errorf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, bond_denom, denomSupplyRes.Coins)
+		}
+		e := deps.NewError(
+			"chains",
+			cause,
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve denom supply from sdk-service",
+			"id", e.ID,
+			"chain name", chain.ChainName,
+			"denom name", bond_denom,
+			"error", err,
+		)
+
+		return
+	}
+
+	// denomSupplyRes.Coins[0].Amount is of pattern {amount}{denom} Ex: 438926033423uxyz
+	// Hence, converting it to type coin to extract amount
+	coin, err := sdktypes.ParseCoinNormalized(denomSupplyRes.Coins[0].Amount)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot convert amount to coin"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot convert amount to coin",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+	supply := coin.Amount
+
+	// get inflation
 	inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
 		ChainName: chainName,
 	})
@@ -1525,8 +1488,10 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
-	apr := (inflation * 100) / (float64(bondedTokens) / float64(supply))
+	// calculate staking APR
+	apr := (inflation * 100) / (float64(bondedTokens) / float64(supply.Int64()))
 
+	// set APR to redis
 	if err = d.Store.Client.Set(context.Background(), aprRedisKey, apr, time.Hour*24).Err(); err != nil {
 		e := deps.NewError(
 			"chains",
