@@ -1275,7 +1275,7 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
-	var stakingPoolData map[string]interface{}
+	var stakingPoolData StakingPoolResponse
 	err = json.Unmarshal(stakingPoolRes.StakingPool, &stakingPoolData)
 	if err != nil {
 		e := deps.NewError(
@@ -1297,7 +1297,7 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
-	bondedTokens, err := strconv.Atoi(stakingPoolData["pool"].(map[string]interface{})["bonded_tokens"].(string))
+	bondedTokens, err := strconv.Atoi(stakingPoolData.Pool.BondedTokens)
 	if err != nil {
 		e := deps.NewError(
 			"chains",
@@ -1343,7 +1343,7 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
-	var stakingParamsData map[string]interface{}
+	var stakingParamsData StakingParamsResponse
 	err = json.Unmarshal(stakingParamsRes.StakingParams, &stakingParamsData)
 	if err != nil {
 		e := deps.NewError(
@@ -1365,7 +1365,7 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
-	bond_denom := stakingParamsData["params"].(map[string]interface{})["bond_denom"].(string)
+	bond_denom := stakingParamsData.Params.BondDenom
 
 	// get supply of staking denom
 	payload := &sdkutilities.SupplyDenomPayload{
