@@ -1444,6 +1444,27 @@ func GetStakingAPR(c *gin.Context) {
 	chainName := c.Param("chain")
 	aprRedisKey := chainName + "APR"
 
+	chain, err := d.Database.Chain(chainName)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve chain",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
 	aprRedis, _ := d.Store.Client.Get(context.Background(), aprRedisKey).Result()
 	if aprRedis != "" {
 		apr, err := strconv.ParseFloat(aprRedis, 64)
@@ -1471,27 +1492,6 @@ func GetStakingAPR(c *gin.Context) {
 		return
 	}
 
-	chain, err := d.Database.Chain(chainName)
-	if err != nil {
-		e := deps.NewError(
-			"chains",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id",
-			e.ID,
-			"name",
-			chainName,
-			"error",
-			err,
-		)
-
-		return
-	}
-
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
 		e := deps.NewError(
@@ -1502,73 +1502,6 @@ func GetStakingAPR(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
-			"name",
-			chainName,
-			"error",
-			err,
-		)
-
-		return
-	}
-
-	inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
-		ChainName: chainName,
-	})
-
-	if err != nil {
-		e := deps.NewError(
-			"chains",
-			fmt.Errorf("cannot retrieve inflation from sdk-service"),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve inflation from sdk-service",
-			"id",
-			e.ID,
-			"name",
-			chainName,
-			"error",
-			err,
-		)
-
-		return
-	}
-
-	var inflationData InflationResponse
-	err = json.Unmarshal(inflationRes.MintInflation, &inflationData)
-	if err != nil {
-		e := deps.NewError(
-			"chains",
-			fmt.Errorf("cannot unmarshal inflation"),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot unmarshal inflation",
-			"id",
-			e.ID,
-			"name",
-			chainName,
-			"error",
-			err,
-		)
-
-		return
-	}
-
-	inflation, err := strconv.ParseFloat(inflationData.Inflation, 64)
-	if err != nil {
-		e := deps.NewError(
-			"chains",
-			fmt.Errorf("cannot convert inflation to float64"),
-			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot convert inflation to float64",
 			"id",
 			e.ID,
 			"name",
@@ -1768,6 +1701,73 @@ func GetStakingAPR(c *gin.Context) {
 				return
 			}
 		}
+	}
+
+	inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
+		ChainName: chainName,
+	})
+
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot retrieve inflation from sdk-service"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot retrieve inflation from sdk-service",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	var inflationData InflationResponse
+	err = json.Unmarshal(inflationRes.MintInflation, &inflationData)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot unmarshal inflation"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot unmarshal inflation",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
+	}
+
+	inflation, err := strconv.ParseFloat(inflationData.Inflation, 64)
+	if err != nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot convert inflation to float64"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot convert inflation to float64",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+
+		return
 	}
 
 	apr := (inflation * 100) / (float64(bondedTokens) / float64(supply))
