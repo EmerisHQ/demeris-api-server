@@ -323,15 +323,15 @@ func TestGetChainStakingAPR(t *testing.T) {
 		dataStruct       cns.Chain
 		chainName        string
 		expectedHttpCode int
-		expectedResponse chains.SupplyResponse
+		expectedResponse chains.APRResponse
 		success          bool
 	}{
 		{
-			"Get Chain Supply - Enabled",
+			"Get Chain APR - Enabled",
 			chainWithPublicEndpoints,
 			chainWithPublicEndpoints.ChainName,
 			500,
-			chains.SupplyResponse{Supply: []chains.Coin(nil), Pagination: chains.Pagination{}},
+			chains.APRResponse{APR: 0},
 			true,
 		},
 	}

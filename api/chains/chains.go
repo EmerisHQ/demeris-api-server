@@ -14,6 +14,7 @@ import (
 	// needed for swagger gen
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/api/apiutils"
@@ -1194,6 +1195,16 @@ func GetEpochProvisions(c *gin.Context) {
 	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintEpochProvisions)
 }
 
+// GetStakingAPR returns the staking APR of a specific chain
+// @Summary Gets the staking APR of a chain
+// @Description Gets APR
+// @Tags Chain
+// @ID get-staking-apr
+// @Produce json
+// @Success 200 {object} APRResponse
+// @Failure 500,400 {object} deps.Error
+// @Router /chain/{chainName}/APR [get]
+
 func GetStakingAPR(c *gin.Context) {
 	d := deps.GetDeps(c)
 
@@ -1202,7 +1213,23 @@ func GetStakingAPR(c *gin.Context) {
 
 	// get apr from redis
 	aprRedis, err := d.Store.Client.Get(context.Background(), aprRedisKey).Result()
-	if aprRedis != "" {
+	if err != nil && err != redis.Nil {
+		e := deps.NewError(
+			"chains",
+			fmt.Errorf("cannot get apr from redis"),
+			http.StatusBadRequest,
+		)
+
+		d.WriteError(c, e,
+			"cannot get apr from redis",
+			"id",
+			e.ID,
+			"name",
+			chainName,
+			"error",
+			err,
+		)
+	} else if err == nil {
 		apr, err := strconv.ParseFloat(aprRedis, 64)
 		if err != nil {
 			e := deps.NewError(
