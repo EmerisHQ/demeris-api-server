@@ -654,7 +654,7 @@ func GetChainSupply(c *gin.Context) {
 // GetDenomSupply returns the total supply of a given denom.
 // @Summary Gets supply of a denom of a given chain.
 // @Tags Chain
-// @ID supply
+// @ID denom-supply
 // @Description Gets supply of a given denom.
 // @Param chainName path string true "chain name"
 // @Param denom path string true "denom name"
