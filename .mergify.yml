@@ -11,6 +11,7 @@ pull_request_rules:
       - "#approved-reviews-by>=2"
       - check-success=lint
       - check-success=build
+      - check-success=code_cov
     actions:
       queue:
         name: default
