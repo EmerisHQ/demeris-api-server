@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	// needed for swagger gen
-
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 
