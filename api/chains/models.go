@@ -97,7 +97,7 @@ type InflationResponse struct {
 
 type StakingParamsResponse struct {
 	Params struct {
-		UnbondingTime     string `json:"unbonding_time"`
+		UnbondingTime     int64  `json:"unbonding_time"`
 		MaxValidators     int64  `json:"max_validators"`
 		MaxEntries        int64  `json:"max_entries"`
 		HistoricalEntries int64  `json:"historical_entries"`

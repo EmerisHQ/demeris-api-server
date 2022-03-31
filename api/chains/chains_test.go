@@ -21,7 +21,6 @@ const (
 	chainStatusUrl         = "http://%s/chain/%s/status"
 	chainSupplyUrl         = "http://%s/chain/%s/supply"
 	verifyTraceEndpointUrl = "http://%s/chain/%s/denom/verify_trace/%s"
-	chainAPREndpoint       = "http://%s/chain/%s/APR"
 )
 
 func TestGetChain(t *testing.T) {
