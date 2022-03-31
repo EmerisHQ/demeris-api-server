@@ -102,7 +102,7 @@ type StakingParamsResponse struct {
 		MaxEntries        int64  `json:"max_entries"`
 		HistoricalEntries int64  `json:"historical_entries"`
 		BondDenom         string `json:"bond_denom"`
-	}
+	} `json:"params"`
 }
 
 type StakingPoolResponse struct {
