@@ -102,14 +102,14 @@ type StakingParamsResponse struct {
 		MaxEntries        int64  `json:"max_entries"`
 		HistoricalEntries int64  `json:"historical_entries"`
 		BondDenom         string `json:"bond_denom"`
-	}
+	} `json:"params"`
 }
 
 type StakingPoolResponse struct {
 	Pool struct {
 		NotBondedTokens string `json:"not_bonded_tokens"`
 		BondedTokens    string `json:"bonded_tokens"`
-	}
+	} `json:"pool"`
 }
 
 // nolint :ditto
