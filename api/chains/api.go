@@ -36,6 +36,7 @@ func Register(router *gin.Engine) {
 		GET("/mint/annual_provisions", GetAnnualProvisions).
 		GET("/mint/epoch_provisions", GetEpochProvisions).
 		GET("/staking/params", GetStakingParams).
+		GET("/apr", GetStakingAPR).
 		GET("/staking/pool", GetStakingPool)
 
 	chain.Group("/fee").

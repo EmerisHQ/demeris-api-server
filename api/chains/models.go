@@ -95,6 +95,23 @@ type InflationResponse struct {
 	Inflation string `json:"inflation"`
 }
 
+type StakingParamsResponse struct {
+	Params struct {
+		UnbondingTime     int64  `json:"unbonding_time"`
+		MaxValidators     int64  `json:"max_validators"`
+		MaxEntries        int64  `json:"max_entries"`
+		HistoricalEntries int64  `json:"historical_entries"`
+		BondDenom         string `json:"bond_denom"`
+	} `json:"params"`
+}
+
+type StakingPoolResponse struct {
+	Pool struct {
+		NotBondedTokens string `json:"not_bonded_tokens"`
+		BondedTokens    string `json:"bonded_tokens"`
+	} `json:"pool"`
+}
+
 // nolint :ditto
 type ParamsResponse struct {
 	Params struct {
@@ -125,4 +142,8 @@ type SupplyResponse struct {
 type Pagination struct {
 	NextKey string `json:"next_key,omitempty"`
 	Total   string `json:"total,omitempty"`
+}
+
+type APRResponse struct {
+	APR float64 `json:"apr,omitempty"`
 }
