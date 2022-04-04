@@ -38,8 +38,6 @@ func GetVerifiedDenoms(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chains",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)

@@ -5,7 +5,6 @@ import (
 )
 
 type Error struct {
-	ID            string `json:"id"`
 	Namespace     string `json:"namespace"`
 	StatusCode    int    `json:"-"`
 	LowLevelError error  `json:"-"`
@@ -13,7 +12,7 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("%s @ %s: %s", e.ID, e.Namespace, e.LowLevelError.Error())
+	return fmt.Sprintf("%s: %s", e.Namespace, e.LowLevelError.Error())
 }
 
 func (e Error) Unwrap() error {

@@ -45,8 +45,6 @@ func Tx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"Failed to parse JSON",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -64,8 +62,6 @@ func Tx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -85,8 +81,6 @@ func Tx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -103,8 +97,6 @@ func Tx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"relaying tx failed",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -168,8 +160,6 @@ func GetTicket(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve ticket",
-			"id",
-			e.ID,
 			"name",
 			ticketId,
 			"error",
@@ -204,8 +194,6 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"Failed to parse JSON",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -223,8 +211,6 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -244,8 +230,6 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -269,8 +253,6 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot estimate fees from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",

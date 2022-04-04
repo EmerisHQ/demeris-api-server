@@ -105,7 +105,6 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 				"panic handler triggered while handling call",
 				"endpoint", c.Request.RequestURI,
 				"error", fmt.Sprint(rval),
-				"error_id", err.ID,
 			)
 
 			userError := apierrors.NewUserFacingError(tryGetIntCorrelationID(c), err)

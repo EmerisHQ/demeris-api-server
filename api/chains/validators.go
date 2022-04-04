@@ -43,8 +43,6 @@ func GetValidators(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve validators",
-			"id",
-			e.ID,
 			"error",
 			err,
 			"chain",

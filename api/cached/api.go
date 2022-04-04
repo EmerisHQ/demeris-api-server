@@ -41,8 +41,6 @@ func getPools(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query pools",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -75,8 +73,6 @@ func getParams(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve params",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -109,8 +105,6 @@ func getSupply(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve total supply",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -143,8 +137,6 @@ func getNodeInfo(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve node_info",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)

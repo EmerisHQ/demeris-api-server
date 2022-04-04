@@ -57,8 +57,6 @@ func GetBalancesByAddress(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query database balance for address",
-			"id",
-			e.ID,
 			"address",
 			address,
 			"error",
@@ -77,8 +75,6 @@ func GetBalancesByAddress(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query database verified denoms",
-			"id",
-			e.ID,
 			"address",
 			address,
 			"error",
@@ -190,8 +186,6 @@ func GetDelegationsByAddress(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query database delegations for addresses",
-			"id",
-			e.ID,
 			"address",
 			address,
 			"error",
@@ -240,8 +234,6 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query database unbonding delegations for addresses",
-			"id",
-			e.ID,
 			"address",
 			address,
 			"error",
@@ -293,8 +285,6 @@ func GetDelegatorRewards(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -314,8 +304,6 @@ func GetDelegatorRewards(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -340,8 +328,6 @@ func GetDelegatorRewards(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve delegator rewards from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -416,8 +402,6 @@ func GetNumbersByAddress(c *gin.Context) {
 
 			d.WriteError(c, e,
 				"cannot query database auth for addresses",
-				"id",
-				e.ID,
 				"address",
 				address,
 				"error",
@@ -437,8 +421,6 @@ func GetNumbersByAddress(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query nodes auth for addresses",
-			"id",
-			e.ID,
 			"address",
 			address,
 			"error",

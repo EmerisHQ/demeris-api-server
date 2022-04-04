@@ -42,8 +42,6 @@ func GetBlock(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query block, missing height",
-			"id",
-			e.ID,
 		)
 		return
 	}
@@ -58,8 +56,6 @@ func GetBlock(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query block, malformed height",
-			"id",
-			e.ID,
 			"height_string",
 			h,
 			"error",
@@ -80,8 +76,6 @@ func GetBlock(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query block from redis",
-			"id",
-			e.ID,
 			"height",
 			hh,
 			"error",

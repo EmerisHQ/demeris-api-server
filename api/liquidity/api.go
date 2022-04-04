@@ -42,8 +42,6 @@ func getSwapFee(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot get swap fees",
-			"id",
-			e.ID,
 			"poolId",
 			poolId,
 			"error",

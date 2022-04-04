@@ -68,8 +68,6 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve chain",
-				"id",
-				e.ID,
 				"name",
 				chainName,
 				"error",
@@ -106,8 +104,6 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve chain",
-				"id",
-				e.ID,
 				"name",
 				chainName,
 				"error",

@@ -37,8 +37,6 @@ func GetFee(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -83,8 +81,6 @@ func GetFeeAddress(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -126,8 +122,6 @@ func GetFeeAddresses(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chains",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -176,8 +170,6 @@ func GetFeeToken(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",

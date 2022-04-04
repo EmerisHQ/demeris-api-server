@@ -68,8 +68,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve srcChainInfo",
-			"id",
-			e.ID,
 			"name",
 			srcChain,
 			"error",
@@ -90,8 +88,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve srcChainInfo",
-			"id",
-			e.ID,
 			"name",
 			destChain,
 			"error",
@@ -111,8 +107,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve srcChainInfo's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			srcChain,
 			"error",
@@ -136,8 +130,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve tx from sdk-service",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"src srcChainInfo name",
@@ -164,8 +156,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"provided transaction is not ibc transfer",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"src srcChainInfo name",
@@ -195,8 +185,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve destination tx",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"dest srcChainInfo name",
@@ -221,8 +209,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve destination tx",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"dest srcChainInfo name",

@@ -56,8 +56,6 @@ func getRelayerStatus(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query relayer status",
-			"id",
-			e.ID,
 			"error",
 			err,
 			"obj",
@@ -77,8 +75,6 @@ func getRelayerStatus(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot unstructure relayer status",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -123,8 +119,6 @@ func getRelayerBalance(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query relayer status",
-			"id",
-			e.ID,
 			"error",
 			err,
 			"obj",
@@ -144,8 +138,6 @@ func getRelayerBalance(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot unstructure relayer status",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -170,8 +162,6 @@ func getRelayerBalance(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve relayer status",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -195,8 +185,6 @@ func getRelayerBalance(c *gin.Context) {
 
 			d.WriteError(c, e,
 				"cannot retrieve relayer status",
-				"id",
-				e.ID,
 				"error",
 				err,
 			)

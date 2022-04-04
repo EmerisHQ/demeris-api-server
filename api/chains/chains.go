@@ -55,8 +55,6 @@ func GetChains(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chains",
-			"id",
-			e.ID,
 			"error",
 			err,
 		)
@@ -136,8 +134,6 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"counterparty",
@@ -182,8 +178,6 @@ func GetPrimaryChannels(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -292,8 +286,6 @@ func VerifyTrace(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query list of chain ids",
-			"id",
-			e.ID,
 			"hash",
 			hash,
 			"path",
@@ -433,8 +425,6 @@ func VerifyTrace(c *gin.Context) {
 
 		d.WriteError(c, e,
 			fmt.Sprintf("cannot query chain with name %s", nextChain),
-			"id",
-			e.ID,
 			"hash",
 			hash,
 			"path",
@@ -460,8 +450,6 @@ func VerifyTrace(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain last block time",
-			"id",
-			e.ID,
 			"hash",
 			hash,
 			"path",
@@ -593,8 +581,6 @@ func GetChainSupply(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -622,8 +608,6 @@ func GetChainSupply(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve supply from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -748,8 +732,6 @@ func GetChainTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -773,8 +755,6 @@ func GetChainTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve tx from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -813,8 +793,6 @@ func GetNumbersByAddress(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot query nodes auth for address",
-			"id",
-			e.ID,
 			"address",
 			address,
 			"error",
@@ -853,8 +831,6 @@ func GetInflation(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -877,8 +853,6 @@ func GetInflation(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve inflation from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -915,8 +889,6 @@ func GetStakingParams(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -939,8 +911,6 @@ func GetStakingParams(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve staking params from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -977,8 +947,6 @@ func GetStakingPool(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1001,8 +969,6 @@ func GetStakingPool(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve staking pool from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1038,8 +1004,6 @@ func GetMintParams(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1062,8 +1026,6 @@ func GetMintParams(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve mint params from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1099,8 +1061,6 @@ func GetAnnualProvisions(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1123,8 +1083,6 @@ func GetAnnualProvisions(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve mint annual provision from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1161,8 +1119,6 @@ func GetEpochProvisions(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1185,8 +1141,6 @@ func GetEpochProvisions(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve mint epoch provisions from sdk-service",
-			"id",
-			e.ID,
 			"name",
 			chain.ChainName,
 			"error",
@@ -1230,8 +1184,6 @@ func GetStakingAPR(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot get APR",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -1251,8 +1203,6 @@ func GetStakingAPR(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot convert apr to float",
-			"id",
-			e.ID,
 			"name",
 			chainName,
 			"error",
@@ -1282,8 +1232,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve chain's sdk-service",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1307,8 +1255,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve staking pool from sdk-service",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1329,8 +1275,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot unmarshal staking pool",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1350,8 +1294,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot convert bonded_tokens to int",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1375,8 +1317,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve staking params from sdk-service",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1397,8 +1337,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot unmarshal staking params",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1451,8 +1389,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot convert amount to coin",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1477,8 +1413,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve inflation from sdk-service",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1499,8 +1433,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot unmarshal inflation",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
@@ -1520,8 +1452,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot convert inflation to float64",
-				"id",
-				e.ID,
 				"name",
 				chain.ChainName,
 				"error",
