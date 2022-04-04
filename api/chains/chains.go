@@ -373,8 +373,6 @@ func VerifyTrace(c *gin.Context) {
 
 				d.WriteError(c, e1,
 					"invalid number of query responses",
-					"id",
-					e1.ID,
 					"hash",
 					hash,
 				)
@@ -666,7 +664,6 @@ func GetDenomSupply(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve chain's sdk-service",
-			"id", e.ID,
 			"name", chain.ChainName,
 			"error", err,
 		)
@@ -693,7 +690,6 @@ func GetDenomSupply(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve denom supply from sdk-service",
-			"id", e.ID,
 			"chain name", chain.ChainName,
 			"denom name", denom,
 			"error", err,
@@ -1368,7 +1364,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve denom supply from sdk-service",
-				"id", e.ID,
 				"chain name", chain.ChainName,
 				"denom name", bond_denom,
 				"error", err,
