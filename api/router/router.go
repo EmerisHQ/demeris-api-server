@@ -108,9 +108,10 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 				"error_id", err.ID,
 			)
 
+			userError := apierrors.NewUserFacingError(tryGetIntCorrelationID(c), err)
 			c.AbortWithStatusJSON(
 				http.StatusInternalServerError,
-				err,
+				userError,
 			)
 
 			return
@@ -139,12 +140,22 @@ func (r *Router) handleErrors(c *gin.Context) {
 		return
 	}
 
-	rerr := apierrors.Error{}
-	if !errors.As(l, &rerr) {
+	err := apierrors.Error{}
+	if !errors.As(l, &err) {
 		panic(l)
 	}
 
-	c.JSON(rerr.StatusCode, rerr)
+	id := tryGetIntCorrelationID(c)
+	userError := apierrors.NewUserFacingError(id, err)
+	c.JSON(err.StatusCode, userError)
+}
+
+func tryGetIntCorrelationID(c *gin.Context) string {
+	id, ok := c.Request.Context().Value(logging.IntCorrelationIDName).(string)
+	if !ok {
+		return ""
+	}
+	return id
 }
 
 func registerRoutes(engine *gin.Engine) {
