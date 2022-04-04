@@ -5,10 +5,10 @@ import (
 )
 
 type Error struct {
-	Namespace     string `json:"namespace"`
-	StatusCode    int    `json:"-"`
-	LowLevelError error  `json:"-"`
-	Cause         string `json:"cause"`
+	Namespace     string
+	StatusCode    int
+	LowLevelError error
+	Cause         string
 }
 
 func (e Error) Error() string {
