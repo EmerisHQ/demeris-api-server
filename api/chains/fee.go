@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,7 +29,7 @@ func GetFee(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"fee",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -74,7 +75,7 @@ func GetFeeAddress(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"feeaddress",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -117,7 +118,7 @@ func GetFeeAddresses(c *gin.Context) {
 	chains, err := d.Database.Chains()
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"feeaddress",
 			fmt.Errorf("cannot retrieve chains"),
 			http.StatusBadRequest,
@@ -167,7 +168,7 @@ func GetFeeToken(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"feetoken",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,

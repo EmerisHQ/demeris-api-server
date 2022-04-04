@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,7 @@ func getSwapFee(c *gin.Context) {
 
 	res, err := d.Store.GetSwapFees(poolId)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"swap fees",
 			fmt.Errorf("cannot get swap fees"),
 			http.StatusBadRequest,

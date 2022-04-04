@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -59,7 +60,7 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 
 		chain, err := d.Database.Chain(chainName)
 		if err != nil {
-			e := deps.NewError(
+			e := apierrors.New(
 				"chains",
 				fmt.Errorf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,
@@ -93,7 +94,7 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 		chainName := c.Param(chainNameParamKey)
 
 		if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
-			e := deps.NewError(
+			e := apierrors.New(
 				"chains",
 				fmt.Errorf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,

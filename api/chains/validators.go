@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/keybase"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
@@ -34,7 +35,7 @@ func GetValidators(c *gin.Context) {
 	chainName := c.Param("chain")
 	validators, err := d.Database.GetValidators(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"validators",
 			fmt.Errorf("cannot retrieve validators"),
 			http.StatusBadRequest,

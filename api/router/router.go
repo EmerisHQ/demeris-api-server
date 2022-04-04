@@ -8,6 +8,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/block"
 	"github.com/emerishq/demeris-api-server/api/cached"
 	"github.com/emerishq/demeris-api-server/api/liquidity"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"k8s.io/client-go/informers"
 
 	"github.com/emerishq/demeris-api-server/api/relayer"
@@ -94,7 +95,7 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 	defer func() {
 		if rval := recover(); rval != nil {
 			// okay we panic-ed, log it through r's logger and write back internal server error
-			err := deps.NewError(
+			err := apierrors.New(
 				"fatal_error",
 				errors.New("internal server error"),
 				http.StatusInternalServerError)
@@ -138,7 +139,7 @@ func (r *Router) handleErrors(c *gin.Context) {
 		return
 	}
 
-	rerr := deps.Error{}
+	rerr := apierrors.Error{}
 	if !errors.As(l, &rerr) {
 		panic(l)
 	}

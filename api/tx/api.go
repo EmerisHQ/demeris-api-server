@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
@@ -40,7 +41,7 @@ func Tx(c *gin.Context) {
 	err := c.BindJSON(&txRequest)
 
 	if err != nil {
-		e := deps.NewError("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
+		e := apierrors.New("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
 
 		d.WriteError(c, e,
 			"Failed to parse JSON",
@@ -55,7 +56,7 @@ func Tx(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -76,7 +77,7 @@ func Tx(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusInternalServerError,
@@ -98,7 +99,7 @@ func Tx(c *gin.Context) {
 	txhash, err := relayTx(client, d, txRequest.TxBytes, chainName, txRequest.Owner)
 
 	if err != nil {
-		e := deps.NewError("tx", fmt.Errorf("relaying tx failed, %w", err), http.StatusBadRequest)
+		e := apierrors.New("tx", fmt.Errorf("relaying tx failed, %w", err), http.StatusBadRequest)
 
 		d.WriteError(c, e,
 			"relaying tx failed",
@@ -159,7 +160,7 @@ func GetTicket(c *gin.Context) {
 	ticket, err := d.Store.Get(fmt.Sprintf("%s/%s", chainName, ticketId))
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"tx",
 			fmt.Errorf("cannot retrieve ticket with id %v", ticketId),
 			http.StatusBadRequest,
@@ -199,7 +200,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 	err := c.BindJSON(&txRequest)
 	if err != nil {
-		e := deps.NewError("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
+		e := apierrors.New("tx", fmt.Errorf("failed to parse JSON"), http.StatusBadRequest)
 
 		d.WriteError(c, e,
 			"Failed to parse JSON",
@@ -214,7 +215,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
@@ -235,7 +236,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusInternalServerError,
@@ -260,7 +261,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot estimate fees from sdk-service"),
 			http.StatusBadRequest,

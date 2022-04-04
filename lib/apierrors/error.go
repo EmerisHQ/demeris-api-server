@@ -1,4 +1,4 @@
-package deps
+package apierrors
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ func (e Error) Unwrap() error {
 	return e.LowLevelError
 }
 
-func NewError(namespace string, cause error, statusCode int) Error {
+func New(namespace string, cause error, statusCode int) Error {
 	return Error{
 		StatusCode:    statusCode,
 		Namespace:     namespace,

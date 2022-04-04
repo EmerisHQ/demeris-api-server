@@ -12,6 +12,7 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	cnsmodels "github.com/emerishq/demeris-backend-models/cns"
 
 	v1 "github.com/allinbits/starport-operator/api/v1"
@@ -47,7 +48,7 @@ func getRelayerStatus(c *gin.Context) {
 	}.String())
 
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
 			fmt.Errorf("cannot query relayer status"),
 			http.StatusInternalServerError,
@@ -68,7 +69,7 @@ func getRelayerStatus(c *gin.Context) {
 
 	relayer, err := k8s.GetRelayerFromObj(obj)
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
 			fmt.Errorf("cannot query relayer status"),
 			http.StatusInternalServerError,
@@ -114,7 +115,7 @@ func getRelayerBalance(c *gin.Context) {
 	}.String())
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
 			fmt.Errorf("cannot query relayer status"),
 			http.StatusInternalServerError,
@@ -135,7 +136,7 @@ func getRelayerBalance(c *gin.Context) {
 
 	relayer, err := k8s.GetRelayerFromObj(obj)
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
 			fmt.Errorf("cannot query relayer status"),
 			http.StatusInternalServerError,
@@ -161,7 +162,7 @@ func getRelayerBalance(c *gin.Context) {
 
 	thresh, err := relayerThresh(chains, d.Database)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
 			fmt.Errorf("cannot retrieve relayer status"),
 			http.StatusBadRequest,
@@ -186,7 +187,7 @@ func getRelayerBalance(c *gin.Context) {
 
 		enough, err := enoughBalance(addresses[i], t, d.Database)
 		if err != nil {
-			e := deps.NewError(
+			e := apierrors.New(
 				"status",
 				fmt.Errorf("cannot retrieve relayer status"),
 				http.StatusBadRequest,

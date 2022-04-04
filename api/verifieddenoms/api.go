@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,7 +30,7 @@ func GetVerifiedDenoms(c *gin.Context) {
 	chains, err := d.Database.Chains()
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"verified_denoms",
 			fmt.Errorf("cannot retrieve chains"),
 			http.StatusBadRequest,
