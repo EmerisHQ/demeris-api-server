@@ -1531,7 +1531,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		}
 
 		// calculate staking APR
-		apr := (inflation * 100) / (float64(bondedTokens) / float64(supply.Int64()))
+		apr := (inflation * 100) / (float64(bondedTokens) / float64(supply.Uint64()))
 		return fmt.Sprintf("%f", apr), nil
 	}
 }
