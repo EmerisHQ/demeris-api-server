@@ -697,7 +697,7 @@ func GetDenomSupply(c *gin.Context) {
 	sdkRes, err := client.SupplyDenom(context.Background(), payload)
 	if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 		cause := fmt.Errorf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
-		if len(sdkRes.Coins) != 1 {
+		if sdkRes != nil && len(sdkRes.Coins) != 1 {
 			cause = fmt.Errorf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
 		}
 		e := deps.NewError(
@@ -1418,7 +1418,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		denomSupplyRes, err := client.SupplyDenom(context.Background(), payload)
 		if err != nil || len(denomSupplyRes.Coins) != 1 { // Expected exactly one response
 			cause := fmt.Errorf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, bond_denom)
-			if len(denomSupplyRes.Coins) != 1 {
+			if denomSupplyRes != nil && len(denomSupplyRes.Coins) != 1 {
 				cause = fmt.Errorf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, bond_denom, denomSupplyRes.Coins)
 			}
 			e := deps.NewError(
