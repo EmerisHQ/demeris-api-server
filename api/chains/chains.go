@@ -1219,7 +1219,7 @@ func GetStakingAPR(c *gin.Context) {
 		aprCachePrefix,
 		getAPR(c),
 	)
-	aprString, err := aprCache.Get(c.Request.Context(), chainName)
+	aprString, err := aprCache.Get(c.Request.Context(), chainName, false)
 	if err != nil {
 		e := deps.NewError(
 			"chains",
