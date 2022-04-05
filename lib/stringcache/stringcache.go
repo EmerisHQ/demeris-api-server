@@ -68,12 +68,14 @@ func (c *StringCache) Get(ctx context.Context, key string) (string, error) {
 			"key", key,
 		)
 		res, err := c.handler.Handle(ctx, key)
-		setErr := c.backend.Set(ctx, cacheKey, res, c.cacheDuration)
-		if setErr != nil {
-			c.l.Errorw(
-				"updating cache, proceeding anyway",
-				"err", err,
-			)
+		if err != nil {
+			setErr := c.backend.Set(ctx, cacheKey, res, c.cacheDuration)
+			if setErr != nil {
+				c.l.Errorw(
+					"updating cache, proceeding anyway",
+					"err", err,
+				)
+			}
 		}
 		return res, err
 	}
