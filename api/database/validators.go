@@ -8,7 +8,8 @@ func (d *Database) GetValidators(chain string) ([]tracelistener.ValidatorRow, er
 	q := `
 	SELECT *
 	FROM tracelistener.validators 
-	WHERE chain_name=?;
+	WHERE chain_name=?
+	AND delete_height IS NULL
 	`
 
 	q = d.dbi.DB.Rebind(q)

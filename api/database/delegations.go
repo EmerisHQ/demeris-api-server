@@ -8,7 +8,12 @@ import (
 func (d *Database) Delegations(address string) ([]tracelistener.DelegationRow, error) {
 	var delegations []tracelistener.DelegationRow
 
-	q, args, err := sqlx.In("SELECT * FROM tracelistener.delegations WHERE delegator_address IN (?) and chain_name in (select chain_name from cns.chains where enabled=true);", []string{address})
+	q, args, err := sqlx.In(`
+	SELECT * FROM tracelistener.delegations
+	WHERE delegator_address IN (?)
+	AND chain_name in (select chain_name from cns.chains where enabled=true)
+	AND delete_height IS NULL
+	`, []string{address})
 	if err != nil {
 		return nil, err
 	}
