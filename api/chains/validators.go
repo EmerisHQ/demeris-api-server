@@ -83,7 +83,7 @@ func adaptValidator(ctx context.Context, cache *stringcache.StringCache, r trace
 	var err error
 
 	if len(r.Identity) > 0 {
-		v.Avatar, err = cache.Get(ctx, r.Identity)
+		v.Avatar, err = cache.Get(ctx, r.Identity, true)
 	}
 
 	return v, err
