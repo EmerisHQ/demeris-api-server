@@ -183,6 +183,8 @@ func toSupportedChain(c cns.Chain) chains.SupportedChain {
 }
 
 func TestGetChainStatus(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
 
 	tests := []struct {
 		name             string
@@ -254,7 +256,6 @@ func TestGetChainStatus(t *testing.T) {
 }
 
 func TestGetChainSupply(t *testing.T) {
-
 	tests := []struct {
 		name             string
 		dataStruct       cns.Chain
