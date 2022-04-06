@@ -11,7 +11,9 @@ func (d *Database) Numbers(address string) ([]tracelistener.AuthRow, error) {
 	q, args, err := sqlx.In(`
 	SELECT * FROM tracelistener.auth
 	WHERE address IN (?)
-	AND chain_name in (select chain_name from cns.chains where enabled=true)
+	AND chain_name IN (
+		SELECT chain_name FROM cns.chains WHERE enabled=true
+	)
 	AND delete_height IS NULL
 	`, []string{address})
 	if err != nil {

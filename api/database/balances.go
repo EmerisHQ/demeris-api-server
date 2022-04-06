@@ -8,7 +8,9 @@ func (d *Database) Balances(address string) ([]tracelistener.BalanceRow, error) 
 	q := `
 		SELECT * FROM tracelistener.balances
 		WHERE address=?
-		AND chain_name in (select chain_name from cns.chains where enabled=true)
+		AND chain_name IN (
+			SELECT chain_name FROM cns.chains WHERE enabled=true
+		)
 		AND delete_height IS NULL
 	`
 
