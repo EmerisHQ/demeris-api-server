@@ -9,6 +9,8 @@ on:
 jobs:
   api-server:
     runs-on: self-hosted
+    outputs:
+      version: ${{ steps.get_version.outputs.version-without-v }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -56,6 +58,7 @@ jobs:
               "branch_name":"main",
               "image_name":"emeris-api-server",
               "image_sha":"${{ github.sha }}",
+              "version":"${{ needs.api-server.outputs.version }}",
               "service_name":"api-server",
               "deploy_type":"deploy_dev"
             }
