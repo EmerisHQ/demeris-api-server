@@ -26,7 +26,7 @@ func Register(router *gin.Engine) {
 // @Description Gets info of all pools.`10
 // @Produce json
 // @Success 200 {object} types.QueryLiquidityPoolsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/pools [get]
 func getPools(c *gin.Context) {
 	d := deps.GetDeps(c)
@@ -58,7 +58,7 @@ func getPools(c *gin.Context) {
 // @Description Gets params of liquidity module.
 // @Produce json
 // @Success 200 {object} types.QueryParamsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/params [get]
 func getParams(c *gin.Context) {
 	d := deps.GetDeps(c)
@@ -90,7 +90,7 @@ func getParams(c *gin.Context) {
 // @Description Gets total supply of cosmos hub.
 // @Produce json
 // @Success 200 {object} types.QueryTotalSupplyResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
 func getSupply(c *gin.Context) {
 	d := deps.GetDeps(c)
@@ -122,7 +122,7 @@ func getSupply(c *gin.Context) {
 // @Description returns output of Cosmos's /node_info endpoint
 // @Produce json
 // @Success 200 {object} types.QueryTotalSupplyResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
 func getNodeInfo(c *gin.Context) {
 	d := deps.GetDeps(c)

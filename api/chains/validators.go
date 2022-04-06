@@ -26,7 +26,7 @@ const (
 // @Description Gets list of validators for a chain.
 // @Produce json
 // @Success 200 {object} ValidatorsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /validators [get]
 func GetValidators(c *gin.Context) {
 	var res ValidatorsResponse

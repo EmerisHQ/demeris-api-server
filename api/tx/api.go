@@ -28,7 +28,7 @@ func Register(router *gin.Engine) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} TxResponse
-// @Failure 500,400 {object} deps.Error
+// @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/{chainName} [post]
 func Tx(c *gin.Context) {
 	// var tx typestx.Tx
@@ -140,7 +140,7 @@ func relayTx(services sdkutilities.Client, d *deps.Deps, txBytes []byte, chainNa
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} store.Ticket
-// @Failure 400 {object} deps.Error
+// @Failure 400 {object} apierrors.UserFacingError
 // @Router /tx/ticket/{chainName}/{ticketId} [get]
 func GetTicket(c *gin.Context) {
 
@@ -180,7 +180,7 @@ func GetTicket(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} TxFeeEstimateRes
-// @Failure 500,400 {object} deps.Error
+// @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/fees/{chainName} [post]
 func GetTxFeeEstimate(c *gin.Context) {
 	var txRequest TxFeeEstimateReq

@@ -17,7 +17,7 @@ import (
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} FeeResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/fee [get]
 func GetFee(c *gin.Context) {
 	var res FeeResponse
@@ -61,7 +61,7 @@ func GetFee(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} FeeAddressResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/address [get]
 func GetFeeAddress(c *gin.Context) {
 	var res FeeAddressResponse
@@ -104,7 +104,7 @@ func GetFeeAddress(c *gin.Context) {
 // @Description Gets all addresses to pay fee for.
 // @Produce json
 // @Success 200 {object} FeeAddressesResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chains/fee/addresses [get]
 func GetFeeAddresses(c *gin.Context) {
 	var res FeeAddressesResponse
@@ -150,7 +150,7 @@ func GetFeeAddresses(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} FeeTokenResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/token [get]
 func GetFeeToken(c *gin.Context) {
 	var res FeeTokenResponse
