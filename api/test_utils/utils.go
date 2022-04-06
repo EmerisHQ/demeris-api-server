@@ -31,6 +31,8 @@ const (
 	createDenomTracesTable = `
 	CREATE TABLE IF NOT EXISTS tracelistener.denom_traces (
 		id serial unique primary key,
+		height int not null default 0,
+		delete_height int,
 		chain_name text not null,
 		path text not null,
 		base_denom text not null,
@@ -41,6 +43,8 @@ const (
 	createChannelsTable = `
 	CREATE TABLE IF NOT EXISTS tracelistener.channels (
 		id serial unique primary key,
+		height int not null default 0,
+		delete_height int,
 		chain_name text not null,
 		channel_id text not null,
 		counter_channel_id text not null,
@@ -53,6 +57,8 @@ const (
 	createConnectionsTable = `
 	CREATE TABLE IF NOT EXISTS tracelistener.connections (
 		id serial unique primary key,
+		height int not null default 0,
+		delete_height int,
 		chain_name text not null,
 		connection_id text not null,
 		client_id text not null,
@@ -66,6 +72,8 @@ const (
 	createClientsTable = `
 	CREATE TABLE IF NOT EXISTS tracelistener.clients (
 		id serial unique primary key,
+		height int not null default 0,
+		delete_height int,
 		chain_name text not null,
 		chain_id text not null,
 		client_id text not null,
