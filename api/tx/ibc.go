@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
@@ -59,7 +60,7 @@ func GetDestTx(c *gin.Context) {
 
 	srcChainInfo, err := d.Database.Chain(srcChain)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve srcChainInfo with name %v", srcChain),
 			http.StatusBadRequest,
@@ -67,8 +68,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve srcChainInfo",
-			"id",
-			e.ID,
 			"name",
 			srcChain,
 			"error",
@@ -81,7 +80,7 @@ func GetDestTx(c *gin.Context) {
 	// validate destination srcChainInfo is present
 	destChainInfo, err := d.Database.Chain(destChain)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve srcChainInfo with name %v", destChain),
 			http.StatusBadRequest,
@@ -89,8 +88,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve srcChainInfo",
-			"id",
-			e.ID,
 			"name",
 			destChain,
 			"error",
@@ -102,7 +99,7 @@ func GetDestTx(c *gin.Context) {
 
 	client, err := sdkservice.Client(srcChainInfo.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve sdk-service for version %s with srcChainInfo name %v", srcChainInfo.CosmosSDKVersion, srcChainInfo.ChainName),
 			http.StatusBadRequest,
@@ -110,8 +107,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve srcChainInfo's sdk-service",
-			"id",
-			e.ID,
 			"name",
 			srcChain,
 			"error",
@@ -127,7 +122,7 @@ func GetDestTx(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve tx from sdk-service, %w", err),
 			http.StatusBadRequest,
@@ -135,8 +130,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve tx from sdk-service",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"src srcChainInfo name",
@@ -155,7 +148,7 @@ func GetDestTx(c *gin.Context) {
 	// for now we just get the first seq number found and roll with it.
 	r := getIBCSeqFromTx(sdkRes)
 	if len(r) == 0 {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("provided transaction is not ibc transfer"),
 			http.StatusBadRequest,
@@ -163,8 +156,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"provided transaction is not ibc transfer",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"src srcChainInfo name",
@@ -186,7 +177,7 @@ func GetDestTx(c *gin.Context) {
 	// we're validating inputs and hence gosec-G107 can be ignored
 	resp, err := httpClient.Get(url) // nolint: gosec
 	if err != nil || resp.StatusCode != http.StatusOK {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
 			http.StatusBadRequest,
@@ -194,8 +185,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve destination tx",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"dest srcChainInfo name",
@@ -212,7 +201,7 @@ func GetDestTx(c *gin.Context) {
 
 	bz, err := io.ReadAll(resp.Body)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
 			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
 			http.StatusBadRequest,
@@ -220,8 +209,6 @@ func GetDestTx(c *gin.Context) {
 
 		d.WriteError(c, e,
 			"cannot retrieve destination tx",
-			"id",
-			e.ID,
 			"txHash",
 			txHash,
 			"dest srcChainInfo name",
