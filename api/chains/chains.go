@@ -1298,8 +1298,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			return "", err
 		}
-		// divding by 1000000 to convert utokens to tokens
-		// bondedTokens := bondedTokensInt.Quo(sdktypes.NewInt(decimals)).Uint64()
 
 		// get staking coin denom from staking params
 		stakingParamsRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
@@ -1395,7 +1393,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			return "", err
 		}
 
-		// divding by 1000000 to convert utokens to tokens
 		supply := coin.Amount.ToDec()
 
 		// get inflation
