@@ -28,6 +28,7 @@ import (
 const (
 	aprCacheDuration = 24 * time.Hour
 	aprCachePrefix   = "api-server/chain-aprs"
+	decimals         = 1000000
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -1300,7 +1301,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		}
 
 		// divding by 1000000 to convert utokens to tokens
-		bondedTokens := bondedTokensInt.Quo(sdktypes.NewInt(1000000)).Uint64()
+		bondedTokens := bondedTokensInt.Quo(sdktypes.NewInt(decimals)).Uint64()
 
 		// get staking coin denom from staking params
 		stakingParamsRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
@@ -1397,7 +1398,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		}
 
 		// divding by 1000000 to convert utokens to tokens
-		supply := coin.Amount.Quo(sdktypes.NewInt(1000000)).Uint64()
+		supply := coin.Amount.Quo(sdktypes.NewInt(decimals)).Uint64()
 
 		// get inflation
 		inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
