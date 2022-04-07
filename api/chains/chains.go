@@ -1339,11 +1339,11 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			return "", err
 		}
 
-		bondedTokens, err := strconv.Atoi(stakingPoolData.Pool.BondedTokens)
-		if err != nil {
+		bondedTokensInt, ok := sdktypes.NewIntFromString(stakingPoolData.Pool.BondedTokens)
+		if !ok {
 			e := deps.NewError(
 				"chains",
-				fmt.Errorf("cannot convert bonded_tokens to int"),
+				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Int"),
 				http.StatusBadRequest,
 			)
 
@@ -1354,11 +1354,14 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 				"error",
-				err,
+				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Int %s", stakingPoolData.Pool.BondedTokens),
 			)
 
-			return "", err
+			return "", fmt.Errorf("cannot convert bonded_tokens to sdktypes.Int %s", stakingPoolData.Pool.BondedTokens)
 		}
+
+		// divding by 1000000 to convert utokens to tokens
+		bondedTokens := bondedTokensInt.Quo(sdktypes.NewInt(1000000)).Uint64()
 
 		// get staking coin denom from staking params
 		stakingParamsRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
@@ -1460,7 +1463,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			return "", err
 		}
-		supply := coin.Amount
+
+		// divding by 1000000 to convert utokens to tokens
+		supply := coin.Amount.Quo(sdktypes.NewInt(1000000)).Uint64()
 
 		// get inflation
 		inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
@@ -1531,7 +1536,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		}
 
 		// calculate staking APR
-		apr := (inflation * 100) / (float64(bondedTokens) / float64(supply.Uint64()))
+		apr := (inflation * 100) / (float64(bondedTokens) / float64(supply))
 		return fmt.Sprintf("%f", apr), nil
 	}
 }
