@@ -1289,7 +1289,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			)
 
 			d.WriteError(c, e,
-				"cannot convert bonded_tokens to int",
+				"cannot convert bonded_tokens to sdktypes.Dec",
 				"name",
 				chain.ChainName,
 				"error",
@@ -1442,12 +1442,12 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		if err != nil {
 			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot convert inflation to float64"),
+				fmt.Errorf("cannot convert inflation to sdktypes.Dec"),
 				http.StatusBadRequest,
 			)
 
 			d.WriteError(c, e,
-				"cannot convert inflation to float64",
+				"cannot convert inflation to sdktypes.Dec",
 				"name",
 				chain.ChainName,
 				"error",
@@ -1459,6 +1459,6 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 		// calculate staking APR
 		apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
-		return fmt.Sprintf("%f", apr), nil
+		return apr.String(), nil
 	}
 }
