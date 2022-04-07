@@ -1280,16 +1280,16 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			return "", err
 		}
 
-		bondedTokens, err := strconv.Atoi(stakingPoolData.Pool.BondedTokens)
+		bondedTokens, err := sdktypes.NewDecFromStr(stakingPoolData.Pool.BondedTokens)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot convert bonded_tokens to int"),
+				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Dec"),
 				http.StatusBadRequest,
 			)
 
 			d.WriteError(c, e,
-				"cannot convert bonded_tokens to int",
+				"cannot convert bonded_tokens to sdktypes.Dec",
 				"name",
 				chain.ChainName,
 				"error",
@@ -1392,7 +1392,8 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 
 			return "", err
 		}
-		supply := coin.Amount
+
+		supply := coin.Amount.ToDec()
 
 		// get inflation
 		inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
@@ -1437,16 +1438,16 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			return "", err
 		}
 
-		inflation, err := strconv.ParseFloat(inflationData.Inflation, 64)
+		inflation, err := sdktypes.NewDecFromStr(inflationData.Inflation)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot convert inflation to float64"),
+				fmt.Errorf("cannot convert inflation to sdktypes.Dec"),
 				http.StatusBadRequest,
 			)
 
 			d.WriteError(c, e,
-				"cannot convert inflation to float64",
+				"cannot convert inflation to sdktypes.Dec",
 				"name",
 				chain.ChainName,
 				"error",
@@ -1457,7 +1458,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		}
 
 		// calculate staking APR
-		apr := (inflation * 100) / (float64(bondedTokens) / float64(supply.Uint64()))
-		return fmt.Sprintf("%f", apr), nil
+		apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
+		return apr.String(), nil
 	}
 }
