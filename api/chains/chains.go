@@ -28,7 +28,6 @@ import (
 const (
 	aprCacheDuration = 24 * time.Hour
 	aprCachePrefix   = "api-server/chain-aprs"
-	decimals         = 1000000
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -1281,11 +1280,11 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			return "", err
 		}
 
-		bondedTokensInt, ok := sdktypes.NewIntFromString(stakingPoolData.Pool.BondedTokens)
-		if !ok {
+		bondedTokens, err := sdktypes.NewDecFromStr(stakingPoolData.Pool.BondedTokens)
+		if err != nil {
 			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Int"),
+				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Dec"),
 				http.StatusBadRequest,
 			)
 
@@ -1294,14 +1293,13 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 				"error",
-				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Int %s", stakingPoolData.Pool.BondedTokens),
+				err,
 			)
 
-			return "", fmt.Errorf("cannot convert bonded_tokens to sdktypes.Int %s", stakingPoolData.Pool.BondedTokens)
+			return "", err
 		}
-
 		// divding by 1000000 to convert utokens to tokens
-		bondedTokens := bondedTokensInt.Quo(sdktypes.NewInt(decimals)).Uint64()
+		// bondedTokens := bondedTokensInt.Quo(sdktypes.NewInt(decimals)).Uint64()
 
 		// get staking coin denom from staking params
 		stakingParamsRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
@@ -1398,7 +1396,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		}
 
 		// divding by 1000000 to convert utokens to tokens
-		supply := coin.Amount.Quo(sdktypes.NewInt(decimals)).Uint64()
+		supply := coin.Amount.ToDec()
 
 		// get inflation
 		inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
@@ -1443,7 +1441,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			return "", err
 		}
 
-		inflation, err := strconv.ParseFloat(inflationData.Inflation, 64)
+		inflation, err := sdktypes.NewDecFromStr(inflationData.Inflation)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -1463,7 +1461,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		}
 
 		// calculate staking APR
-		apr := (inflation * 100) / (float64(bondedTokens) / float64(supply))
+		apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
 		return fmt.Sprintf("%f", apr), nil
 	}
 }
