@@ -3,23 +3,17 @@ name: Build docker images
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - Dockerfile.**
-      - cmd/**
-      - api/**
-      - utils/**
-      - go.mod
-      - go.sum
-      - helm/**
+    tags:
+      - 'v*'
 
 jobs:
   api-server:
     runs-on: self-hosted
+    outputs:
+      version: ${{ steps.get_version.outputs.version-without-v }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -44,6 +38,8 @@ jobs:
           tags: gcr.io/tendermint-dev/emeris-api-server:${{ steps.get_version.outputs.version-without-v }},gcr.io/tendermint-dev/emeris-api-server:${{ github.sha }}
           build-args: |
             GIT_TOKEN=${{ secrets.TENDERBOT_GIT_TOKEN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-on-dev:
     runs-on: self-hosted
@@ -62,6 +58,7 @@ jobs:
               "branch_name":"main",
               "image_name":"emeris-api-server",
               "image_sha":"${{ github.sha }}",
+              "version":"${{ needs.api-server.outputs.version }}",
               "service_name":"api-server",
               "deploy_type":"deploy_dev"
             }

@@ -8,7 +8,14 @@ import (
 func (d *Database) UnbondingDelegations(address string) ([]tracelistener.UnbondingDelegationRow, error) {
 	var unbondingDelegations []tracelistener.UnbondingDelegationRow
 
-	q, args, err := sqlx.In("SELECT * FROM tracelistener.unbonding_delegations WHERE delegator_address IN (?) and chain_name in (select chain_name from cns.chains where enabled=true);", []string{address})
+	q, args, err := sqlx.In(`
+	SELECT * FROM tracelistener.unbonding_delegations
+	WHERE delegator_address IN (?)
+	AND chain_name IN (
+		SELECT chain_name FROM cns.chains WHERE enabled=true
+	)
+	AND delete_height IS NULL
+	`, []string{address})
 	if err != nil {
 		return nil, err
 	}

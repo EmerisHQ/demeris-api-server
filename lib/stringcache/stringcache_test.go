@@ -13,6 +13,7 @@ import (
 )
 
 var l = zap.New(nil).Sugar()
+var setCacheOnError = true
 
 func TestStringCache_CacheMiss(t *testing.T) {
 	assert := assert.New(t)
@@ -37,7 +38,7 @@ func TestStringCache_CacheMiss(t *testing.T) {
 		handler,
 	)
 
-	res, err := cache.Get(ctx, "key12345")
+	res, err := cache.Get(ctx, "key12345", setCacheOnError)
 	assert.NoError(err)
 	assert.Equal("result", res)
 }
@@ -63,7 +64,7 @@ func TestStringCache_UseCache(t *testing.T) {
 		handler,
 	)
 
-	res, err := cache.Get(ctx, "key12345")
+	res, err := cache.Get(ctx, "key12345", setCacheOnError)
 	assert.NoError(err)
 	assert.Equal("result", res)
 }
@@ -91,7 +92,7 @@ func TestStringCache_HandlerErrorSetsCache(t *testing.T) {
 		handler,
 	)
 
-	_, err := cache.Get(ctx, "key12345")
+	_, err := cache.Get(ctx, "key12345", setCacheOnError)
 	assert.Error(err)
 }
 
@@ -116,7 +117,7 @@ func TestStringCache_CacheSetError(t *testing.T) {
 		handler,
 	)
 
-	res, err := cache.Get(ctx, "key12345")
+	res, err := cache.Get(ctx, "key12345", setCacheOnError)
 
 	assert.NoError(err)
 	assert.Equal("result", res)
@@ -141,6 +142,6 @@ func TestStringCache_CacheGetError(t *testing.T) {
 		handler,
 	)
 
-	_, err := cache.Get(ctx, "key12345")
+	_, err := cache.Get(ctx, "key12345", setCacheOnError)
 	assert.Error(err)
 }
