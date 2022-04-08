@@ -33,15 +33,14 @@ func GetFee(c *gin.Context) {
 			"fee",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
+		).WithLogContext(
 			"cannot retrieve chain",
 			"name",
 			chainName,
 			"error",
 			err,
 		)
+		c.Error(e)
 
 		return
 	}
@@ -77,15 +76,14 @@ func GetFeeAddress(c *gin.Context) {
 			"feeaddress",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
+		).WithLogContext(
 			"cannot retrieve chain",
 			"name",
 			chainName,
 			"error",
 			err,
 		)
+		c.Error(e)
 
 		return
 	}
@@ -118,13 +116,12 @@ func GetFeeAddresses(c *gin.Context) {
 			"feeaddress",
 			fmt.Errorf("cannot retrieve chains"),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
+		).WithLogContext(
 			"cannot retrieve chains",
 			"error",
 			err,
 		)
+		c.Error(e)
 
 		return
 	}
@@ -166,15 +163,14 @@ func GetFeeToken(c *gin.Context) {
 			"feetoken",
 			fmt.Errorf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
+		).WithLogContext(
 			"cannot retrieve chain",
 			"name",
 			chainName,
 			"error",
 			err,
 		)
+		c.Error(e)
 
 		return
 	}

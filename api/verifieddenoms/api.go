@@ -34,13 +34,12 @@ func GetVerifiedDenoms(c *gin.Context) {
 			"verified_denoms",
 			fmt.Errorf("cannot retrieve chains"),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
+		).WithLogContext(
 			"cannot retrieve chains",
 			"error",
 			err,
 		)
+		c.Error(e)
 
 		return
 	}

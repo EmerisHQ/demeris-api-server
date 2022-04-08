@@ -39,15 +39,14 @@ func GetValidators(c *gin.Context) {
 			"validators",
 			fmt.Errorf("cannot retrieve validators"),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
+		).WithLogContext(
 			"cannot retrieve validators",
 			"error",
 			err,
 			"chain",
 			chainName,
 		)
+		c.Error(e)
 
 		return
 	}

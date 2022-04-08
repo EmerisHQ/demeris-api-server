@@ -64,16 +64,14 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 				"chains",
 				fmt.Errorf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,
-			)
-
-			d.WriteError(c, e,
+			).WithLogContext(
 				"cannot retrieve chain",
 				"name",
 				chainName,
 				"error",
 				err,
 			)
-
+			c.Error(e)
 			c.Abort()
 			return
 		}
