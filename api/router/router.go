@@ -144,6 +144,15 @@ func (r *Router) handleErrors(c *gin.Context) {
 		panic(fmt.Sprintf("expected to receive error of type *apierrors.Errors, got %T with content: %v", l, l))
 	}
 
+	if len(err.InternalCause) > 0 {
+		keysAndValues := append(err.LogKeysAndValues, "error", err)
+		d := deps.GetDeps(c)
+		d.Logger.Errorw(
+			err.InternalCause,
+			keysAndValues...,
+		)
+	}
+
 	id := tryGetIntCorrelationID(c)
 	userError := apierrors.NewUserFacingError(id, err)
 	c.JSON(err.StatusCode, userError)
