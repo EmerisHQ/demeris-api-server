@@ -10,7 +10,8 @@ type Error struct {
 	LowLevelError error
 	Cause         string
 
-	logMsgAndArgs []any
+	InternalCause    string
+	LogKeysAndValues []any
 }
 
 func (e *Error) Error() string {
@@ -19,6 +20,12 @@ func (e *Error) Error() string {
 
 func (e *Error) Unwrap() error {
 	return e.LowLevelError
+}
+
+func (e *Error) WithLogContext(internalCause string, keysAndValues ...any) *Error {
+	e.InternalCause = internalCause
+	e.LogKeysAndValues = keysAndValues
+	return e
 }
 
 func New(namespace string, cause error, statusCode int) *Error {
