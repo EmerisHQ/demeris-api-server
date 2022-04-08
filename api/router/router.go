@@ -144,11 +144,11 @@ func (r *Router) handleErrors(c *gin.Context) {
 		panic(fmt.Sprintf("expected to receive error of type *apierrors.Errors, got %T with content: %v", l, l))
 	}
 
-	if len(err.InternalCause) > 0 {
+	if len(err.InternalCause.Error()) > 0 {
 		keysAndValues := append(err.LogKeysAndValues, "error", err)
 		d := deps.GetDeps(c)
 		d.Logger.Errorw(
-			err.InternalCause,
+			err.InternalCause.Error(),
 			keysAndValues...,
 		)
 	}
