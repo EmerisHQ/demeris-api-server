@@ -52,9 +52,7 @@ func GetChains(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve chains"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chains",
-			"error",
-			err,
+			fmt.Errorf("cannot retrieve chains: %w", err),
 		)
 		c.Error(e)
 
@@ -130,13 +128,11 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve primary channel between %v and %v", chainName, counterparty),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain",
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
 			"counterparty",
 			counterparty,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -173,11 +169,9 @@ func GetPrimaryChannels(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve primary channels for %v", chainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain",
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -229,8 +223,6 @@ func VerifyTrace(c *gin.Context) {
 			hash,
 			"chainName",
 			chainName,
-			"error",
-			err,
 		)
 
 		res.VerifiedTrace.Verified = false
@@ -280,13 +272,11 @@ func VerifyTrace(c *gin.Context) {
 			fmt.Sprintf("cannot query list of chain ids"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot query list of chain ids",
+			fmt.Errorf("cannot query list of chain ids: %w", err),
 			"hash",
 			hash,
 			"path",
 			res.VerifiedTrace.Path,
-			"err",
-			err,
 		)
 		c.Error(e)
 		return
@@ -416,7 +406,7 @@ func VerifyTrace(c *gin.Context) {
 			fmt.Sprintf("database error, %w", err),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			fmt.Sprintf("cannot query chain with name %s", nextChain),
+			fmt.Errorf("cannot query chain with name: %w", err),
 			"hash",
 			hash,
 			"path",
@@ -425,8 +415,6 @@ func VerifyTrace(c *gin.Context) {
 			chainName,
 			"nextChain",
 			nextChain,
-			"err",
-			err,
 		)
 		c.Error(e)
 
@@ -440,7 +428,7 @@ func VerifyTrace(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve chain status for %v", nextChain),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			"cannot retrieve chain last block time",
+			fmt.Errorf("cannot retrieve chain last block time: %w", err),
 			"hash",
 			hash,
 			"path",
@@ -449,8 +437,6 @@ func VerifyTrace(c *gin.Context) {
 			chainName,
 			"nextChain",
 			nextChain,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -568,11 +554,9 @@ func GetChainSupply(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -594,11 +578,9 @@ func GetChainSupply(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve supply from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve supply from sdk-service",
+			fmt.Errorf("cannot retrieve supply from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -649,9 +631,8 @@ func GetDenomSupply(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name", chain.ChainName,
-			"error", err,
 		)
 		c.Error(e)
 
@@ -674,10 +655,9 @@ func GetDenomSupply(c *gin.Context) {
 			cause,
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve denom supply from sdk-service",
+			fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
 			"chain name", chain.ChainName,
 			"denom name", denom,
-			"error", err,
 		)
 		c.Error(e)
 
@@ -709,11 +689,9 @@ func GetChainTx(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -731,11 +709,9 @@ func GetChainTx(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve tx from sdk-service, %w", err),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve tx from sdk-service",
+			fmt.Errorf("cannot retrieve tx from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -766,11 +742,9 @@ func GetNumbersByAddress(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve account/sequence numbers for address %v", address),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot query nodes auth for address",
+			fmt.Errorf("cannot query nodes auth for address: %w", err),
 			"address",
 			address,
-			"error",
-			err,
 			"chain",
 			chainInfo,
 		)
@@ -801,11 +775,9 @@ func GetInflation(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -822,11 +794,9 @@ func GetInflation(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve inflation from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve inflation from sdk-service",
+			fmt.Errorf("cannot retrieve inflation from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -855,11 +825,9 @@ func GetStakingParams(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -876,11 +844,9 @@ func GetStakingParams(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve staking params from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve staking params from sdk-service",
+			fmt.Errorf("cannot retrieve staking params from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -909,11 +875,9 @@ func GetStakingPool(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -930,11 +894,9 @@ func GetStakingPool(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve staking pool from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve staking pool from sdk-service",
+			fmt.Errorf("cannot retrieve staking pool from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -962,11 +924,9 @@ func GetMintParams(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -983,11 +943,9 @@ func GetMintParams(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve mint params from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve mint params from sdk-service",
+			fmt.Errorf("cannot retrieve mint params from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -1015,11 +973,9 @@ func GetAnnualProvisions(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -1036,11 +992,9 @@ func GetAnnualProvisions(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve mint annual provision from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve mint annual provision from sdk-service",
+			fmt.Errorf("cannot retrieve mint annual provision from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -1069,11 +1023,9 @@ func GetEpochProvisions(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -1090,11 +1042,9 @@ func GetEpochProvisions(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve mint epoch provisions from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve mint epoch provisions from sdk-service",
+			fmt.Errorf("cannot retrieve mint epoch provisions from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -1132,11 +1082,9 @@ func GetStakingAPR(c *gin.Context) {
 			fmt.Sprintf("cannot get APR"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot get APR",
+			fmt.Errorf("cannot get APR: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -1150,11 +1098,9 @@ func GetStakingAPR(c *gin.Context) {
 			fmt.Sprintf("cannot convert apr to float"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot convert apr to float",
+			fmt.Errorf("cannot convert apr to float: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 			"APR",
 			apr,
 		)
@@ -1176,11 +1122,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot retrieve chain's sdk-service",
+				fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1198,11 +1142,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot retrieve staking pool from sdk-service"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot retrieve staking pool from sdk-service",
+				fmt.Errorf("cannot retrieve staking pool from sdk-service: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1217,11 +1159,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot unmarshal staking pool"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot unmarshal staking pool",
+				fmt.Errorf("cannot unmarshal staking pool: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1235,11 +1175,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot convert bonded_tokens to sdktypes.Dec"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot convert bonded_tokens to sdktypes.Dec",
+				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Dec: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1257,11 +1195,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot retrieve staking params from sdk-service"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot retrieve staking params from sdk-service",
+				fmt.Errorf("cannot retrieve staking params from sdk-service: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1276,11 +1212,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot unmarshal staking params"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot unmarshal staking params",
+				fmt.Errorf("cannot unmarshal staking params: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1306,10 +1240,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				cause,
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot retrieve denom supply from sdk-service",
+				fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
 				"chain name", chain.ChainName,
 				"denom name", bond_denom,
-				"error", err,
 			)
 			c.Error(e)
 
@@ -1325,11 +1258,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot convert amount to coin"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot convert amount to coin",
+				fmt.Errorf("cannot convert amount to coin: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1349,11 +1280,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot retrieve inflation from sdk-service"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot retrieve inflation from sdk-service",
+				fmt.Errorf("cannot retrieve inflation from sdk-service: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1368,11 +1297,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot unmarshal inflation"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot unmarshal inflation",
+				fmt.Errorf("cannot unmarshal inflation: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 
@@ -1386,11 +1313,9 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				fmt.Sprintf("cannot convert inflation to sdktypes.Dec"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot convert inflation to sdktypes.Dec",
+				fmt.Errorf("cannot convert inflation to sdktypes.Dec: %w", err),
 				"name",
 				chain.ChainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 

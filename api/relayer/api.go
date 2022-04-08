@@ -53,9 +53,7 @@ func getRelayerStatus(c *gin.Context) {
 			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			"cannot query relayer status",
-			"error",
-			err,
+			fmt.Errorf("cannot query relayer status: %w", err),
 			"obj",
 			obj,
 		)
@@ -71,9 +69,7 @@ func getRelayerStatus(c *gin.Context) {
 			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			"cannot unstructure relayer status",
-			"error",
-			err,
+			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
 		c.Error(e)
 
@@ -114,9 +110,7 @@ func getRelayerBalance(c *gin.Context) {
 			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			"cannot query relayer status",
-			"error",
-			err,
+			fmt.Errorf("cannot query relayer status: %w", err),
 			"obj",
 			obj,
 		)
@@ -132,9 +126,7 @@ func getRelayerBalance(c *gin.Context) {
 			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			"cannot unstructure relayer status",
-			"error",
-			err,
+			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
 		c.Error(e)
 		return
@@ -155,9 +147,7 @@ func getRelayerBalance(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve relayer status"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve relayer status",
-			"error",
-			err,
+			fmt.Errorf("cannot retrieve relayer status: %w", err),
 		)
 		c.Error(e)
 
@@ -177,9 +167,7 @@ func getRelayerBalance(c *gin.Context) {
 				fmt.Sprintf("cannot retrieve relayer status"),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot retrieve relayer status",
-				"error",
-				err,
+				fmt.Errorf("cannot retrieve relayer status: %w", err),
 			)
 			c.Error(e)
 

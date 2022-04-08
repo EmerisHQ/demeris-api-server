@@ -65,11 +65,9 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,
 			).WithLogContext(
-				"cannot retrieve chain",
+				fmt.Errorf("cannot retrieve chain: %w", err),
 				"name",
 				chainName,
-				"error",
-				err,
 			)
 			c.Error(e)
 			c.Abort()
@@ -104,8 +102,6 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 				"cannot retrieve chain",
 				"name",
 				chainName,
-				"error",
-				err,
 			)
 
 			c.Abort()

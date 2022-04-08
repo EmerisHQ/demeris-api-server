@@ -42,9 +42,7 @@ func Tx(c *gin.Context) {
 
 	if err != nil {
 		e := apierrors.New("tx", fmt.Sprintf("failed to parse JSON"), http.StatusBadRequest).WithLogContext(
-			"Failed to parse JSON",
-			"error",
-			err,
+			fmt.Errorf("Failed to parse JSON: %w", err),
 		)
 		c.Error(e)
 
@@ -58,11 +56,9 @@ func Tx(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain",
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -76,11 +72,9 @@ func Tx(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -91,9 +85,7 @@ func Tx(c *gin.Context) {
 
 	if err != nil {
 		e := apierrors.New("tx", fmt.Sprintf("relaying tx failed, %w", err), http.StatusBadRequest).WithLogContext(
-			"relaying tx failed",
-			"error",
-			err,
+			fmt.Errorf("relaying tx failed: %w", err),
 		)
 		c.Error(e)
 
@@ -153,11 +145,9 @@ func GetTicket(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve ticket with id %v", ticketId),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve ticket",
+			fmt.Errorf("cannot retrieve ticket: %w", err),
 			"name",
 			ticketId,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -186,9 +176,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 	err := c.BindJSON(&txRequest)
 	if err != nil {
 		e := apierrors.New("tx", fmt.Sprintf("failed to parse JSON"), http.StatusBadRequest).WithLogContext(
-			"Failed to parse JSON",
-			"error",
-			err,
+			fmt.Errorf("Failed to parse JSON: %w", err),
 		)
 		c.Error(e)
 
@@ -202,11 +190,9 @@ func GetTxFeeEstimate(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot retrieve chain",
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -220,11 +206,9 @@ func GetTxFeeEstimate(c *gin.Context) {
 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusInternalServerError,
 		).WithLogContext(
-			"cannot retrieve chain's sdk-service",
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 
@@ -242,11 +226,9 @@ func GetTxFeeEstimate(c *gin.Context) {
 			fmt.Sprintf("cannot estimate fees from sdk-service"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot estimate fees from sdk-service",
+			fmt.Errorf("cannot estimate fees from sdk-service: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
 		c.Error(e)
 

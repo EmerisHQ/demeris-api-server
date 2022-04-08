@@ -39,11 +39,9 @@ func getSwapFee(c *gin.Context) {
 			fmt.Sprintf("cannot get swap fees"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			"cannot get swap fees",
+			fmt.Errorf("cannot get swap fees: %w", err),
 			"poolId",
 			poolId,
-			"error",
-			err,
 		)
 		c.Error(e)
 
