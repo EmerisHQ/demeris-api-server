@@ -57,7 +57,7 @@ func getRelayerStatus(c *gin.Context) {
 			"obj",
 			obj,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -71,7 +71,7 @@ func getRelayerStatus(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -114,7 +114,7 @@ func getRelayerBalance(c *gin.Context) {
 			"obj",
 			obj,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -128,7 +128,7 @@ func getRelayerBalance(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 		return
 	}
 
@@ -149,7 +149,7 @@ func getRelayerBalance(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve relayer status: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -169,7 +169,7 @@ func getRelayerBalance(c *gin.Context) {
 			).WithLogContext(
 				fmt.Errorf("cannot retrieve relayer status: %w", err),
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return
 		}

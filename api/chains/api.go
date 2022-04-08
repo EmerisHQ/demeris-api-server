@@ -69,7 +69,7 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 				"name",
 				chainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 			c.Abort()
 			return
 		}
@@ -102,6 +102,8 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 				"cannot retrieve chain",
 				"name",
 				chainName,
+				"error",
+				err,
 			)
 
 			c.Abort()

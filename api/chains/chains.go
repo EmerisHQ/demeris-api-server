@@ -54,7 +54,7 @@ func GetChains(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve chains: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -134,7 +134,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 			"counterparty",
 			counterparty,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -173,7 +173,7 @@ func GetPrimaryChannels(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -278,7 +278,7 @@ func VerifyTrace(c *gin.Context) {
 			"path",
 			res.VerifiedTrace.Path,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 		return
 	}
 
@@ -353,15 +353,14 @@ func VerifyTrace(c *gin.Context) {
 			} else {
 				e1 := apierrors.New(
 					"denom/verify-trace",
-					fmt.Sprintf("failed querying for %s, error: %w", hash, err),
+					fmt.Sprintf("failed querying for %s, error: %v", hash, err),
 					http.StatusBadRequest,
-				)
-
-				d.WriteError(c, e1,
-					"invalid number of query responses",
+				).WithLogContext(
+					fmt.Errorf("invalid number of query responses: %w", err),
 					"hash",
 					hash,
 				)
+				_ = c.Error(e1)
 			}
 
 			return
@@ -403,7 +402,7 @@ func VerifyTrace(c *gin.Context) {
 
 		e := apierrors.New(
 			"denom/verify-trace",
-			fmt.Sprintf("database error, %w", err),
+			fmt.Sprintf("database error, %v", err),
 			http.StatusInternalServerError,
 		).WithLogContext(
 			fmt.Errorf("cannot query chain with name: %w", err),
@@ -416,7 +415,7 @@ func VerifyTrace(c *gin.Context) {
 			"nextChain",
 			nextChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -438,7 +437,7 @@ func VerifyTrace(c *gin.Context) {
 			"nextChain",
 			nextChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -558,7 +557,7 @@ func GetChainSupply(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -582,7 +581,7 @@ func GetChainSupply(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -634,7 +633,7 @@ func GetDenomSupply(c *gin.Context) {
 			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name", chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -659,7 +658,7 @@ func GetDenomSupply(c *gin.Context) {
 			"chain name", chain.ChainName,
 			"denom name", denom,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -693,7 +692,7 @@ func GetChainTx(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -706,14 +705,14 @@ func GetChainTx(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Sprintf("cannot retrieve tx from sdk-service, %w", err),
+			fmt.Sprintf("cannot retrieve tx from sdk-service, %v", err),
 			http.StatusBadRequest,
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve tx from sdk-service: %w", err),
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -748,7 +747,7 @@ func GetNumbersByAddress(c *gin.Context) {
 			"chain",
 			chainInfo,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -779,7 +778,7 @@ func GetInflation(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -798,7 +797,7 @@ func GetInflation(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -829,7 +828,7 @@ func GetStakingParams(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -848,7 +847,7 @@ func GetStakingParams(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -879,7 +878,7 @@ func GetStakingPool(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -898,7 +897,7 @@ func GetStakingPool(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -928,7 +927,7 @@ func GetMintParams(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -947,7 +946,7 @@ func GetMintParams(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -977,7 +976,7 @@ func GetAnnualProvisions(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -996,7 +995,7 @@ func GetAnnualProvisions(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -1027,7 +1026,7 @@ func GetEpochProvisions(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -1046,7 +1045,7 @@ func GetEpochProvisions(c *gin.Context) {
 			"name",
 			chain.ChainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -1086,7 +1085,7 @@ func GetStakingAPR(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -1104,7 +1103,7 @@ func GetStakingAPR(c *gin.Context) {
 			"APR",
 			apr,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -1126,7 +1125,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1146,7 +1145,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1163,7 +1162,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1179,7 +1178,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1199,7 +1198,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1216,7 +1215,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1244,7 +1243,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"chain name", chain.ChainName,
 				"denom name", bond_denom,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1262,7 +1261,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1284,7 +1283,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1301,7 +1300,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}
@@ -1317,7 +1316,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 				"name",
 				chain.ChainName,
 			)
-			c.Error(e)
+			_ = c.Error(e)
 
 			return "", err
 		}

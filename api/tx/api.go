@@ -44,7 +44,7 @@ func Tx(c *gin.Context) {
 		e := apierrors.New("tx", fmt.Sprintf("failed to parse JSON"), http.StatusBadRequest).WithLogContext(
 			fmt.Errorf("Failed to parse JSON: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -60,7 +60,7 @@ func Tx(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -76,7 +76,7 @@ func Tx(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -84,10 +84,10 @@ func Tx(c *gin.Context) {
 	txhash, err := relayTx(client, d, txRequest.TxBytes, chainName, txRequest.Owner)
 
 	if err != nil {
-		e := apierrors.New("tx", fmt.Sprintf("relaying tx failed, %w", err), http.StatusBadRequest).WithLogContext(
+		e := apierrors.New("tx", fmt.Sprintf("relaying tx failed, %v", err), http.StatusBadRequest).WithLogContext(
 			fmt.Errorf("relaying tx failed: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -149,7 +149,7 @@ func GetTicket(c *gin.Context) {
 			"name",
 			ticketId,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -178,7 +178,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 		e := apierrors.New("tx", fmt.Sprintf("failed to parse JSON"), http.StatusBadRequest).WithLogContext(
 			fmt.Errorf("Failed to parse JSON: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -194,7 +194,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -210,7 +210,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -230,7 +230,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}

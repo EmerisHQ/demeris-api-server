@@ -38,7 +38,7 @@ func GetFee(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -79,7 +79,7 @@ func GetFeeAddress(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -115,7 +115,7 @@ func GetFeeAddresses(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve chains: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -162,7 +162,7 @@ func GetFeeToken(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}

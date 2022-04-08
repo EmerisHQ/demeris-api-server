@@ -40,7 +40,7 @@ func getPools(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot query pools: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -69,7 +69,7 @@ func getParams(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve params: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -98,7 +98,7 @@ func getSupply(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve total supply: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -127,7 +127,7 @@ func getNodeInfo(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve node_info: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}

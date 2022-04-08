@@ -37,7 +37,7 @@ func GetVerifiedDenoms(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve chains: %w", err),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}

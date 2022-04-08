@@ -44,7 +44,7 @@ func GetValidators(c *gin.Context) {
 			"chain",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}

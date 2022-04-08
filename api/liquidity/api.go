@@ -43,7 +43,7 @@ func getSwapFee(c *gin.Context) {
 			"poolId",
 			poolId,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}

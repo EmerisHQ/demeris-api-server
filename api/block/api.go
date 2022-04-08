@@ -41,7 +41,7 @@ func GetBlock(c *gin.Context) {
 		).WithLogContext(
 			fmt.Errorf("cannot query block, missing height"),
 		)
-		c.Error(e)
+		_ = c.Error(e)
 		return
 	}
 
@@ -56,7 +56,7 @@ func GetBlock(c *gin.Context) {
 			"height_string",
 			h,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 		return
 	}
 
@@ -73,7 +73,7 @@ func GetBlock(c *gin.Context) {
 			"height",
 			hh,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 		return
 	}
 

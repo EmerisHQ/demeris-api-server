@@ -58,7 +58,7 @@ func GetBalancesByAddress(c *gin.Context) {
 			"address",
 			address,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 		return
 	}
 
@@ -73,7 +73,7 @@ func GetBalancesByAddress(c *gin.Context) {
 			"address",
 			address,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 		return
 	}
 
@@ -181,7 +181,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 			"address",
 			address,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -226,7 +226,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 			"address",
 			address,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -274,7 +274,7 @@ func GetDelegatorRewards(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -290,7 +290,7 @@ func GetDelegatorRewards(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -311,7 +311,7 @@ func GetDelegatorRewards(c *gin.Context) {
 			"name",
 			chainName,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -397,7 +397,7 @@ func GetNumbersByAddress(c *gin.Context) {
 			"address",
 			address,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -423,7 +423,7 @@ func GetUserTickets(c *gin.Context) {
 			"address",
 			address,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}

@@ -69,7 +69,7 @@ func GetDestTx(c *gin.Context) {
 			"name",
 			srcChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -86,7 +86,7 @@ func GetDestTx(c *gin.Context) {
 			"name",
 			destChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -102,7 +102,7 @@ func GetDestTx(c *gin.Context) {
 			"name",
 			srcChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -115,7 +115,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Sprintf("cannot retrieve tx from sdk-service, %w", err),
+			fmt.Sprintf("cannot retrieve tx from sdk-service, %v", err),
 			http.StatusBadRequest,
 		).WithLogContext(
 			fmt.Errorf("cannot retrieve tx from sdk-service: %w", err),
@@ -124,7 +124,7 @@ func GetDestTx(c *gin.Context) {
 			"src srcChainInfo name",
 			srcChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -147,7 +147,7 @@ func GetDestTx(c *gin.Context) {
 			"src srcChainInfo name",
 			srcChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -175,7 +175,7 @@ func GetDestTx(c *gin.Context) {
 			"status_code",
 			resp.Status,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
@@ -194,7 +194,7 @@ func GetDestTx(c *gin.Context) {
 			"dest srcChainInfo name",
 			destChain,
 		)
-		c.Error(e)
+		_ = c.Error(e)
 
 		return
 	}
