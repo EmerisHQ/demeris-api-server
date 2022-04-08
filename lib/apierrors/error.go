@@ -14,7 +14,12 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("%s: %s: %v", e.Namespace, e.Cause, e.InternalCause)
+	c := e.Cause
+	if e.InternalCause != nil {
+		c = e.InternalCause.Error()
+	}
+
+	return fmt.Sprintf("%s: %s", e.Namespace, c)
 }
 
 func (e *Error) Unwrap() error {
