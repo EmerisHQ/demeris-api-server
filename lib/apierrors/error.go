@@ -5,21 +5,16 @@ import (
 )
 
 type Error struct {
-	Namespace     string
-	StatusCode    int
-	LowLevelError error
-	Cause         string
+	Namespace  string
+	StatusCode int
+	Cause      string
 
 	InternalCause    string
 	LogKeysAndValues []any
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.Namespace, e.LowLevelError.Error())
-}
-
-func (e *Error) Unwrap() error {
-	return e.LowLevelError
+	return fmt.Sprintf("%s: %s", e.Namespace, e.Cause)
 }
 
 func (e *Error) WithLogContext(internalCause string, keysAndValues ...any) *Error {
@@ -28,11 +23,10 @@ func (e *Error) WithLogContext(internalCause string, keysAndValues ...any) *Erro
 	return e
 }
 
-func New(namespace string, cause error, statusCode int) *Error {
+func New(namespace string, cause string, statusCode int) *Error {
 	return &Error{
-		StatusCode:    statusCode,
-		Namespace:     namespace,
-		LowLevelError: cause,
-		Cause:         cause.Error(),
+		StatusCode: statusCode,
+		Namespace:  namespace,
+		Cause:      cause,
 	}
 }
