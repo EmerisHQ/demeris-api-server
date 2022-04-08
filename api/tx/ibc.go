@@ -62,7 +62,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve srcChainInfo with name %v", srcChain),
+			fmt.Sprintf("cannot retrieve srcChainInfo with name %v", srcChain),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot retrieve srcChainInfo",
@@ -81,7 +81,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve srcChainInfo with name %v", destChain),
+			fmt.Sprintf("cannot retrieve srcChainInfo with name %v", destChain),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot retrieve srcChainInfo",
@@ -99,7 +99,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve sdk-service for version %s with srcChainInfo name %v", srcChainInfo.CosmosSDKVersion, srcChainInfo.ChainName),
+			fmt.Sprintf("cannot retrieve sdk-service for version %s with srcChainInfo name %v", srcChainInfo.CosmosSDKVersion, srcChainInfo.ChainName),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot retrieve srcChainInfo's sdk-service",
@@ -121,7 +121,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve tx from sdk-service, %w", err),
+			fmt.Sprintf("cannot retrieve tx from sdk-service, %w", err),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot retrieve tx from sdk-service",
@@ -146,7 +146,7 @@ func GetDestTx(c *gin.Context) {
 	if len(r) == 0 {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("provided transaction is not ibc transfer"),
+			fmt.Sprintf("provided transaction is not ibc transfer"),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"provided transaction is not ibc transfer",
@@ -174,7 +174,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil || resp.StatusCode != http.StatusOK {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
+			fmt.Sprintf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot retrieve destination tx",
@@ -197,7 +197,7 @@ func GetDestTx(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
+			fmt.Sprintf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot retrieve destination tx",

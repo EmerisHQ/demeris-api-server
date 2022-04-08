@@ -97,7 +97,7 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 			// okay we panic-ed, log it through r's logger and write back internal server error
 			err := apierrors.New(
 				"fatal_error",
-				errors.New("internal server error"),
+				fmt.Sprintf("internal server error"),
 				http.StatusInternalServerError)
 
 			logger := logging.AddCorrelationIDToLogger(c, r.l)

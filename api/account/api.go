@@ -51,7 +51,7 @@ func GetBalancesByAddress(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"account",
-			fmt.Errorf("cannot retrieve account for address %v", address),
+			fmt.Sprintf("cannot retrieve account for address %v", address),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot query database balance for address",
@@ -68,7 +68,7 @@ func GetBalancesByAddress(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"account",
-			fmt.Errorf("cannot retrieve account for address %v", address),
+			fmt.Sprintf("cannot retrieve account for address %v", address),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot query database verified denoms",
@@ -178,7 +178,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"delegations",
-			fmt.Errorf("cannot retrieve delegations for address %v", address),
+			fmt.Sprintf("cannot retrieve delegations for address %v", address),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot query database delegations for addresses",
@@ -225,7 +225,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"unbonding delegations",
-			fmt.Errorf("cannot retrieve unbonding delegations for address %v", address),
+			fmt.Sprintf("cannot retrieve unbonding delegations for address %v", address),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot query database unbonding delegations for addresses",
@@ -275,7 +275,7 @@ func GetDelegatorRewards(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot retrieve chain",
@@ -293,7 +293,7 @@ func GetDelegatorRewards(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusInternalServerError,
 		).WithLogContext(
 			"cannot retrieve chain's sdk-service",
@@ -316,7 +316,7 @@ func GetDelegatorRewards(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
+			fmt.Sprintf("cannot retrieve delegator rewards from sdk-service"),
 			http.StatusInternalServerError,
 		).WithLogContext(
 			"cannot retrieve delegator rewards from sdk-service",
@@ -389,7 +389,7 @@ func GetNumbersByAddress(c *gin.Context) {
 		if err != nil {
 			e := apierrors.New(
 				"numbers",
-				fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
+				fmt.Sprintf("cannot retrieve account/sequence numbers for address %v", address),
 				http.StatusBadRequest,
 			).WithLogContext(
 				"cannot query database auth for addresses",
@@ -406,7 +406,7 @@ func GetNumbersByAddress(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"numbers",
-			fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
+			fmt.Sprintf("cannot retrieve account/sequence numbers for address %v", address),
 			http.StatusInternalServerError,
 		).WithLogContext(
 			"cannot query nodes auth for addresses",
@@ -434,7 +434,7 @@ func GetUserTickets(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"tickets",
-			fmt.Errorf("cannot retrieve tickets for address %v", address),
+			fmt.Sprintf("cannot retrieve tickets for address %v", address),
 			http.StatusBadRequest,
 		).WithLogContext(
 			"cannot query store for tickets",
