@@ -139,9 +139,9 @@ func (r *Router) handleErrors(c *gin.Context) {
 		return
 	}
 
-	err := apierrors.Error{}
+	err := &apierrors.Error{}
 	if !errors.As(l, &err) {
-		panic(l)
+		panic(fmt.Sprintf("expected to receive error of type *apierrors.Errors, got %T with content: %v", l, l))
 	}
 
 	id := tryGetIntCorrelationID(c)

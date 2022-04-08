@@ -9,7 +9,7 @@ type UserFacingError struct {
 	Cause     string `json:"cause"`
 }
 
-func NewUserFacingError(id string, e Error) UserFacingError {
+func NewUserFacingError(id string, e *Error) UserFacingError {
 	return UserFacingError{
 		ID:        id,
 		Namespace: e.Namespace,
