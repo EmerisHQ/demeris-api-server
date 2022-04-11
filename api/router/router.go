@@ -121,7 +121,6 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 
 func (r *Router) decorateCtxWithDeps(c *gin.Context) {
 	c.Set("deps", &deps.Deps{
-		Logger:           r.l,
 		Database:         r.DB,
 		Store:            r.s,
 		KubeNamespace:    r.k8sNamespace,
@@ -145,8 +144,12 @@ func (r *Router) handleErrors(c *gin.Context) {
 	}
 
 	keysAndValues := append(err.LogKeysAndValues, "error", err)
-	d := deps.GetDeps(c)
-	d.Logger.Errorw(
+
+	logger, loggerErr := logging.GetLoggerFromContext(c)
+	if loggerErr != nil {
+		panic(fmt.Sprintf("gin context didn't contain logger: %s", loggerErr))
+	}
+	logger.Errorw(
 		err.Error(),
 		keysAndValues...,
 	)
