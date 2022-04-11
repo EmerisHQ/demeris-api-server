@@ -88,24 +88,20 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 		chainName := c.Param(chainNameParamKey)
 
 		if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
-				http.StatusBadRequest,
-			)
-
 			if err == nil {
 				err = fmt.Errorf("%s chain doesnt exists", chainName)
 			}
 
-			d.WriteError(c, e,
-				"cannot retrieve chain",
-				"name",
-				chainName,
-				"error",
-				err,
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
+				"name", chainName,
 			)
 
+			c.Error(e)
 			c.Abort()
 			return
 		}
