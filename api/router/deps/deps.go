@@ -38,7 +38,7 @@ func GetDeps(c *gin.Context) *Deps {
 }
 
 // WriteError adds an error to the gin context and logs it.
-func (d *Deps) WriteError(c *gin.Context, err apierrors.Error, logMessage string, keyAndValues ...interface{}) {
+func (d *Deps) WriteError(c *gin.Context, err *apierrors.Error, logMessage string, keyAndValues ...interface{}) {
 	_ = c.Error(err)
 
 	if keyAndValues != nil {

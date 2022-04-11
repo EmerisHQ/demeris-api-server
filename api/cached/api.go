@@ -35,15 +35,12 @@ func getPools(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"pools",
-			fmt.Errorf("cannot retrieve pools"),
+			fmt.Sprintf("cannot retrieve pools"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot query pools: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot query pools",
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -67,15 +64,12 @@ func getParams(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"params",
-			fmt.Errorf("cannot retrieve params"),
+			fmt.Sprintf("cannot retrieve params"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve params: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve params",
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -99,15 +93,12 @@ func getSupply(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"supply",
-			fmt.Errorf("cannot retrieve total supply"),
+			fmt.Sprintf("cannot retrieve total supply"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve total supply: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve total supply",
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -131,15 +122,12 @@ func getNodeInfo(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"node_info",
-			fmt.Errorf("cannot retrieve node_info"),
+			fmt.Sprintf("cannot retrieve node_info"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve node_info: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve node_info",
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}

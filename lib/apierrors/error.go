@@ -5,25 +5,37 @@ import (
 )
 
 type Error struct {
-	Namespace     string
-	StatusCode    int
-	LowLevelError error
-	Cause         string
+	Namespace  string
+	StatusCode int
+	Cause      string
+
+	InternalCause    error
+	LogKeysAndValues []any
 }
 
-func (e Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.Namespace, e.LowLevelError.Error())
+func (e *Error) Error() string {
+	c := e.Cause
+	if e.InternalCause != nil {
+		c = e.InternalCause.Error()
+	}
+
+	return fmt.Sprintf("%s: %s", e.Namespace, c)
 }
 
-func (e Error) Unwrap() error {
-	return e.LowLevelError
+func (e *Error) Unwrap() error {
+	return e.InternalCause
 }
 
-func New(namespace string, cause error, statusCode int) Error {
-	return Error{
-		StatusCode:    statusCode,
-		Namespace:     namespace,
-		LowLevelError: cause,
-		Cause:         cause.Error(),
+func (e *Error) WithLogContext(internalCause error, keysAndValues ...any) *Error {
+	e.InternalCause = internalCause
+	e.LogKeysAndValues = keysAndValues
+	return e
+}
+
+func New(namespace string, cause string, statusCode int) *Error {
+	return &Error{
+		StatusCode: statusCode,
+		Namespace:  namespace,
+		Cause:      cause,
 	}
 }
