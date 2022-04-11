@@ -58,7 +58,7 @@ func New(
 
 	engine := gin.New()
 
-	engine.Use(logging.CorrelationIDMiddleware(l))
+	engine.Use(logging.AddLoggerMiddleware(l))
 	r := &Router{
 		g:                engine,
 		DB:               db,
