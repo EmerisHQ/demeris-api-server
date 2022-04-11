@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/emeris-utils/logging"
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
@@ -14,6 +16,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
@@ -360,11 +363,12 @@ func GetNumbersByAddress(c *gin.Context) {
 	var res NumbersResponse
 
 	d := deps.GetDeps(c)
+	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
 	address := c.Param("address")
 
 	dd, err := d.Database.Chains()
-	d.Logger.Debugw("chain names", "chain names", dd, "error", err)
+	logger.Debugw("chain names", "chain names", dd, "error", err)
 
 	/*
 		PSA: do not remove this comment, this is the proper tracelistener-based implementation of this endpoint,
