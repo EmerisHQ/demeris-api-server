@@ -27,8 +27,3 @@ func Init(c *config.Config) (*Database, error) {
 func (d *Database) Close() error {
 	return d.dbi.Close()
 }
-
-// Q queries the DB.
-func (d *Database) Q(sql string, dest interface{}, args ...interface{}) error {
-	return d.dbi.Exec(sql, args, dest)
-}
