@@ -32,7 +32,7 @@ jobs:
 
       - name: Upload Swagger
         if: contains(github.ref, "/main")
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: swagger.yaml
           path: docs/swagger.yaml
