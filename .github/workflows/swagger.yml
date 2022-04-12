@@ -31,7 +31,7 @@ jobs:
         run: make generate-swagger
 
       - name: Upload Swagger
-        if: contains(github.ref, "/main")
+        if: contains(github.ref, '/main')
         uses: actions/upload-artifact@v2
         with:
           name: swagger.yaml
