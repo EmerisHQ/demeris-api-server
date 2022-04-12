@@ -97,7 +97,7 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 			// okay we panic-ed, log it through r's logger and write back internal server error
 			err := apierrors.New(
 				"fatal_error",
-				errors.New("internal server error"),
+				fmt.Sprintf("internal server error"),
 				http.StatusInternalServerError)
 
 			logger := logging.AddCorrelationIDToLogger(c, r.l)
@@ -139,10 +139,17 @@ func (r *Router) handleErrors(c *gin.Context) {
 		return
 	}
 
-	err := apierrors.Error{}
+	err := &apierrors.Error{}
 	if !errors.As(l, &err) {
-		panic(l)
+		panic(fmt.Sprintf("expected to receive error of type *apierrors.Errors, got %T with content: %v", l, l))
 	}
+
+	keysAndValues := append(err.LogKeysAndValues, "error", err)
+	d := deps.GetDeps(c)
+	d.Logger.Errorw(
+		err.Error(),
+		keysAndValues...,
+	)
 
 	id := tryGetIntCorrelationID(c)
 	userError := apierrors.NewUserFacingError(id, err)

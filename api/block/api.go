@@ -36,13 +36,12 @@ func GetBlock(c *gin.Context) {
 	if h == "" {
 		e := apierrors.New(
 			"block",
-			fmt.Errorf("missing height"),
+			fmt.Sprintf("missing height"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot query block, missing height"),
 		)
-
-		d.WriteError(c, e,
-			"cannot query block, missing height",
-		)
+		_ = c.Error(e)
 		return
 	}
 
@@ -50,17 +49,14 @@ func GetBlock(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"block",
-			fmt.Errorf("malformed height"),
+			fmt.Sprintf("malformed height"),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query block, malformed height",
+		).WithLogContext(
+			fmt.Errorf("cannot query block, malformed height: %w", err),
 			"height_string",
 			h,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 		return
 	}
 
@@ -70,17 +66,14 @@ func GetBlock(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"block",
-			fmt.Errorf("cannot get block at height %v", hh),
+			fmt.Sprintf("cannot get block at height %v", hh),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query block from redis",
+		).WithLogContext(
+			fmt.Errorf("cannot query block from redis: %w", err),
 			"height",
 			hh,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 		return
 	}
 

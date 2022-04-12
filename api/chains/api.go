@@ -62,18 +62,14 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 		if err != nil {
 			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot retrieve chain with name %v", chainName),
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,
-			)
-
-			d.WriteError(c, e,
-				"cannot retrieve chain",
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
 				"name",
 				chainName,
-				"error",
-				err,
 			)
-
+			_ = c.Error(e)
 			c.Abort()
 			return
 		}
@@ -94,7 +90,7 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 		if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
 			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot retrieve chain with name %v", chainName),
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,
 			)
 

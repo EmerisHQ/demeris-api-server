@@ -50,17 +50,14 @@ func getRelayerStatus(c *gin.Context) {
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
 		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot query relayer status",
-			"error",
-			err,
+		).WithLogContext(
+			fmt.Errorf("cannot query relayer status: %w", err),
 			"obj",
 			obj,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -69,15 +66,12 @@ func getRelayerStatus(c *gin.Context) {
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
 		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
+		).WithLogContext(
+			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot unstructure relayer status",
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -113,17 +107,14 @@ func getRelayerBalance(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot query relayer status",
-			"error",
-			err,
+		).WithLogContext(
+			fmt.Errorf("cannot query relayer status: %w", err),
 			"obj",
 			obj,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -132,16 +123,13 @@ func getRelayerBalance(c *gin.Context) {
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
 		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
+		).WithLogContext(
+			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot unstructure relayer status",
-			"error",
-			err,
-		)
-
+		_ = c.Error(e)
+		return
 	}
 
 	chains := []string{}
@@ -156,15 +144,12 @@ func getRelayerBalance(c *gin.Context) {
 	if err != nil {
 		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot retrieve relayer status"),
+			fmt.Sprintf("cannot retrieve relayer status"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve relayer status: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve relayer status",
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -179,15 +164,12 @@ func getRelayerBalance(c *gin.Context) {
 		if err != nil {
 			e := apierrors.New(
 				"status",
-				fmt.Errorf("cannot retrieve relayer status"),
+				fmt.Sprintf("cannot retrieve relayer status"),
 				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve relayer status: %w", err),
 			)
-
-			d.WriteError(c, e,
-				"cannot retrieve relayer status",
-				"error",
-				err,
-			)
+			_ = c.Error(e)
 
 			return
 		}
