@@ -20,7 +20,7 @@ func Register(router *gin.Engine) {
 // @Description gets verified denoms
 // @Produce json
 // @Success 200 {object} VerifiedDenomsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /verified_denoms [get]
 func GetVerifiedDenoms(c *gin.Context) {
 	var res VerifiedDenomsResponse

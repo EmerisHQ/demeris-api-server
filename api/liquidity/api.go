@@ -24,7 +24,7 @@ func Register(router *gin.Engine) {
 // @Param pool path string true "pool id"
 // @Produce json
 // @Success 200 {object} SwapFeesResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /pool/{poolID}/swapfees [get]
 func getSwapFee(c *gin.Context) {
 

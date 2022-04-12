@@ -38,7 +38,7 @@ func Register(router *gin.Engine) {
 // @Produce json
 // @Param address path string true "address to query balance for"
 // @Success 200 {object} BalancesResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/balance [get]
 func GetBalancesByAddress(c *gin.Context) {
 	var res BalancesResponse
@@ -160,7 +160,7 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @Produce json
 // @Param address path string true "address to query staking for"
 // @Success 200 {object} StakingBalancesResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/stakingbalance [get]
 func GetDelegationsByAddress(c *gin.Context) {
 	var res StakingBalancesResponse
@@ -205,7 +205,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 // @Produce json
 // @Param address path string true "address to query unbonding delegations for"
 // @Success 200 {object} UnbondingDelegationsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/unbondingdelegations [get]
 func GetUnbondingDelegationsByAddress(c *gin.Context) {
 	var res UnbondingDelegationsResponse
@@ -251,7 +251,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 // @Param address path string true "address to query delegation rewards for"
 // @Param chain path string true "chain to query delegation rewards for"
 // @Success 200 {object} DelegatorRewardsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/delegatorrewards/{chain} [get]
 func GetDelegatorRewards(c *gin.Context) {
 	var res DelegatorRewardsResponse
@@ -354,7 +354,7 @@ func GetDelegatorRewards(c *gin.Context) {
 // @Produce json
 // @Param address path string true "address to query numbers for"
 // @Success 200 {object} NumbersResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/numbers [get]
 func GetNumbersByAddress(c *gin.Context) {
 	var res NumbersResponse

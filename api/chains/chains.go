@@ -37,7 +37,7 @@ const (
 // @Description Gets list of supported chains.
 // @Produce json
 // @Success 200 {object} ChainsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chains [get]
 func GetChains(c *gin.Context) {
 	var res ChainsResponse
@@ -78,7 +78,7 @@ func GetChains(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} ChainResponse
-// @Failure 500,400 {object} deps.Error
+// @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName} [get]
 func GetChain(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -95,7 +95,7 @@ func GetChain(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} Bech32ConfigResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/bech32 [get]
 func GetChainBech32Config(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -113,7 +113,7 @@ func GetChainBech32Config(c *gin.Context) {
 // @Param counterparty path string true "counterparty chain name"
 // @Produce json
 // @Success 200 {object} PrimaryChannelResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/primary_channel/{counterparty} [get]
 func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 	var res PrimaryChannelResponse
@@ -155,7 +155,7 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} PrimaryChannelsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/primary_channel [get]
 func GetPrimaryChannels(c *gin.Context) {
 	var res PrimaryChannelsResponse
@@ -197,7 +197,7 @@ func GetPrimaryChannels(c *gin.Context) {
 // @Param hash path string true "trace hash"
 // @Produce json
 // @Success 200 {object} VerifiedTraceResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
 func VerifyTrace(c *gin.Context) {
 	var res VerifiedTraceResponse
@@ -501,7 +501,7 @@ func paths(path string) ([]string, error) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} StatusResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/status [get]
 func GetChainStatus(c *gin.Context) {
 	var res StatusResponse
@@ -541,7 +541,7 @@ func GetChainStatus(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} SupplyResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/supply [get]
 func GetChainSupply(c *gin.Context) {
 	paginationKey, exists := c.GetQuery("key")
@@ -617,7 +617,7 @@ func GetChainSupply(c *gin.Context) {
 // @Param denom path string true "denom name"
 // @Produce json
 // @Success 200 {object} SupplyResponse
-// @Failure 400 {object} deps.Error
+// @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/supply/:denom [get]
 func GetDenomSupply(c *gin.Context) {
 	denom := c.Param("denom")
@@ -676,7 +676,7 @@ func GetDenomSupply(c *gin.Context) {
 // @Param tx path string true "tx"
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/txs/{txhash} [get]
 func GetChainTx(c *gin.Context) {
 	txHash := c.Param("tx")
@@ -728,7 +728,7 @@ func GetChainTx(c *gin.Context) {
 // @Produce json
 // @Param address path string true "address to query numbers for"
 // @Success 200 {object} json.RawMessage
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/numbers/{address} [get]
 func GetNumbersByAddress(c *gin.Context) {
 	address := c.Param("address")
@@ -762,7 +762,7 @@ func GetNumbersByAddress(c *gin.Context) {
 // @ID get-inflation
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/inflation [get]
 func GetInflation(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -812,7 +812,7 @@ func GetInflation(c *gin.Context) {
 // @ID get-staking-params
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 400 {object} deps.Error
+// @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/staking/params [get]
 func GetStakingParams(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -862,7 +862,7 @@ func GetStakingParams(c *gin.Context) {
 // @ID get-staking-pool
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 400 {object} deps.Error
+// @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/staking/pool [get]
 func GetStakingPool(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -912,7 +912,7 @@ func GetStakingPool(c *gin.Context) {
 // @ID get-mint-params
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/params [get]
 func GetMintParams(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -961,7 +961,7 @@ func GetMintParams(c *gin.Context) {
 // @ID get-annual-provisions
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/annual_provisions [get]
 func GetAnnualProvisions(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -1010,7 +1010,7 @@ func GetAnnualProvisions(c *gin.Context) {
 // @ID get-epoch-provisions
 // @Produce json
 // @Success 200 {object} json.RawMessage
-// @Failure 400 {object} deps.Error
+// @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/epoch_provisions [get]
 func GetEpochProvisions(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
@@ -1060,7 +1060,7 @@ func GetEpochProvisions(c *gin.Context) {
 // @ID get-staking-apr
 // @Produce json
 // @Success 200 {object} APRResponse
-// @Failure 500,400 {object} deps.Error
+// @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/APR [get]
 func GetStakingAPR(c *gin.Context) {
 	d := deps.GetDeps(c)
