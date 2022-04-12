@@ -101,7 +101,7 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 				"name", chainName,
 			)
 
-			c.Error(e)
+			_ = c.Error(e)
 			c.Abort()
 			return
 		}
