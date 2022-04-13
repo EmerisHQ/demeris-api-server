@@ -1321,6 +1321,11 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			return "", err
 		}
 
+		// only 25% of the newly minted tokens are distributed as staking rewards for osmosis
+		if strings.ToLower(chain.ChainName) == "osmosis" {
+			inflation = inflation.QuoInt64(4)
+		}
+
 		// calculate staking APR
 		apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
 		return apr.String(), nil
