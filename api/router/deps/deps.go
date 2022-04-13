@@ -5,6 +5,7 @@ import (
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
@@ -36,15 +37,8 @@ func GetDeps(c *gin.Context) *Deps {
 	return deps
 }
 
-// WriteError logs and return client-facing errors
-func (d *Deps) WriteError(c *gin.Context, err Error, logMessage string, keyAndValues ...interface{}) {
-
-	// setting error id
-	value, ok := c.Request.Context().Value(logging.IntCorrelationIDName).(string)
-	if !ok {
-		panic("cant get value int_correlation_id")
-	}
-	err.ID = value
+// WriteError adds an error to the gin context and logs it.
+func (d *Deps) WriteError(c *gin.Context, err *apierrors.Error, logMessage string, keyAndValues ...interface{}) {
 	_ = c.Error(err)
 
 	if keyAndValues != nil {

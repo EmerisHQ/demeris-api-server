@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,7 +17,7 @@ import (
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} FeeResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/fee [get]
 func GetFee(c *gin.Context) {
 	var res FeeResponse
@@ -28,21 +29,16 @@ func GetFee(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"fee",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -62,7 +58,7 @@ func GetFee(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} FeeAddressResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/address [get]
 func GetFeeAddress(c *gin.Context) {
 	var res FeeAddressResponse
@@ -74,21 +70,16 @@ func GetFeeAddress(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"feeaddress",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -107,7 +98,7 @@ func GetFeeAddress(c *gin.Context) {
 // @Description Gets all addresses to pay fee for.
 // @Produce json
 // @Success 200 {object} FeeAddressesResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chains/fee/addresses [get]
 func GetFeeAddresses(c *gin.Context) {
 	var res FeeAddressesResponse
@@ -117,19 +108,14 @@ func GetFeeAddresses(c *gin.Context) {
 	chains, err := d.Database.Chains()
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"feeaddress",
-			fmt.Errorf("cannot retrieve chains"),
+			fmt.Sprintf("cannot retrieve chains"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chains: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chains",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -155,7 +141,7 @@ func GetFeeAddresses(c *gin.Context) {
 // @Param chainName path string true "chain name"
 // @Produce json
 // @Success 200 {object} FeeTokenResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/token [get]
 func GetFeeToken(c *gin.Context) {
 	var res FeeTokenResponse
@@ -167,21 +153,16 @@ func GetFeeToken(c *gin.Context) {
 	chain, err := d.Database.Chain(chainName)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"feetoken",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}

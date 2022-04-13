@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,6 +37,7 @@ func Register(router *gin.Engine) {
 		GET("/mint/annual_provisions", GetAnnualProvisions).
 		GET("/mint/epoch_provisions", GetEpochProvisions).
 		GET("/staking/params", GetStakingParams).
+		GET("/apr", GetStakingAPR).
 		GET("/staking/pool", GetStakingPool)
 
 	chain.Group("/fee").
@@ -58,22 +60,16 @@ func GetChainMiddleware(chainNameParamKey string) gin.HandlerFunc {
 
 		chain, err := d.Database.Chain(chainName)
 		if err != nil {
-			e := deps.NewError(
+			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot retrieve chain with name %v", chainName),
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,
-			)
-
-			d.WriteError(c, e,
-				"cannot retrieve chain",
-				"id",
-				e.ID,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
 				"name",
 				chainName,
-				"error",
-				err,
 			)
-
+			_ = c.Error(e)
 			c.Abort()
 			return
 		}
@@ -92,9 +88,9 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 		chainName := c.Param(chainNameParamKey)
 
 		if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
-			e := deps.NewError(
+			e := apierrors.New(
 				"chains",
-				fmt.Errorf("cannot retrieve chain with name %v", chainName),
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 				http.StatusBadRequest,
 			)
 
@@ -104,8 +100,6 @@ func RequireChainEnabled(chainNameParamKey string) gin.HandlerFunc {
 
 			d.WriteError(c, e,
 				"cannot retrieve chain",
-				"id",
-				e.ID,
 				"name",
 				chainName,
 				"error",

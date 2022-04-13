@@ -53,7 +53,7 @@ func NewStringCache(
 	}
 }
 
-func (c *StringCache) Get(ctx context.Context, key string) (string, error) {
+func (c *StringCache) Get(ctx context.Context, key string, setCacheOnError bool) (string, error) {
 	cacheKey := c.avatarCacheKey(key)
 
 	res, err := c.backend.Get(ctx, cacheKey)
@@ -68,12 +68,15 @@ func (c *StringCache) Get(ctx context.Context, key string) (string, error) {
 			"key", key,
 		)
 		res, err := c.handler.Handle(ctx, key)
-		setErr := c.backend.Set(ctx, cacheKey, res, c.cacheDuration)
-		if setErr != nil {
-			c.l.Errorw(
-				"updating cache, proceeding anyway",
-				"err", err,
-			)
+		// update cache if no err or setCacheOnError is true
+		if err == nil || setCacheOnError {
+			setErr := c.backend.Set(ctx, cacheKey, res, c.cacheDuration)
+			if setErr != nil {
+				c.l.Errorw(
+					"updating cache, proceeding anyway",
+					"err", err,
+				)
+			}
 		}
 		return res, err
 	}

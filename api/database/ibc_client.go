@@ -20,9 +20,12 @@ func (d *Database) QueryIBCClientTrace(chain string, channel string) (cns.IbcCli
 	INNER JOIN 
 		(SELECT * 
 			FROM tracelistener.channels 
-			WHERE chain_name=? AND channel_id=?
+			WHERE chain_name=?
+			AND channel_id=?
+			AND delete_height IS NULL
 		) ch 
-	ON conn.connection_id=ANY(ch.hops);
+	ON conn.connection_id=ANY(ch.hops)
+	WHERE conn.delete_height IS NULL;
 	`
 
 	q = d.dbi.DB.Rebind(q)

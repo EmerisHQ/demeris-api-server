@@ -13,6 +13,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
@@ -37,7 +38,7 @@ func Register(router *gin.Engine) {
 // @Produce json
 // @Param address path string true "address to query balance for"
 // @Success 200 {object} BalancesResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/balance [get]
 func GetBalancesByAddress(c *gin.Context) {
 	var res BalancesResponse
@@ -48,41 +49,31 @@ func GetBalancesByAddress(c *gin.Context) {
 	balances, err := d.Database.Balances(address)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"account",
-			fmt.Errorf("cannot retrieve account for address %v", address),
+			fmt.Sprintf("cannot retrieve account for address %v", address),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query database balance for address",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot query database balance for address: %w", err),
 			"address",
 			address,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 		return
 	}
 
 	vd, err := verifiedDenomsMap(d.Database)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"account",
-			fmt.Errorf("cannot retrieve account for address %v", address),
+			fmt.Sprintf("cannot retrieve account for address %v", address),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query database verified denoms",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot query database verified denoms: %w", err),
 			"address",
 			address,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 		return
 	}
 
@@ -169,7 +160,7 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @Produce json
 // @Param address path string true "address to query staking for"
 // @Success 200 {object} StakingBalancesResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/stakingbalance [get]
 func GetDelegationsByAddress(c *gin.Context) {
 	var res StakingBalancesResponse
@@ -181,21 +172,16 @@ func GetDelegationsByAddress(c *gin.Context) {
 	dl, err := d.Database.Delegations(address)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"delegations",
-			fmt.Errorf("cannot retrieve delegations for address %v", address),
+			fmt.Sprintf("cannot retrieve delegations for address %v", address),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query database delegations for addresses",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot query database delegations for addresses: %w", err),
 			"address",
 			address,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -219,7 +205,7 @@ func GetDelegationsByAddress(c *gin.Context) {
 // @Produce json
 // @Param address path string true "address to query unbonding delegations for"
 // @Success 200 {object} UnbondingDelegationsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/unbondingdelegations [get]
 func GetUnbondingDelegationsByAddress(c *gin.Context) {
 	var res UnbondingDelegationsResponse
@@ -231,21 +217,16 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 	unbondings, err := d.Database.UnbondingDelegations(address)
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"unbonding delegations",
-			fmt.Errorf("cannot retrieve unbonding delegations for address %v", address),
+			fmt.Sprintf("cannot retrieve unbonding delegations for address %v", address),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query database unbonding delegations for addresses",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot query database unbonding delegations for addresses: %w", err),
 			"address",
 			address,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -270,7 +251,7 @@ func GetUnbondingDelegationsByAddress(c *gin.Context) {
 // @Param address path string true "address to query delegation rewards for"
 // @Param chain path string true "chain to query delegation rewards for"
 // @Success 200 {object} DelegatorRewardsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/delegatorrewards/{chain} [get]
 func GetDelegatorRewards(c *gin.Context) {
 	var res DelegatorRewardsResponse
@@ -284,42 +265,32 @@ func GetDelegatorRewards(c *gin.Context) {
 
 	chain, err := d.Database.Chain(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve chain with name %v", chainName),
+			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chain: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
 
 	client, err := sdkservice.Client(chain.MajorSDKVersion())
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
 			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chain's sdk-service",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -331,21 +302,16 @@ func GetDelegatorRewards(c *gin.Context) {
 	})
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"chains",
-			fmt.Errorf("cannot retrieve delegator rewards from sdk-service"),
+			fmt.Sprintf("cannot retrieve delegator rewards from sdk-service"),
 			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve delegator rewards from sdk-service",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve delegator rewards from sdk-service: %w", err),
 			"name",
 			chainName,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -388,7 +354,7 @@ func GetDelegatorRewards(c *gin.Context) {
 // @Produce json
 // @Param address path string true "address to query numbers for"
 // @Success 200 {object} NumbersResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/numbers [get]
 func GetNumbersByAddress(c *gin.Context) {
 	var res NumbersResponse
@@ -407,20 +373,14 @@ func GetNumbersByAddress(c *gin.Context) {
 		dl, err := d.Database.Numbers(address)
 
 		if err != nil {
-			e := deps.NewError(
+			e := apierrors.New(
 				"numbers",
-				fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
+				fmt.Sprintf("cannot retrieve account/sequence numbers for address %v", address),
 				http.StatusBadRequest,
-			)
-
-			d.WriteError(c, e,
-				"cannot query database auth for addresses",
-				"id",
-				e.ID,
+			).WithLogContext(
+				fmt.Errorf("cannot query database auth for addresses: %w", err),
 				"address",
 				address,
-				"error",
-				err,
 			)
 
 			return
@@ -428,21 +388,16 @@ func GetNumbersByAddress(c *gin.Context) {
 
 	resp, err := fetchNumbers(dd, address)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"numbers",
-			fmt.Errorf("cannot retrieve account/sequence numbers for address %v", address),
+			fmt.Sprintf("cannot retrieve account/sequence numbers for address %v", address),
 			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot query nodes auth for addresses",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot query nodes auth for addresses: %w", err),
 			"address",
 			address,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -459,19 +414,16 @@ func GetUserTickets(c *gin.Context) {
 
 	tickets, err := d.Store.GetUserTickets(address)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"tickets",
-			fmt.Errorf("cannot retrieve tickets for address %v", address),
+			fmt.Sprintf("cannot retrieve tickets for address %v", address),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query store for tickets",
+		).WithLogContext(
+			fmt.Errorf("cannot query store for tickets: %w", err),
 			"address",
 			address,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 
 		return
 	}

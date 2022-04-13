@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +20,7 @@ func Register(router *gin.Engine) {
 // @Description gets verified denoms
 // @Produce json
 // @Success 200 {object} VerifiedDenomsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /verified_denoms [get]
 func GetVerifiedDenoms(c *gin.Context) {
 	var res VerifiedDenomsResponse
@@ -29,19 +30,14 @@ func GetVerifiedDenoms(c *gin.Context) {
 	chains, err := d.Database.Chains()
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"verified_denoms",
-			fmt.Errorf("cannot retrieve chains"),
+			fmt.Sprintf("cannot retrieve chains"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chains: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve chains",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}

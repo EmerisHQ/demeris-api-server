@@ -8,7 +8,9 @@ func (d *Database) Connection(chain string, connection_id string) (tracelistener
 	q := `
 	SELECT *
 	FROM tracelistener.connections 
-	WHERE chain_name=? AND connection_id=?;
+	WHERE chain_name=?
+	AND connection_id=?
+	AND delete_height IS NULL
 	`
 
 	q = d.dbi.DB.Rebind(q)

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/gravity-devs/liquidity/x/liquidity/types"
 )
@@ -25,26 +26,21 @@ func Register(router *gin.Engine) {
 // @Description Gets info of all pools.`10
 // @Produce json
 // @Success 200 {object} types.QueryLiquidityPoolsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/pools [get]
 func getPools(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	res, err := d.Store.GetPools()
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"pools",
-			fmt.Errorf("cannot retrieve pools"),
+			fmt.Sprintf("cannot retrieve pools"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot query pools: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot query pools",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -59,26 +55,21 @@ func getPools(c *gin.Context) {
 // @Description Gets params of liquidity module.
 // @Produce json
 // @Success 200 {object} types.QueryParamsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/params [get]
 func getParams(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	res, err := d.Store.GetParams()
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"params",
-			fmt.Errorf("cannot retrieve params"),
+			fmt.Sprintf("cannot retrieve params"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve params: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve params",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -93,26 +84,21 @@ func getParams(c *gin.Context) {
 // @Description Gets total supply of cosmos hub.
 // @Produce json
 // @Success 200 {object} types.QueryTotalSupplyResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
 func getSupply(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	res, err := d.Store.GetSupply()
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"supply",
-			fmt.Errorf("cannot retrieve total supply"),
+			fmt.Sprintf("cannot retrieve total supply"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve total supply: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve total supply",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -127,26 +113,21 @@ func getSupply(c *gin.Context) {
 // @Description returns output of Cosmos's /node_info endpoint
 // @Produce json
 // @Success 200 {object} types.QueryTotalSupplyResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
 func getNodeInfo(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	res, err := d.Store.GetNodeInfo()
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"node_info",
-			fmt.Errorf("cannot retrieve node_info"),
+			fmt.Sprintf("cannot retrieve node_info"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve node_info: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve node_info",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}

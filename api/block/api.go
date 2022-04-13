@@ -11,6 +11,7 @@ import (
 	"github.com/emerishq/emeris-utils/store"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,44 +27,36 @@ func Register(router *gin.Engine) {
 // @Produce json
 // @Param height query string true "height to query for"
 // @Success 200 {object} json.RawMessage
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /block_results [get]
 func GetBlock(c *gin.Context) {
 	d := deps.GetDeps(c)
 
 	h := c.Query("height")
 	if h == "" {
-		e := deps.NewError(
+		e := apierrors.New(
 			"block",
-			fmt.Errorf("missing height"),
+			fmt.Sprintf("missing height"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot query block, missing height"),
 		)
-
-		d.WriteError(c, e,
-			"cannot query block, missing height",
-			"id",
-			e.ID,
-		)
+		_ = c.Error(e)
 		return
 	}
 
 	hh, err := strconv.ParseInt(h, 10, 64)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"block",
-			fmt.Errorf("malformed height"),
+			fmt.Sprintf("malformed height"),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query block, malformed height",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot query block, malformed height: %w", err),
 			"height_string",
 			h,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 		return
 	}
 
@@ -71,21 +64,16 @@ func GetBlock(c *gin.Context) {
 
 	bd, err := bs.Block(hh)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"block",
-			fmt.Errorf("cannot get block at height %v", hh),
+			fmt.Sprintf("cannot get block at height %v", hh),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot query block from redis",
-			"id",
-			e.ID,
+		).WithLogContext(
+			fmt.Errorf("cannot query block from redis: %w", err),
 			"height",
 			hh,
-			"error",
-			err,
 		)
+		_ = c.Error(e)
 		return
 	}
 

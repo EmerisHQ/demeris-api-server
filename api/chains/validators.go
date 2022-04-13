@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/keybase"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
@@ -31,7 +32,7 @@ const (
 // @Description	3: "BOND_STATUS_BONDED"
 // @Produce json
 // @Success 200 {object} ValidatorsResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /validators [get]
 func GetValidators(c *gin.Context) {
 	var res ValidatorsResponse
@@ -40,21 +41,16 @@ func GetValidators(c *gin.Context) {
 	chainName := c.Param("chain")
 	validators, err := d.Database.GetValidators(chainName)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"validators",
-			fmt.Errorf("cannot retrieve validators"),
+			fmt.Sprintf("cannot retrieve validators"),
 			http.StatusBadRequest,
-		)
-
-		d.WriteError(c, e,
-			"cannot retrieve validators",
-			"id",
-			e.ID,
-			"error",
-			err,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve validators: %w", err),
 			"chain",
 			chainName,
 		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -90,7 +86,7 @@ func adaptValidator(ctx context.Context, cache *stringcache.StringCache, r trace
 	var err error
 
 	if len(r.Identity) > 0 {
-		v.Avatar, err = cache.Get(ctx, r.Identity)
+		v.Avatar, err = cache.Get(ctx, r.Identity, true)
 	}
 
 	return v, err

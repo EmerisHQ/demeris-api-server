@@ -12,6 +12,7 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	cnsmodels "github.com/emerishq/demeris-backend-models/cns"
 
 	v1 "github.com/allinbits/starport-operator/api/v1"
@@ -34,7 +35,7 @@ func Register(router *gin.Engine) {
 // @Description gets relayer status
 // @Produce json
 // @Success 200 {object} RelayerStatusResponse
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /relayer/status [get]
 func getRelayerStatus(c *gin.Context) {
 	var res RelayerStatusResponse
@@ -47,40 +48,30 @@ func getRelayerStatus(c *gin.Context) {
 	}.String())
 
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot query relayer status",
-			"id",
-			e.ID,
-			"error",
-			err,
+		).WithLogContext(
+			fmt.Errorf("cannot query relayer status: %w", err),
 			"obj",
 			obj,
 		)
+		_ = c.Error(e)
 
 		return
 	}
 
 	relayer, err := k8s.GetRelayerFromObj(obj)
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
+		).WithLogContext(
+			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot unstructure relayer status",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -101,7 +92,7 @@ func getRelayerStatus(c *gin.Context) {
 // @Description gets relayer balance for the various relayer accounts
 // @Produce json
 // @Success 200 {object} RelayerBalances
-// @Failure 500,403 {object} deps.Error
+// @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /relayer/balance [get]
 func getRelayerBalance(c *gin.Context) {
 	var res RelayerBalances
@@ -114,41 +105,31 @@ func getRelayerBalance(c *gin.Context) {
 	}.String())
 
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
-		)
-
-		d.WriteError(c, e,
-			"cannot query relayer status",
-			"id",
-			e.ID,
-			"error",
-			err,
+		).WithLogContext(
+			fmt.Errorf("cannot query relayer status: %w", err),
 			"obj",
 			obj,
 		)
+		_ = c.Error(e)
 
 		return
 	}
 
 	relayer, err := k8s.GetRelayerFromObj(obj)
 	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot query relayer status"),
+			fmt.Sprintf("cannot query relayer status"),
 			http.StatusInternalServerError,
+		).WithLogContext(
+			fmt.Errorf("cannot unstructure relayer status: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot unstructure relayer status",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
-
+		_ = c.Error(e)
+		return
 	}
 
 	chains := []string{}
@@ -161,19 +142,14 @@ func getRelayerBalance(c *gin.Context) {
 
 	thresh, err := relayerThresh(chains, d.Database)
 	if err != nil {
-		e := deps.NewError(
+		e := apierrors.New(
 			"status",
-			fmt.Errorf("cannot retrieve relayer status"),
+			fmt.Sprintf("cannot retrieve relayer status"),
 			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve relayer status: %w", err),
 		)
-
-		d.WriteError(c, e,
-			"cannot retrieve relayer status",
-			"id",
-			e.ID,
-			"error",
-			err,
-		)
+		_ = c.Error(e)
 
 		return
 	}
@@ -186,19 +162,14 @@ func getRelayerBalance(c *gin.Context) {
 
 		enough, err := enoughBalance(addresses[i], t, d.Database)
 		if err != nil {
-			e := deps.NewError(
+			e := apierrors.New(
 				"status",
-				fmt.Errorf("cannot retrieve relayer status"),
+				fmt.Sprintf("cannot retrieve relayer status"),
 				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve relayer status: %w", err),
 			)
-
-			d.WriteError(c, e,
-				"cannot retrieve relayer status",
-				"id",
-				e.ID,
-				"error",
-				err,
-			)
+			_ = c.Error(e)
 
 			return
 		}

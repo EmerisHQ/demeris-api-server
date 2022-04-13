@@ -18,21 +18,29 @@ jobs:
           fetch-depth: 2
 
       - name: Setup go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
+
+      - name: Cache go modules and build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Setup token for pulling from private repos
         run: |
           go env -w GOPRIVATE=github.com/emerishq,github.com/allinbits
           git config --global url."https://git:${{ secrets.TENDERBOT_GIT_TOKEN }}@github.com".insteadOf "https://github.com"
 
-      - name: Run tests
-        run: make test
-
       - name: Run coverage
-        run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+        run: go test -v -failfast -race -coverprofile=coverage.out -covermode=atomic -count=1 ./...
+
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           file: coverage.out

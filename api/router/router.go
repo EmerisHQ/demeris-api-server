@@ -8,6 +8,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/block"
 	"github.com/emerishq/demeris-api-server/api/cached"
 	"github.com/emerishq/demeris-api-server/api/liquidity"
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"k8s.io/client-go/informers"
 
 	"github.com/emerishq/demeris-api-server/api/relayer"
@@ -94,9 +95,9 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 	defer func() {
 		if rval := recover(); rval != nil {
 			// okay we panic-ed, log it through r's logger and write back internal server error
-			err := deps.NewError(
+			err := apierrors.New(
 				"fatal_error",
-				errors.New("internal server error"),
+				fmt.Sprintf("internal server error"),
 				http.StatusInternalServerError)
 
 			logger := logging.AddCorrelationIDToLogger(c, r.l)
@@ -104,12 +105,12 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 				"panic handler triggered while handling call",
 				"endpoint", c.Request.RequestURI,
 				"error", fmt.Sprint(rval),
-				"error_id", err.ID,
 			)
 
+			userError := apierrors.NewUserFacingError(tryGetIntCorrelationID(c), err)
 			c.AbortWithStatusJSON(
 				http.StatusInternalServerError,
-				err,
+				userError,
 			)
 
 			return
@@ -138,12 +139,29 @@ func (r *Router) handleErrors(c *gin.Context) {
 		return
 	}
 
-	rerr := deps.Error{}
-	if !errors.As(l, &rerr) {
-		panic(l)
+	err := &apierrors.Error{}
+	if !errors.As(l, &err) {
+		panic(fmt.Sprintf("expected to receive error of type *apierrors.Errors, got %T with content: %v", l, l))
 	}
 
-	c.JSON(rerr.StatusCode, rerr)
+	keysAndValues := append(err.LogKeysAndValues, "error", err)
+	d := deps.GetDeps(c)
+	d.Logger.Errorw(
+		err.Error(),
+		keysAndValues...,
+	)
+
+	id := tryGetIntCorrelationID(c)
+	userError := apierrors.NewUserFacingError(id, err)
+	c.JSON(err.StatusCode, userError)
+}
+
+func tryGetIntCorrelationID(c *gin.Context) string {
+	id, ok := c.Request.Context().Value(logging.IntCorrelationIDName).(string)
+	if !ok {
+		return ""
+	}
+	return id
 }
 
 func registerRoutes(engine *gin.Engine) {
