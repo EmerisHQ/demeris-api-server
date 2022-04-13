@@ -28,6 +28,7 @@ import (
 const (
 	aprCacheDuration = 24 * time.Hour
 	aprCachePrefix   = "api-server/chain-aprs"
+	osmosisChainName = "osmosis"
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -1319,6 +1320,11 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 			_ = c.Error(e)
 
 			return "", err
+		}
+
+		// only 25% of the newly minted tokens are distributed as staking rewards for osmosis
+		if strings.ToLower(chain.ChainName) == osmosisChainName {
+			inflation = inflation.QuoInt64(4)
 		}
 
 		// calculate staking APR
