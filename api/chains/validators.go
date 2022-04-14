@@ -24,6 +24,12 @@ const (
 // @Tags Chain
 // @ID validators
 // @Description Gets list of validators for a chain.
+// @Description
+// @Description These are the numerical value  correspondence of validator status.
+// @Description 0: "BOND_STATUS_UNSPECIFIED"
+// @Description	1: "BOND_STATUS_UNBONDED"
+// @Description	2: "BOND_STATUS_UNBONDING"
+// @Description	3: "BOND_STATUS_BONDED"
 // @Produce json
 // @Success 200 {object} ValidatorsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
