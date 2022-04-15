@@ -10,13 +10,13 @@ import (
 	_ "github.com/gravity-devs/liquidity/x/liquidity/types"
 )
 
-func Register(router *gin.Engine) {
+func Register(router *gin.Engine, d *deps.Deps) {
 	group := router.Group("/cached/cosmos")
 
-	group.GET("/liquidity/v1beta1/pools", getPools)
-	group.GET("/liquidity/v1beta1/params", getParams)
-	group.GET("/bank/v1beta1/supply", getSupply)
-	group.GET("/node_info", getNodeInfo)
+	group.GET("/liquidity/v1beta1/pools", getPools(d))
+	group.GET("/liquidity/v1beta1/params", getParams(d))
+	group.GET("/bank/v1beta1/supply", getSupply(d))
+	group.GET("/node_info", getNodeInfo(d))
 }
 
 // getPools returns the of all pools.
@@ -28,24 +28,24 @@ func Register(router *gin.Engine) {
 // @Success 200 {object} types.QueryLiquidityPoolsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/pools [get]
-func getPools(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getPools(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		res, err := d.Store.GetPools()
+		if err != nil {
+			e := apierrors.New(
+				"pools",
+				fmt.Sprintf("cannot retrieve pools"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot query pools: %w", err),
+			)
+			_ = c.Error(e)
 
-	res, err := d.Store.GetPools()
-	if err != nil {
-		e := apierrors.New(
-			"pools",
-			fmt.Sprintf("cannot retrieve pools"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot query pools: %w", err),
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getParams returns the params of liquidity module.
@@ -57,24 +57,25 @@ func getPools(c *gin.Context) {
 // @Success 200 {object} types.QueryParamsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/params [get]
-func getParams(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getParams(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	res, err := d.Store.GetParams()
-	if err != nil {
-		e := apierrors.New(
-			"params",
-			fmt.Sprintf("cannot retrieve params"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve params: %w", err),
-		)
-		_ = c.Error(e)
+		res, err := d.Store.GetParams()
+		if err != nil {
+			e := apierrors.New(
+				"params",
+				fmt.Sprintf("cannot retrieve params"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve params: %w", err),
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getSupply returns the total supply.
@@ -86,24 +87,25 @@ func getParams(c *gin.Context) {
 // @Success 200 {object} types.QueryTotalSupplyResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
-func getSupply(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getSupply(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	res, err := d.Store.GetSupply()
-	if err != nil {
-		e := apierrors.New(
-			"supply",
-			fmt.Sprintf("cannot retrieve total supply"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve total supply: %w", err),
-		)
-		_ = c.Error(e)
+		res, err := d.Store.GetSupply()
+		if err != nil {
+			e := apierrors.New(
+				"supply",
+				fmt.Sprintf("cannot retrieve total supply"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve total supply: %w", err),
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getNodeInfo returns output of Cosmos's /node_info endpoint.
@@ -115,22 +117,23 @@ func getSupply(c *gin.Context) {
 // @Success 200 {object} types.QueryTotalSupplyResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
-func getNodeInfo(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getNodeInfo(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	res, err := d.Store.GetNodeInfo()
-	if err != nil {
-		e := apierrors.New(
-			"node_info",
-			fmt.Sprintf("cannot retrieve node_info"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve node_info: %w", err),
-		)
-		_ = c.Error(e)
+		res, err := d.Store.GetNodeInfo()
+		if err != nil {
+			e := apierrors.New(
+				"node_info",
+				fmt.Sprintf("cannot retrieve node_info"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve node_info: %w", err),
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }

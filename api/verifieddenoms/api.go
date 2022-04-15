@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine) {
-	router.GET("/verified_denoms", GetVerifiedDenoms)
+func Register(router *gin.Engine, d *deps.Deps) {
+	router.GET("/verified_denoms", GetVerifiedDenoms(d))
 }
 
 // GetVerifiedDenoms returns the list of verified denoms.
@@ -22,34 +22,34 @@ func Register(router *gin.Engine) {
 // @Success 200 {object} VerifiedDenomsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /verified_denoms [get]
-func GetVerifiedDenoms(c *gin.Context) {
-	var res VerifiedDenomsResponse
+func GetVerifiedDenoms(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res VerifiedDenomsResponse
 
-	d := deps.GetDeps(c)
+		chains, err := d.Database.Chains()
 
-	chains, err := d.Database.Chains()
+		if err != nil {
+			e := apierrors.New(
+				"verified_denoms",
+				fmt.Sprintf("cannot retrieve chains"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chains: %w", err),
+			)
+			_ = c.Error(e)
 
-	if err != nil {
-		e := apierrors.New(
-			"verified_denoms",
-			fmt.Sprintf("cannot retrieve chains"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chains: %w", err),
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	for _, cc := range chains {
-		for _, vd := range cc.VerifiedTokens() {
-			res.VerifiedDenoms = append(res.VerifiedDenoms, VerifiedDenom{
-				Denom:     vd,
-				ChainName: cc.ChainName,
-			})
+			return
 		}
-	}
 
-	c.JSON(http.StatusOK, res)
+		for _, cc := range chains {
+			for _, vd := range cc.VerifiedTokens() {
+				res.VerifiedDenoms = append(res.VerifiedDenoms, VerifiedDenom{
+					Denom:     vd,
+					ChainName: cc.ChainName,
+				})
+			}
+		}
+
+		c.JSON(http.StatusOK, res)
+	}
 }

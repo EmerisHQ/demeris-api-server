@@ -167,34 +167,33 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 func registerRoutes(engine *gin.Engine, d *deps.Deps) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
-	account.Register(engine)
+	account.Register(engine, d)
 
 	// @tag.name Denoms
 	// @tag.description Denoms-related endpoints
-	verifieddenoms.Register(engine)
+	verifieddenoms.Register(engine, d)
 
 	// @tag.name Chain
 	// @tag.description Chain-related endpoints
-	chains.Register(engine)
+	chains.Register(engine, d)
 
 	// @tag.name Transactions
 	// @tag.description Transaction-related endpoints
-	tx.Register(engine)
+	tx.Register(engine, d)
 
 	// @tag.name Relayer
 	// @tag.description Relayer-related endpoints
-	relayer.Register(engine)
+	relayer.Register(engine, d)
 
 	// @tag.name Block
 	// @tag.description Blocks-related endpoints
-	block.Register(engine)
+	block.Register(engine, d)
 
 	// @tag.name liquidity
 	// @tag.description pool-related endpoints
-	liquidity.Register(engine)
+	liquidity.Register(engine, d)
 
 	// @tag.name cached
 	// @tag.description cached data endpoints
-	cached.Register(engine)
-
+	cached.Register(engine, d)
 }
