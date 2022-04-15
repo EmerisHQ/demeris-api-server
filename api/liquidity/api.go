@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
+func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 	group := router.Group("/pool")
 
-	group.GET("/:poolId/swapfees", getSwapFee(d))
+	group.GET("/:poolId/swapfees", getSwapFee(db, s))
 }
 
 // getSwapFee returns the swap fee of past 1 hour n.
@@ -26,12 +27,12 @@ func Register(router *gin.Engine, d *deps.Deps) {
 // @Success 200 {object} SwapFeesResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /pool/{poolID}/swapfees [get]
-func getSwapFee(d *deps.Deps) gin.HandlerFunc {
+func getSwapFee(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		poolId := c.Param("poolId")
 
-		res, err := d.Store.GetSwapFees(poolId)
+		res, err := s.GetSwapFees(poolId)
 		if err != nil {
 			e := apierrors.New(
 				"swap fees",

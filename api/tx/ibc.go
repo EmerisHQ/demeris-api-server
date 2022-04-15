@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
@@ -51,14 +51,14 @@ func getIBCSeqFromTx(data []byte) []string {
 // @Success 200 {object} DestTxResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /tx/{srcChain}/{destChain}/{txHash} [get]
-func GetDestTx(d *deps.Deps) gin.HandlerFunc {
+func GetDestTx(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		srcChain := c.Param("src-chain")
 		destChain := c.Param("dest-chain")
 		txHash := c.Param("tx-hash")
 
-		srcChainInfo, err := d.Database.Chain(srcChain)
+		srcChainInfo, err := db.Chain(srcChain)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -75,7 +75,7 @@ func GetDestTx(d *deps.Deps) gin.HandlerFunc {
 		}
 
 		// validate destination srcChainInfo is present
-		destChainInfo, err := d.Database.Chain(destChain)
+		destChainInfo, err := db.Chain(destChain)
 		if err != nil {
 			e := apierrors.New(
 				"chains",

@@ -4,30 +4,31 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
-	router.GET("/chains", GetChains(d))
-	router.GET("/chains/fee/addresses", GetFeeAddresses(d))
+func Register(router *gin.Engine, db *database.Database, s *store.Store) {
+	router.GET("/chains", GetChains(db))
+	router.GET("/chains/fee/addresses", GetFeeAddresses(db))
 
 	chain := router.Group("/chain/:chain")
 
-	chain.GET("/denom/verify_trace/:hash", VerifyTrace(d))
+	chain.GET("/denom/verify_trace/:hash", VerifyTrace(db))
 
 	chain.Group("").
-		Use(RequireChainEnabled("chain", d)).
-		GET("/primary_channels", GetPrimaryChannels(d)).
-		GET("/primary_channel/:counterparty", GetPrimaryChannelWithCounterparty(d)).
-		GET("/validators", GetValidators(d))
+		Use(RequireChainEnabled("chain", db)).
+		GET("/primary_channels", GetPrimaryChannels(db)).
+		GET("/primary_channel/:counterparty", GetPrimaryChannelWithCounterparty(db)).
+		GET("/validators", GetValidators(db, s))
 
 	chain.Group("").
-		Use(GetChainMiddleware("chain", d)).
+		Use(GetChainMiddleware("chain", db)).
 		GET("", GetChain).
 		GET("/bech32", GetChainBech32Config).
-		GET("/status", GetChainStatus(d)).
+		GET("/status", GetChainStatus(db)).
 		GET("/supply", GetChainSupply).
 		GET("/supply/:denom", GetDenomSupply).
 		GET("/txs/:tx", GetChainTx).
@@ -37,13 +38,13 @@ func Register(router *gin.Engine, d *deps.Deps) {
 		GET("/mint/annual_provisions", GetAnnualProvisions).
 		GET("/mint/epoch_provisions", GetEpochProvisions).
 		GET("/staking/params", GetStakingParams).
-		GET("/apr", GetStakingAPR(d)).
+		GET("/apr", GetStakingAPR(db, s)).
 		GET("/staking/pool", GetStakingPool)
 
 	chain.Group("/fee").
-		GET("", GetFee(d)).
-		GET("/address", GetFeeAddress(d)).
-		GET("/token", GetFeeToken(d))
+		GET("", GetFee(db)).
+		GET("/address", GetFeeAddress(db)).
+		GET("/token", GetFeeToken(db))
 }
 
 const (
@@ -52,12 +53,12 @@ const (
 
 // GetChainMiddleware the chain from the database and sets its cns.Chain
 // definition into the context.
-func GetChainMiddleware(chainNameParamKey string, d *deps.Deps) gin.HandlerFunc {
+func GetChainMiddleware(chainNameParamKey string, db *database.Database) gin.HandlerFunc {
 	// TODO: pass deps to GetChainMiddleware instead of taking them from context
 	return func(c *gin.Context) {
 		chainName := c.Param(chainNameParamKey)
 
-		chain, err := d.Database.Chain(chainName)
+		chain, err := db.Chain(chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -80,11 +81,11 @@ func GetChainMiddleware(chainNameParamKey string, d *deps.Deps) gin.HandlerFunc 
 
 // RequireChainEnabled checks if the chain exists and it's enabled in the database,
 // if it's not it returns an error to the user.
-func RequireChainEnabled(chainNameParamKey string, d *deps.Deps) gin.HandlerFunc {
+func RequireChainEnabled(chainNameParamKey string, db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		chainName := c.Param(chainNameParamKey)
 
-		if exists, err := d.Database.ChainExists(chainName); err != nil || !exists {
+		if exists, err := db.ChainExists(chainName); err != nil || !exists {
 			if err == nil {
 				err = fmt.Errorf("%s chain doesnt exists", chainName)
 			}

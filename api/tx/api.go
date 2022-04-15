@@ -5,19 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/emeris-utils/store"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
-	router.POST("/tx/:chain", Tx(d))
-	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx(d))
-	router.POST("/tx/:chain/simulate", GetTxFeeEstimate(d))
-	router.GET("/tx/ticket/:chain/:ticket", GetTicket(d))
+func Register(router *gin.Engine, db *database.Database, s *store.Store) {
+	router.POST("/tx/:chain", Tx(db, s))
+	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx(db))
+	router.POST("/tx/:chain/simulate", GetTxFeeEstimate(db))
+	router.GET("/tx/ticket/:chain/:ticket", GetTicket(db, s))
 }
 
 // Tx relays a transaction to an internal node for the specified chain.
@@ -30,7 +31,7 @@ func Register(router *gin.Engine, d *deps.Deps) {
 // @Success 200 {object} TxResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/{chainName} [post]
-func Tx(d *deps.Deps) gin.HandlerFunc {
+func Tx(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// var tx typestx.Tx
 		var txRequest TxRequest
@@ -48,7 +49,7 @@ func Tx(d *deps.Deps) gin.HandlerFunc {
 			return
 		}
 
-		chain, err := d.Database.Chain(chainName)
+		chain, err := db.Chain(chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -80,7 +81,7 @@ func Tx(d *deps.Deps) gin.HandlerFunc {
 			return
 		}
 
-		txhash, err := relayTx(client, d, txRequest.TxBytes, chainName, txRequest.Owner)
+		txhash, err := relayTx(client, s, txRequest.TxBytes, chainName, txRequest.Owner)
 
 		if err != nil {
 			e := apierrors.New("tx", fmt.Sprintf("relaying tx failed, %v", err), http.StatusBadRequest).WithLogContext(
@@ -100,7 +101,7 @@ func Tx(d *deps.Deps) gin.HandlerFunc {
 // relayTx relays the tx to the specifc endpoint
 // relayTx will also perform the ticketing mechanism
 // Always expect broadcast mode to be `async`
-func relayTx(services sdkutilities.Client, d *deps.Deps, txBytes []byte, chainName string, owner string) (string, error) {
+func relayTx(services sdkutilities.Client, store *store.Store, txBytes []byte, chainName string, owner string) (string, error) {
 	res, err := services.BroadcastTx(context.Background(), &sdkutilities.BroadcastTxPayload{
 		ChainName: chainName,
 		TxBytes:   txBytes,
@@ -110,7 +111,7 @@ func relayTx(services sdkutilities.Client, d *deps.Deps, txBytes []byte, chainNa
 		return "", err
 	}
 
-	err = d.Store.CreateTicket(chainName, res.Hash, owner)
+	err = store.CreateTicket(chainName, res.Hash, owner)
 
 	if err != nil {
 		return res.Hash, err
@@ -130,13 +131,13 @@ func relayTx(services sdkutilities.Client, d *deps.Deps, txBytes []byte, chainNa
 // @Success 200 {object} store.Ticket
 // @Failure 400 {object} apierrors.UserFacingError
 // @Router /tx/ticket/{chainName}/{ticketId} [get]
-func GetTicket(d *deps.Deps) gin.HandlerFunc {
+func GetTicket(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		chainName := c.Param("chain")
 		ticketId := c.Param("ticket")
 
-		ticket, err := d.Store.Get(fmt.Sprintf("%s/%s", chainName, ticketId))
+		ticket, err := s.Get(fmt.Sprintf("%s/%s", chainName, ticketId))
 
 		if err != nil {
 			e := apierrors.New(
@@ -167,7 +168,7 @@ func GetTicket(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} TxFeeEstimateRes
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/fees/{chainName} [post]
-func GetTxFeeEstimate(d *deps.Deps) gin.HandlerFunc {
+func GetTxFeeEstimate(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var txRequest TxFeeEstimateReq
 
@@ -183,7 +184,7 @@ func GetTxFeeEstimate(d *deps.Deps) gin.HandlerFunc {
 			return
 		}
 
-		chain, err := d.Database.Chain(chainName)
+		chain, err := db.Chain(chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
@@ -19,13 +19,13 @@ import (
 // @Success 200 {object} FeeResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/fee [get]
-func GetFee(d *deps.Deps) gin.HandlerFunc {
+func GetFee(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res FeeResponse
 
 		chainName := c.Param("chain")
 
-		chain, err := d.Database.Chain(chainName)
+		chain, err := db.Chain(chainName)
 
 		if err != nil {
 			e := apierrors.New(
@@ -60,13 +60,13 @@ func GetFee(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} FeeAddressResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/address [get]
-func GetFeeAddress(d *deps.Deps) gin.HandlerFunc {
+func GetFeeAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res FeeAddressResponse
 
 		chainName := c.Param("chain")
 
-		chain, err := d.Database.Chain(chainName)
+		chain, err := db.Chain(chainName)
 
 		if err != nil {
 			e := apierrors.New(
@@ -100,11 +100,11 @@ func GetFeeAddress(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} FeeAddressesResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chains/fee/addresses [get]
-func GetFeeAddresses(d *deps.Deps) gin.HandlerFunc {
+func GetFeeAddresses(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res FeeAddressesResponse
 
-		chains, err := d.Database.Chains()
+		chains, err := db.Chains()
 
 		if err != nil {
 			e := apierrors.New(
@@ -143,13 +143,13 @@ func GetFeeAddresses(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} FeeTokenResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/token [get]
-func GetFeeToken(d *deps.Deps) gin.HandlerFunc {
+func GetFeeToken(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res FeeTokenResponse
 
 		chainName := c.Param("chain")
 
-		chain, err := d.Database.Chain(chainName)
+		chain, err := db.Chain(chainName)
 
 		if err != nil {
 			e := apierrors.New(

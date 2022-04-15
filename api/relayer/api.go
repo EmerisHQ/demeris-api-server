@@ -16,16 +16,15 @@ import (
 	cnsmodels "github.com/emerishq/demeris-backend-models/cns"
 
 	v1 "github.com/allinbits/starport-operator/api/v1"
-	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, d *deps.Deps, i *Informer) {
+func Register(router *gin.Engine, db *database.Database, i *Informer) {
 	rel := router.Group("/relayer")
 
 	rel.GET("/status", getRelayerStatus(i))
-	rel.GET("/balance", getRelayerBalance(d, i))
+	rel.GET("/balance", getRelayerBalance(db, i))
 }
 
 // getRelayerStatus returns status of relayer.
@@ -94,7 +93,7 @@ func getRelayerStatus(ri *Informer) gin.HandlerFunc {
 // @Success 200 {object} RelayerBalances
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /relayer/balance [get]
-func getRelayerBalance(d *deps.Deps, ri *Informer) gin.HandlerFunc {
+func getRelayerBalance(db *database.Database, ri *Informer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res RelayerBalances
 
@@ -139,7 +138,7 @@ func getRelayerBalance(d *deps.Deps, ri *Informer) gin.HandlerFunc {
 			addresses = append(addresses, cs.AccountAddress)
 		}
 
-		thresh, err := relayerThresh(chains, d.Database)
+		thresh, err := relayerThresh(chains, db)
 		if err != nil {
 			e := apierrors.New(
 				"status",
@@ -159,7 +158,7 @@ func getRelayerBalance(d *deps.Deps, ri *Informer) gin.HandlerFunc {
 				continue
 			}
 
-			enough, err := enoughBalance(addresses[i], t, d.Database)
+			enough, err := enoughBalance(addresses[i], t, db)
 			if err != nil {
 				e := apierrors.New(
 					"status",

@@ -7,6 +7,7 @@ import (
 
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/emerishq/emeris-utils/logging"
+	"github.com/emerishq/emeris-utils/store"
 	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
-	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/sdkservice"
@@ -23,14 +23,14 @@ import (
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
+func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 	group := router.Group("/account/:address")
-	group.GET("/balance", GetBalancesByAddress(d))
-	group.GET("/stakingbalances", GetDelegationsByAddress(d))
-	group.GET("/unbondingdelegations", GetUnbondingDelegationsByAddress(d))
-	group.GET("/numbers", GetNumbersByAddress(d))
-	group.GET("/tickets", GetUserTickets(d))
-	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(d))
+	group.GET("/balance", GetBalancesByAddress(db))
+	group.GET("/stakingbalances", GetDelegationsByAddress(db))
+	group.GET("/unbondingdelegations", GetUnbondingDelegationsByAddress(db))
+	group.GET("/numbers", GetNumbersByAddress(db))
+	group.GET("/tickets", GetUserTickets(db, s))
+	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(db))
 }
 
 // GetBalancesByAddress returns account of an address.
@@ -43,13 +43,13 @@ func Register(router *gin.Engine, d *deps.Deps) {
 // @Success 200 {object} BalancesResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/balance [get]
-func GetBalancesByAddress(d *deps.Deps) gin.HandlerFunc {
+func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res BalancesResponse
 
 		address := c.Param("address")
 
-		balances, err := d.Database.Balances(address)
+		balances, err := db.Balances(address)
 
 		if err != nil {
 			e := apierrors.New(
@@ -65,7 +65,7 @@ func GetBalancesByAddress(d *deps.Deps) gin.HandlerFunc {
 			return
 		}
 
-		vd, err := verifiedDenomsMap(d.Database)
+		vd, err := verifiedDenomsMap(db)
 		if err != nil {
 			e := apierrors.New(
 				"account",
@@ -87,7 +87,7 @@ func GetBalancesByAddress(d *deps.Deps) gin.HandlerFunc {
 			res.Balances = append(res.Balances, balanceRespForBalance(
 				b,
 				vd,
-				d.Database.DenomTrace,
+				db.DenomTrace,
 			))
 		}
 
@@ -166,13 +166,13 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @Success 200 {object} StakingBalancesResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/stakingbalance [get]
-func GetDelegationsByAddress(d *deps.Deps) gin.HandlerFunc {
+func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res StakingBalancesResponse
 
 		address := c.Param("address")
 
-		dl, err := d.Database.Delegations(address)
+		dl, err := db.Delegations(address)
 
 		if err != nil {
 			e := apierrors.New(
@@ -211,13 +211,13 @@ func GetDelegationsByAddress(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} UnbondingDelegationsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/unbondingdelegations [get]
-func GetUnbondingDelegationsByAddress(d *deps.Deps) gin.HandlerFunc {
+func GetUnbondingDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res UnbondingDelegationsResponse
 
 		address := c.Param("address")
 
-		unbondings, err := d.Database.UnbondingDelegations(address)
+		unbondings, err := db.UnbondingDelegations(address)
 
 		if err != nil {
 			e := apierrors.New(
@@ -257,7 +257,7 @@ func GetUnbondingDelegationsByAddress(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} DelegatorRewardsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/delegatorrewards/{chain} [get]
-func GetDelegatorRewards(d *deps.Deps) gin.HandlerFunc {
+func GetDelegatorRewards(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res DelegatorRewardsResponse
 
@@ -266,7 +266,7 @@ func GetDelegatorRewards(d *deps.Deps) gin.HandlerFunc {
 		address := c.Param("address")
 		chainName := c.Param("chain")
 
-		chain, err := d.Database.Chain(chainName)
+		chain, err := db.Chain(chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -360,7 +360,7 @@ func GetDelegatorRewards(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} NumbersResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/numbers [get]
-func GetNumbersByAddress(d *deps.Deps) gin.HandlerFunc {
+func GetNumbersByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res NumbersResponse
 
@@ -368,14 +368,14 @@ func GetNumbersByAddress(d *deps.Deps) gin.HandlerFunc {
 
 		address := c.Param("address")
 
-		dd, err := d.Database.Chains()
+		dd, err := db.Chains()
 		logger.Debugw("chain names", "chain names", dd, "error", err)
 
 		/*
 			PSA: do not remove this comment, this is the proper tracelistener-based implementation of this endpoint,
 			which will  be used some time in the future as soon as we fix the auth mismatch error.
 
-			dl, err := d.Database.Numbers(address)
+			dl, err := db.Numbers(address)
 
 			if err != nil {
 				e := apierrors.New(
@@ -413,12 +413,12 @@ func GetNumbersByAddress(d *deps.Deps) gin.HandlerFunc {
 	}
 }
 
-func GetUserTickets(d *deps.Deps) gin.HandlerFunc {
+func GetUserTickets(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		address := c.Param("address")
 
-		tickets, err := d.Store.GetUserTickets(address)
+		tickets, err := s.GetUserTickets(address)
 		if err != nil {
 			e := apierrors.New(
 				"tickets",

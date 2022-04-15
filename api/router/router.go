@@ -25,7 +25,6 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/account"
 	"github.com/emerishq/demeris-api-server/api/database"
-	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -75,14 +74,9 @@ func New(
 	engine.RedirectTrailingSlash = false
 	engine.RedirectFixedPath = false
 
-	d := &deps.Deps{
-		Database: r.DB,
-		Store:    r.s,
-	}
-
 	relayersInformer := relayer.NewInformer(genericInformer, kubeNamespace)
 
-	registerRoutes(engine, d, relayersInformer)
+	registerRoutes(engine, r.DB, r.s, relayersInformer)
 
 	return r
 }
@@ -157,36 +151,36 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 	return id
 }
 
-func registerRoutes(engine *gin.Engine, d *deps.Deps, relayersInformer *relayer.Informer) {
+func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, relayersInformer *relayer.Informer) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
-	account.Register(engine, d)
+	account.Register(engine, db, s)
 
 	// @tag.name Denoms
 	// @tag.description Denoms-related endpoints
-	verifieddenoms.Register(engine, d)
+	verifieddenoms.Register(engine, db)
 
 	// @tag.name Chain
 	// @tag.description Chain-related endpoints
-	chains.Register(engine, d)
+	chains.Register(engine, db, s)
 
 	// @tag.name Transactions
 	// @tag.description Transaction-related endpoints
-	tx.Register(engine, d)
+	tx.Register(engine, db, s)
 
 	// @tag.name Relayer
 	// @tag.description Relayer-related endpoints
-	relayer.Register(engine, d, relayersInformer)
+	relayer.Register(engine, db, relayersInformer)
 
 	// @tag.name Block
 	// @tag.description Blocks-related endpoints
-	block.Register(engine, d)
+	block.Register(engine, db, s)
 
 	// @tag.name liquidity
 	// @tag.description pool-related endpoints
-	liquidity.Register(engine, d)
+	liquidity.Register(engine, db, s)
 
 	// @tag.name cached
 	// @tag.description cached data endpoints
-	cached.Register(engine, d)
+	cached.Register(engine, db, s)
 }
