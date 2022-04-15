@@ -208,9 +208,7 @@ func VerifyTrace(c *gin.Context) {
 	chainName := c.Param("chain")
 	hash := c.Param("hash")
 
-	hash = strings.ToLower(hash)
-
-	res.VerifiedTrace.IbcDenom = fmt.Sprintf("ibc/%s", hash)
+	res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
 
 	denomTrace, err := d.Database.DenomTrace(chainName, hash)
 
