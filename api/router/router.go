@@ -77,12 +77,19 @@ func New(
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
 	engine.Use(r.catchPanicsFunc)
-	engine.Use(r.decorateCtxWithDeps)
 	engine.Use(r.handleErrors)
 	engine.RedirectTrailingSlash = false
 	engine.RedirectFixedPath = false
 
-	registerRoutes(engine)
+	d := &deps.Deps{
+		Database:         r.DB,
+		Store:            r.s,
+		KubeNamespace:    r.k8sNamespace,
+		K8S:              &r.k8s,
+		RelayersInformer: r.relayersInformer,
+	}
+
+	registerRoutes(engine, d)
 
 	return r
 }
@@ -117,16 +124,6 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 		}
 	}()
 	c.Next()
-}
-
-func (r *Router) decorateCtxWithDeps(c *gin.Context) {
-	c.Set("deps", &deps.Deps{
-		Database:         r.DB,
-		Store:            r.s,
-		KubeNamespace:    r.k8sNamespace,
-		K8S:              &r.k8s,
-		RelayersInformer: r.relayersInformer,
-	})
 }
 
 func (r *Router) handleErrors(c *gin.Context) {
@@ -167,7 +164,7 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 	return id
 }
 
-func registerRoutes(engine *gin.Engine) {
+func registerRoutes(engine *gin.Engine, d *deps.Deps) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
 	account.Register(engine)
