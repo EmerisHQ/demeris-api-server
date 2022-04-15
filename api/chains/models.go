@@ -81,12 +81,15 @@ func (d IBCDenomHash) MarshalJSON() ([]byte, error) {
 }
 
 type VerifiedTrace struct {
-	IbcDenom  IBCDenomHash `json:"ibc_denom,omitempty"`
-	BaseDenom string       `json:"base_denom,omitempty"`
-	Verified  bool         `json:"verified"`
-	Path      string       `json:"path,omitempty"`
-	Trace     []Trace      `json:"trace,omitempty"`
-	Cause     string       `json:"cause,omitempty"`
+	// IbcDenom is the identifier of this in denom in the form of "ibc/<hash>",
+	// where <hash> is uppercased.
+	IbcDenom IBCDenomHash `json:"ibc_denom,omitempty"`
+
+	BaseDenom string  `json:"base_denom,omitempty"`
+	Verified  bool    `json:"verified"`
+	Path      string  `json:"path,omitempty"`
+	Trace     []Trace `json:"trace,omitempty"`
+	Cause     string  `json:"cause,omitempty"`
 }
 
 type VerifiedTraceResponse struct {
