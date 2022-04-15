@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/api/apiutils"
@@ -22,6 +23,7 @@ import (
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/emeris-utils/logging"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
@@ -204,6 +206,7 @@ func VerifyTrace(c *gin.Context) {
 	var res VerifiedTraceResponse
 
 	d := deps.GetDeps(c)
+	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
 	chainName := c.Param("chain")
 	hash := c.Param("hash")
@@ -215,24 +218,19 @@ func VerifyTrace(c *gin.Context) {
 	denomTrace, err := d.Database.DenomTrace(chainName, hash)
 
 	if err != nil {
-
 		cause := fmt.Sprintf("token hash %v not found on chain %v", hash, chainName)
 
-		d.LogError(
+		logger.Errorw(
 			cause,
-			"hash",
-			hash,
-			"chainName",
-			chainName,
+			"hash", hash,
+			"chainName", chainName,
 		)
 
 		res.VerifiedTrace.Verified = false
 		res.VerifiedTrace.Cause = cause
 
 		c.JSON(http.StatusOK, res)
-
 		return
-
 	}
 
 	res.VerifiedTrace.Path = denomTrace.Path
@@ -244,14 +242,11 @@ func VerifyTrace(c *gin.Context) {
 
 		cause := fmt.Sprintf("unsupported path %s", res.VerifiedTrace.Path)
 
-		d.LogError(
+		logger.Errorw(
 			"invalid denom",
-			"hash",
-			hash,
-			"path",
-			res.VerifiedTrace.Path,
-			"err",
-			cause,
+			"hash", hash,
+			"path", res.VerifiedTrace.Path,
+			"err", cause,
 		)
 
 		res.VerifiedTrace.Verified = false
@@ -289,14 +284,11 @@ func VerifyTrace(c *gin.Context) {
 		if !strings.HasPrefix(element, "transfer/") {
 			cause := fmt.Sprintf("Unsupported path %s", res.VerifiedTrace.Path)
 
-			d.LogError(
+			logger.Errorw(
 				"invalid denom",
-				"hash",
-				hash,
-				"path",
-				res.VerifiedTrace.Path,
-				"err",
-				cause,
+				"hash", hash,
+				"path", res.VerifiedTrace.Path,
+				"err", cause,
 			)
 
 			res.VerifiedTrace.Verified = false
@@ -314,15 +306,11 @@ func VerifyTrace(c *gin.Context) {
 
 		chainID, ok := chainIDsMap[nextChain]
 		if !ok {
-
-			d.LogError(
+			logger.Errorw(
 				"cannot check path element during path resolution",
-				"hash",
-				hash,
-				"path",
-				res.VerifiedTrace.Path,
-				"err",
-				fmt.Errorf("cannot find %s in chainIDs map", nextChain),
+				"hash", hash,
+				"path", res.VerifiedTrace.Path,
+				"err", fmt.Errorf("cannot find %s in chainIDs map", nextChain),
 			)
 
 			res.VerifiedTrace.Verified = false
@@ -337,14 +325,11 @@ func VerifyTrace(c *gin.Context) {
 
 		if err != nil {
 			if errors.As(err, &database.ErrNoDestChain{}) {
-				d.LogError(
+				logger.Errorw(
 					err.Error(),
-					"hash",
-					hash,
-					"path",
-					res.VerifiedTrace.Path,
-					"chain",
-					chainName,
+					"hash", hash,
+					"path", res.VerifiedTrace.Path,
+					"chain", chainName,
 				)
 
 				res.VerifiedTrace.Verified = false
@@ -379,17 +364,12 @@ func VerifyTrace(c *gin.Context) {
 
 	nextChainData, err := d.Database.Chain(nextChain)
 	if err != nil {
-
-		d.LogError(
+		logger.Errorw(
 			"cannot query chain",
-			"hash",
-			hash,
-			"path",
-			res.VerifiedTrace.Path,
-			"nextChain",
-			nextChain,
-			"err",
-			err,
+			"hash", hash,
+			"path", res.VerifiedTrace.Path,
+			"nextChain", nextChain,
+			"err", err,
 		)
 
 		// we did not find any chain with name nextChain
@@ -443,7 +423,7 @@ func VerifyTrace(c *gin.Context) {
 		return
 	}
 
-	d.Logger.Debugw("last block time", "chain", nextChain, "time", cbt, "threshold_for_chain", nextChainData.ValidBlockThresh.Duration())
+	logger.Debugw("last block time", "chain", nextChain, "time", cbt, "threshold_for_chain", nextChainData.ValidBlockThresh.Duration())
 
 	if time.Since(cbt.BlockTime) > nextChainData.ValidBlockThresh.Duration() {
 		res.VerifiedTrace.Verified = false
@@ -508,6 +488,7 @@ func GetChainStatus(c *gin.Context) {
 	var res StatusResponse
 	d := deps.GetDeps(c)
 
+	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 	cbt, err := d.Database.ChainLastBlock(chain.ChainName)
@@ -517,7 +498,7 @@ func GetChainStatus(c *gin.Context) {
 		return
 	}
 
-	d.Logger.Debugw("last block time",
+	logger.Debugw("last block time",
 		"chain", chain.ChainName,
 		"time", cbt,
 		"threshold_for_chain", chain.ValidBlockThresh.Duration(),
@@ -1065,11 +1046,12 @@ func GetEpochProvisions(c *gin.Context) {
 // @Router /chain/{chainName}/APR [get]
 func GetStakingAPR(c *gin.Context) {
 	d := deps.GetDeps(c)
+	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
 	chainName := c.Param("chain")
 
 	aprCache := stringcache.NewStringCache(
-		d.Logger,
+		logger,
 		stringcache.NewStoreBackend(d.Store),
 		aprCacheDuration,
 		aprCachePrefix,

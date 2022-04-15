@@ -8,10 +8,13 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/lib/keybase"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/emerishq/emeris-utils/logging"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 const (
@@ -35,6 +38,7 @@ const (
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /validators [get]
 func GetValidators(c *gin.Context) {
+	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 	var res ValidatorsResponse
 
 	d := deps.GetDeps(c)
@@ -57,7 +61,7 @@ func GetValidators(c *gin.Context) {
 
 	adaptValidators := make([]*Validator, 0, len(validators))
 	avatarCache := stringcache.NewStringCache(
-		d.Logger,
+		logger,
 		stringcache.NewStoreBackend(d.Store),
 		avatarCacheDuration,
 		avatarCachePrefix,
@@ -66,7 +70,7 @@ func GetValidators(c *gin.Context) {
 	for _, v := range validators {
 		adapted, err := adaptValidator(c.Request.Context(), avatarCache, v)
 		if err != nil {
-			d.Logger.Warnw(
+			logger.Warnw(
 				"cannot get avatar for validator",
 				"validatorIdentity", v.Identity,
 				"error", err,
