@@ -64,8 +64,6 @@ func TestGetChain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			// arrange
 			// if we have a populated Chain store, add it
 			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
@@ -104,8 +102,6 @@ func TestGetChain(t *testing.T) {
 func TestGetChains(t *testing.T) {
 	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			// arrange
 			// if we have a populated Chain store, add it
 			if len(tt.dataStruct) != 0 {
@@ -142,8 +138,6 @@ func TestGetChains(t *testing.T) {
 }
 
 func TestVerifyTrace(t *testing.T) {
-	t.Parallel()
-
 	utils.RunTraceListnerMigrations(testingCtx, t)
 
 	for i, tt := range verifyTraceTestCases {
@@ -189,6 +183,8 @@ func toSupportedChain(c cns.Chain) chains.SupportedChain {
 }
 
 func TestGetChainStatus(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
 
 	tests := []struct {
 		name             string
@@ -226,7 +222,6 @@ func TestGetChainStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			// arrange
 			// if we have a populated Chain store, add it
 			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
@@ -261,7 +256,6 @@ func TestGetChainStatus(t *testing.T) {
 }
 
 func TestGetChainSupply(t *testing.T) {
-
 	tests := []struct {
 		name             string
 		dataStruct       cns.Chain
@@ -282,7 +276,6 @@ func TestGetChainSupply(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			// arrange
 			// if we have a populated Chain store, add it
 			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
