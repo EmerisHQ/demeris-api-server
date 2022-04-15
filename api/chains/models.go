@@ -81,7 +81,7 @@ func (d IBCDenomHash) MarshalJSON() ([]byte, error) {
 }
 
 type VerifiedTrace struct {
-	// IbcDenom is the identifier of this in denom in the form of "ibc/<hash>",
+	// IbcDenom is the identifier of this denom in the form of "ibc/<hash>",
 	// where <hash> is uppercased.
 	IbcDenom IBCDenomHash `json:"ibc_denom,omitempty"`
 
