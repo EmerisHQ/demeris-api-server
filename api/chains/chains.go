@@ -195,7 +195,7 @@ func GetPrimaryChannels(c *gin.Context) {
 // @ID verifyTrace
 // @Description Verifies that a trace hash is valid against a chain name.
 // @Param chainName path string true "chain name"
-// @Param hash path string true "trace hash, case insentitive"
+// @Param hash path string true "trace hash, case insensitive"
 // @Produce json
 // @Success 200 {object} VerifiedTraceResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
