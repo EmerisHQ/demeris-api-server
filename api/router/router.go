@@ -32,13 +32,10 @@ import (
 )
 
 type Router struct {
-	g                *gin.Engine
-	DB               *database.Database
-	l                *zap.SugaredLogger
-	s                *store.Store
-	k8s              kube.Client
-	k8sNamespace     string
-	relayersInformer informers.GenericInformer
+	g  *gin.Engine
+	DB *database.Database
+	l  *zap.SugaredLogger
+	s  *store.Store
 }
 
 func New(
@@ -47,7 +44,7 @@ func New(
 	s *store.Store,
 	kubeClient kube.Client,
 	kubeNamespace string,
-	relayersInformer informers.GenericInformer,
+	genericInformer informers.GenericInformer,
 	debug bool,
 ) *Router {
 	gin.SetMode(gin.ReleaseMode)
@@ -60,13 +57,10 @@ func New(
 
 	engine.Use(logging.AddLoggerMiddleware(l))
 	r := &Router{
-		g:                engine,
-		DB:               db,
-		l:                l,
-		s:                s,
-		k8s:              kubeClient,
-		k8sNamespace:     kubeNamespace,
-		relayersInformer: relayersInformer,
+		g:  engine,
+		DB: db,
+		l:  l,
+		s:  s,
 	}
 
 	r.metrics()
@@ -82,14 +76,13 @@ func New(
 	engine.RedirectFixedPath = false
 
 	d := &deps.Deps{
-		Database:         r.DB,
-		Store:            r.s,
-		KubeNamespace:    r.k8sNamespace,
-		K8S:              &r.k8s,
-		RelayersInformer: r.relayersInformer,
+		Database: r.DB,
+		Store:    r.s,
 	}
 
-	registerRoutes(engine, d)
+	relayersInformer := relayer.NewInformer(genericInformer, kubeNamespace)
+
+	registerRoutes(engine, d, relayersInformer)
 
 	return r
 }
@@ -164,7 +157,7 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 	return id
 }
 
-func registerRoutes(engine *gin.Engine, d *deps.Deps) {
+func registerRoutes(engine *gin.Engine, d *deps.Deps, relayersInformer *relayer.Informer) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
 	account.Register(engine, d)
@@ -183,7 +176,7 @@ func registerRoutes(engine *gin.Engine, d *deps.Deps) {
 
 	// @tag.name Relayer
 	// @tag.description Relayer-related endpoints
-	relayer.Register(engine, d)
+	relayer.Register(engine, d, relayersInformer)
 
 	// @tag.name Block
 	// @tag.description Blocks-related endpoints

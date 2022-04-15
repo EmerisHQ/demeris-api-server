@@ -21,11 +21,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
+func Register(router *gin.Engine, d *deps.Deps, i *Informer) {
 	rel := router.Group("/relayer")
 
-	rel.GET("/status", getRelayerStatus(d))
-	rel.GET("/balance", getRelayerBalance(d))
+	rel.GET("/status", getRelayerStatus(i))
+	rel.GET("/balance", getRelayerBalance(d, i))
 }
 
 // getRelayerStatus returns status of relayer.
@@ -37,12 +37,12 @@ func Register(router *gin.Engine, d *deps.Deps) {
 // @Success 200 {object} RelayerStatusResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /relayer/status [get]
-func getRelayerStatus(d *deps.Deps) gin.HandlerFunc {
+func getRelayerStatus(ri *Informer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res RelayerStatusResponse
 
-		obj, err := d.RelayersInformer.Lister().Get(k8stypes.NamespacedName{
-			Namespace: d.KubeNamespace,
+		obj, err := ri.Informer.Lister().Get(k8stypes.NamespacedName{
+			Namespace: ri.Namespace,
 			Name:      "relayer",
 		}.String())
 
@@ -94,12 +94,12 @@ func getRelayerStatus(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} RelayerBalances
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /relayer/balance [get]
-func getRelayerBalance(d *deps.Deps) gin.HandlerFunc {
+func getRelayerBalance(d *deps.Deps, ri *Informer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res RelayerBalances
 
-		obj, err := d.RelayersInformer.Lister().Get(k8stypes.NamespacedName{
-			Namespace: d.KubeNamespace,
+		obj, err := ri.Informer.Lister().Get(k8stypes.NamespacedName{
+			Namespace: ri.Namespace,
 			Name:      "relayer",
 		}.String())
 
