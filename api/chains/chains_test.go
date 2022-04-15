@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
@@ -164,6 +165,12 @@ func TestVerifyTrace(t *testing.T) {
 
 			if tt.cause != "" {
 				require.Contains(t, result["cause"], tt.cause)
+			}
+
+			if result["hash"] != nil {
+				h := result["hash"].(string)
+				require.Equal(t, "ibc/", h[:4])
+				require.Equal(t, strings.ToUpper(tt.hash), h[4:])
 			}
 
 			require.Equal(t, tt.verified, result["verified"], "result cause=%s", result["cause"])
