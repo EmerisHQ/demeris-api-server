@@ -42,35 +42,35 @@ const (
 // @Success 200 {object} ChainsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chains [get]
-func GetChains(c *gin.Context) {
-	var res ChainsResponse
+func GetChains(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res ChainsResponse
 
-	d := deps.GetDeps(c)
+		chains, err := d.Database.SimpleChains()
 
-	chains, err := d.Database.SimpleChains()
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve chains"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chains: %w", err),
+			)
+			_ = c.Error(e)
 
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve chains"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chains: %w", err),
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		for _, cc := range chains {
+			res.Chains = append(res.Chains, SupportedChain{
+				ChainName:   cc.ChainName,
+				DisplayName: cc.DisplayName,
+				Logo:        cc.Logo,
+			})
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	for _, cc := range chains {
-		res.Chains = append(res.Chains, SupportedChain{
-			ChainName:   cc.ChainName,
-			DisplayName: cc.DisplayName,
-			Logo:        cc.Logo,
-		})
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // GetChain returns chain information by specifying its name.
@@ -118,36 +118,37 @@ func GetChainBech32Config(c *gin.Context) {
 // @Success 200 {object} PrimaryChannelResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/primary_channel/{counterparty} [get]
-func GetPrimaryChannelWithCounterparty(c *gin.Context) {
-	var res PrimaryChannelResponse
+func GetPrimaryChannelWithCounterparty(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res PrimaryChannelResponse
 
-	d := deps.GetDeps(c)
-	chainName := c.Param("chain")
-	counterparty := c.Param("counterparty")
-	chain, err := d.Database.PrimaryChannelCounterparty(chainName, counterparty)
-	if err != nil {
-		e := apierrors.New(
-			"primarychannel",
-			fmt.Sprintf("cannot retrieve primary channel between %v and %v", chainName, counterparty),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain: %w", err),
-			"name",
-			chainName,
-			"counterparty",
-			counterparty,
-		)
-		_ = c.Error(e)
+		chainName := c.Param("chain")
+		counterparty := c.Param("counterparty")
+		chain, err := d.Database.PrimaryChannelCounterparty(chainName, counterparty)
+		if err != nil {
+			e := apierrors.New(
+				"primarychannel",
+				fmt.Sprintf("cannot retrieve primary channel between %v and %v", chainName, counterparty),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
+				"name",
+				chainName,
+				"counterparty",
+				counterparty,
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		res.Channel = PrimaryChannel{
+			Counterparty: counterparty,
+			ChannelName:  chain.ChannelName,
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	res.Channel = PrimaryChannel{
-		Counterparty: counterparty,
-		ChannelName:  chain.ChannelName,
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // GetPrimaryChannels returns the primary channels of a chain.
@@ -160,35 +161,36 @@ func GetPrimaryChannelWithCounterparty(c *gin.Context) {
 // @Success 200 {object} PrimaryChannelsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/primary_channel [get]
-func GetPrimaryChannels(c *gin.Context) {
-	var res PrimaryChannelsResponse
+func GetPrimaryChannels(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res PrimaryChannelsResponse
 
-	d := deps.GetDeps(c)
-	chainName := c.Param("chain")
-	chain, err := d.Database.PrimaryChannels(chainName)
-	if err != nil {
-		e := apierrors.New(
-			"primarychannel",
-			fmt.Sprintf("cannot retrieve primary channels for %v", chainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain: %w", err),
-			"name",
-			chainName,
-		)
-		_ = c.Error(e)
+		chainName := c.Param("chain")
+		chain, err := d.Database.PrimaryChannels(chainName)
+		if err != nil {
+			e := apierrors.New(
+				"primarychannel",
+				fmt.Sprintf("cannot retrieve primary channels for %v", chainName),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
+				"name",
+				chainName,
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		for _, cc := range chain {
+			res.Channels = append(res.Channels, PrimaryChannel{
+				Counterparty: cc.Counterparty,
+				ChannelName:  cc.ChannelName,
+			})
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	for _, cc := range chain {
-		res.Channels = append(res.Channels, PrimaryChannel{
-			Counterparty: cc.Counterparty,
-			ChannelName:  cc.ChannelName,
-		})
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // VerifyTrace verifies that a trace hash is valid against a chain name.
@@ -202,85 +204,43 @@ func GetPrimaryChannels(c *gin.Context) {
 // @Success 200 {object} VerifiedTraceResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
-func VerifyTrace(c *gin.Context) {
-	var res VerifiedTraceResponse
+func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res VerifiedTraceResponse
 
-	d := deps.GetDeps(c)
-	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
-	chainName := c.Param("chain")
-	hash := c.Param("hash")
+		chainName := c.Param("chain")
+		hash := c.Param("hash")
 
-	res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
+		res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
 
-	denomTrace, err := d.Database.DenomTrace(chainName, hash)
+		denomTrace, err := d.Database.DenomTrace(chainName, hash)
 
-	if err != nil {
-		cause := fmt.Sprintf("token hash %v not found on chain %v", hash, chainName)
+		if err != nil {
+			cause := fmt.Sprintf("token hash %v not found on chain %v", hash, chainName)
 
-		logger.Errorw(
-			cause,
-			"hash", hash,
-			"chainName", chainName,
-		)
+			logger.Errorw(
+				cause,
+				"hash", hash,
+				"chainName", chainName,
+			)
 
-		res.VerifiedTrace.Verified = false
-		res.VerifiedTrace.Cause = cause
+			res.VerifiedTrace.Verified = false
+			res.VerifiedTrace.Cause = cause
 
-		c.JSON(http.StatusOK, res)
-		return
-	}
+			c.JSON(http.StatusOK, res)
+			return
+		}
 
-	res.VerifiedTrace.Path = denomTrace.Path
-	res.VerifiedTrace.BaseDenom = denomTrace.BaseDenom
+		res.VerifiedTrace.Path = denomTrace.Path
+		res.VerifiedTrace.BaseDenom = denomTrace.BaseDenom
 
-	pathsElements, err := paths(res.VerifiedTrace.Path)
+		pathsElements, err := paths(res.VerifiedTrace.Path)
 
-	if err != nil {
+		if err != nil {
 
-		cause := fmt.Sprintf("unsupported path %s", res.VerifiedTrace.Path)
-
-		logger.Errorw(
-			"invalid denom",
-			"hash", hash,
-			"path", res.VerifiedTrace.Path,
-			"err", cause,
-		)
-
-		res.VerifiedTrace.Verified = false
-		res.VerifiedTrace.Cause = cause
-
-		c.JSON(http.StatusOK, res)
-
-		return
-	}
-
-	chainIDsMap, err := d.Database.ChainIDs()
-
-	if err != nil {
-
-		err = fmt.Errorf("cannot query list of chain ids, %w", err)
-
-		e := apierrors.New(
-			"denom/verify-trace",
-			fmt.Sprintf("cannot query list of chain ids"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot query list of chain ids: %w", err),
-			"hash",
-			hash,
-			"path",
-			res.VerifiedTrace.Path,
-		)
-		_ = c.Error(e)
-		return
-	}
-
-	nextChain := chainName
-	for _, element := range pathsElements {
-		// otherwise, check that it has a transfer prefix
-		if !strings.HasPrefix(element, "transfer/") {
-			cause := fmt.Sprintf("Unsupported path %s", res.VerifiedTrace.Path)
+			cause := fmt.Sprintf("unsupported path %s", res.VerifiedTrace.Path)
 
 			logger.Errorw(
 				"invalid denom",
@@ -297,151 +257,194 @@ func VerifyTrace(c *gin.Context) {
 			return
 		}
 
-		channel := strings.TrimPrefix(element, "transfer/")
+		chainIDsMap, err := d.Database.ChainIDs()
 
-		var channelInfo cns.IbcChannelsInfo
-		var trace Trace
+		if err != nil {
 
-		chainID, ok := chainIDsMap[nextChain]
-		if !ok {
-			logger.Errorw(
-				"cannot check path element during path resolution",
-				"hash", hash,
-				"path", res.VerifiedTrace.Path,
-				"err", fmt.Errorf("cannot find %s in chainIDs map", nextChain),
+			err = fmt.Errorf("cannot query list of chain ids, %w", err)
+
+			e := apierrors.New(
+				"denom/verify-trace",
+				fmt.Sprintf("cannot query list of chain ids"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot query list of chain ids: %w", err),
+				"hash",
+				hash,
+				"path",
+				res.VerifiedTrace.Path,
 			)
-
-			res.VerifiedTrace.Verified = false
-			res.VerifiedTrace.Cause = "cannot check path element during path resolution"
-
-			c.JSON(http.StatusOK, res)
-
+			_ = c.Error(e)
 			return
 		}
 
-		channelInfo, err = d.Database.GetIbcChannelToChain(nextChain, channel, chainID)
+		nextChain := chainName
+		for _, element := range pathsElements {
+			// otherwise, check that it has a transfer prefix
+			if !strings.HasPrefix(element, "transfer/") {
+				cause := fmt.Sprintf("Unsupported path %s", res.VerifiedTrace.Path)
 
-		if err != nil {
-			if errors.As(err, &database.ErrNoDestChain{}) {
 				logger.Errorw(
-					err.Error(),
+					"invalid denom",
 					"hash", hash,
 					"path", res.VerifiedTrace.Path,
-					"chain", chainName,
+					"err", cause,
 				)
 
 				res.VerifiedTrace.Verified = false
-				res.VerifiedTrace.Cause = err.Error()
+				res.VerifiedTrace.Cause = cause
 
 				c.JSON(http.StatusOK, res)
-			} else {
-				e1 := apierrors.New(
-					"denom/verify-trace",
-					fmt.Sprintf("failed querying for %s, error: %v", hash, err),
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("invalid number of query responses: %w", err),
-					"hash",
-					hash,
-				)
-				_ = c.Error(e1)
+
+				return
 			}
+
+			channel := strings.TrimPrefix(element, "transfer/")
+
+			var channelInfo cns.IbcChannelsInfo
+			var trace Trace
+
+			chainID, ok := chainIDsMap[nextChain]
+			if !ok {
+				logger.Errorw(
+					"cannot check path element during path resolution",
+					"hash", hash,
+					"path", res.VerifiedTrace.Path,
+					"err", fmt.Errorf("cannot find %s in chainIDs map", nextChain),
+				)
+
+				res.VerifiedTrace.Verified = false
+				res.VerifiedTrace.Cause = "cannot check path element during path resolution"
+
+				c.JSON(http.StatusOK, res)
+
+				return
+			}
+
+			channelInfo, err = d.Database.GetIbcChannelToChain(nextChain, channel, chainID)
+
+			if err != nil {
+				if errors.As(err, &database.ErrNoDestChain{}) {
+					logger.Errorw(
+						err.Error(),
+						"hash", hash,
+						"path", res.VerifiedTrace.Path,
+						"chain", chainName,
+					)
+
+					res.VerifiedTrace.Verified = false
+					res.VerifiedTrace.Cause = err.Error()
+
+					c.JSON(http.StatusOK, res)
+				} else {
+					e1 := apierrors.New(
+						"denom/verify-trace",
+						fmt.Sprintf("failed querying for %s, error: %v", hash, err),
+						http.StatusBadRequest,
+					).WithLogContext(
+						fmt.Errorf("invalid number of query responses: %w", err),
+						"hash",
+						hash,
+					)
+					_ = c.Error(e1)
+				}
+
+				return
+			}
+
+			trace.ChainName = channelInfo[0].ChainAName
+			trace.CounterpartyName = channelInfo[0].ChainBName
+			trace.Channel = channelInfo[0].ChainAChannelID
+			trace.Port = "transfer"
+
+			res.VerifiedTrace.Trace = append(res.VerifiedTrace.Trace, trace)
+
+			nextChain = trace.CounterpartyName
+		}
+
+		nextChainData, err := d.Database.Chain(nextChain)
+		if err != nil {
+			logger.Errorw(
+				"cannot query chain",
+				"hash", hash,
+				"path", res.VerifiedTrace.Path,
+				"nextChain", nextChain,
+				"err", err,
+			)
+
+			// we did not find any chain with name nextChain
+			if errors.Is(err, sql.ErrNoRows) {
+				res.VerifiedTrace.Verified = false
+				res.VerifiedTrace.Cause = fmt.Sprintf("no chain with name %s found", nextChain)
+				c.JSON(http.StatusOK, res)
+
+				return
+			}
+
+			e := apierrors.New(
+				"denom/verify-trace",
+				fmt.Sprintf("database error, %v", err),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot query chain with name: %w", err),
+				"hash",
+				hash,
+				"path",
+				res.VerifiedTrace.Path,
+				"chain",
+				chainName,
+				"nextChain",
+				nextChain,
+			)
+			_ = c.Error(e)
 
 			return
 		}
 
-		trace.ChainName = channelInfo[0].ChainAName
-		trace.CounterpartyName = channelInfo[0].ChainBName
-		trace.Channel = channelInfo[0].ChainAChannelID
-		trace.Port = "transfer"
+		cbt, err := d.Database.ChainLastBlock(nextChain)
+		if err != nil {
+			e := apierrors.New(
+				"denom/verify-trace",
+				fmt.Sprintf("cannot retrieve chain status for %v", nextChain),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain last block time: %w", err),
+				"hash",
+				hash,
+				"path",
+				res.VerifiedTrace.Path,
+				"chainName",
+				chainName,
+				"nextChain",
+				nextChain,
+			)
+			_ = c.Error(e)
 
-		res.VerifiedTrace.Trace = append(res.VerifiedTrace.Trace, trace)
+			return
+		}
 
-		nextChain = trace.CounterpartyName
-	}
+		logger.Debugw("last block time", "chain", nextChain, "time", cbt, "threshold_for_chain", nextChainData.ValidBlockThresh.Duration())
 
-	nextChainData, err := d.Database.Chain(nextChain)
-	if err != nil {
-		logger.Errorw(
-			"cannot query chain",
-			"hash", hash,
-			"path", res.VerifiedTrace.Path,
-			"nextChain", nextChain,
-			"err", err,
-		)
-
-		// we did not find any chain with name nextChain
-		if errors.Is(err, sql.ErrNoRows) {
+		if time.Since(cbt.BlockTime) > nextChainData.ValidBlockThresh.Duration() {
 			res.VerifiedTrace.Verified = false
-			res.VerifiedTrace.Cause = fmt.Sprintf("no chain with name %s found", nextChain)
+			res.VerifiedTrace.Cause = fmt.Sprintf("chain %s status offline", nextChain)
 			c.JSON(http.StatusOK, res)
 
 			return
 		}
 
-		e := apierrors.New(
-			"denom/verify-trace",
-			fmt.Sprintf("database error, %v", err),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot query chain with name: %w", err),
-			"hash",
-			hash,
-			"path",
-			res.VerifiedTrace.Path,
-			"chain",
-			chainName,
-			"nextChain",
-			nextChain,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	cbt, err := d.Database.ChainLastBlock(nextChain)
-	if err != nil {
-		e := apierrors.New(
-			"denom/verify-trace",
-			fmt.Sprintf("cannot retrieve chain status for %v", nextChain),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain last block time: %w", err),
-			"hash",
-			hash,
-			"path",
-			res.VerifiedTrace.Path,
-			"chainName",
-			chainName,
-			"nextChain",
-			nextChain,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	logger.Debugw("last block time", "chain", nextChain, "time", cbt, "threshold_for_chain", nextChainData.ValidBlockThresh.Duration())
-
-	if time.Since(cbt.BlockTime) > nextChainData.ValidBlockThresh.Duration() {
 		res.VerifiedTrace.Verified = false
-		res.VerifiedTrace.Cause = fmt.Sprintf("chain %s status offline", nextChain)
-		c.JSON(http.StatusOK, res)
 
-		return
-	}
-
-	res.VerifiedTrace.Verified = false
-
-	// set verifiedStatus for base denom on nextChain
-	for _, d := range nextChainData.Denoms {
-		if denomTrace.BaseDenom == d.Name {
-			res.VerifiedTrace.Verified = d.Verified
-			break
+		// set verifiedStatus for base denom on nextChain
+		for _, d := range nextChainData.Denoms {
+			if denomTrace.BaseDenom == d.Name {
+				res.VerifiedTrace.Verified = d.Verified
+				break
+			}
 		}
-	}
 
-	c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusOK, res)
+	}
 }
 
 func paths(path string) ([]string, error) {
@@ -482,35 +485,36 @@ func paths(path string) ([]string, error) {
 // @Success 200 {object} StatusResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/status [get]
-func GetChainStatus(c *gin.Context) {
-	var res StatusResponse
-	d := deps.GetDeps(c)
+func GetChainStatus(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res StatusResponse
 
-	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	cbt, err := d.Database.ChainLastBlock(chain.ChainName)
-	if err != nil {
-		res.Online = false
+		cbt, err := d.Database.ChainLastBlock(chain.ChainName)
+		if err != nil {
+			res.Online = false
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+		logger.Debugw("last block time",
+			"chain", chain.ChainName,
+			"time", cbt,
+			"threshold_for_chain", chain.ValidBlockThresh.Duration(),
+		)
+
+		if time.Since(cbt.BlockTime) > chain.ValidBlockThresh.Duration() {
+			res.Online = false
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+		res.Online = true
+
 		c.JSON(http.StatusOK, res)
-		return
 	}
-
-	logger.Debugw("last block time",
-		"chain", chain.ChainName,
-		"time", cbt,
-		"threshold_for_chain", chain.ValidBlockThresh.Duration(),
-	)
-
-	if time.Since(cbt.BlockTime) > chain.ValidBlockThresh.Duration() {
-		res.Online = false
-		c.JSON(http.StatusOK, res)
-		return
-	}
-
-	res.Online = true
-
-	c.JSON(http.StatusOK, res)
 }
 
 // GetChainSupply returns the total supply of a given chain.
@@ -1042,54 +1046,55 @@ func GetEpochProvisions(c *gin.Context) {
 // @Success 200 {object} APRResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/APR [get]
-func GetStakingAPR(c *gin.Context) {
-	d := deps.GetDeps(c)
-	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+func GetStakingAPR(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
-	chainName := c.Param("chain")
+		chainName := c.Param("chain")
 
-	aprCache := stringcache.NewStringCache(
-		logger,
-		stringcache.NewStoreBackend(d.Store),
-		aprCacheDuration,
-		aprCachePrefix,
-		getAPR(c),
-	)
-	aprString, err := aprCache.Get(c.Request.Context(), chainName, false)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot get APR"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot get APR: %w", err),
-			"name",
-			chainName,
+		aprCache := stringcache.NewStringCache(
+			logger,
+			stringcache.NewStoreBackend(d.Store),
+			aprCacheDuration,
+			aprCachePrefix,
+			getAPR(c),
 		)
-		_ = c.Error(e)
+		aprString, err := aprCache.Get(c.Request.Context(), chainName, false)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot get APR"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot get APR: %w", err),
+				"name",
+				chainName,
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		apr, err := strconv.ParseFloat(aprString, 64)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot convert apr to float"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot convert apr to float: %w", err),
+				"name",
+				chainName,
+				"APR",
+				apr,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+		res := APRResponse{APR: apr}
+		c.JSON(http.StatusOK, res)
 	}
-
-	apr, err := strconv.ParseFloat(aprString, 64)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot convert apr to float"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot convert apr to float: %w", err),
-			"name",
-			chainName,
-			"APR",
-			apr,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-	res := APRResponse{APR: apr}
-	c.JSON(http.StatusOK, res)
 }
 
 func getAPR(c *gin.Context) stringcache.HandlerFunc {

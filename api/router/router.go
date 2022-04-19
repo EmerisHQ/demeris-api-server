@@ -77,12 +77,19 @@ func New(
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
 	engine.Use(r.catchPanicsFunc)
-	engine.Use(r.decorateCtxWithDeps)
 	engine.Use(r.handleErrors)
 	engine.RedirectTrailingSlash = false
 	engine.RedirectFixedPath = false
 
-	registerRoutes(engine)
+	d := &deps.Deps{
+		Database:         r.DB,
+		Store:            r.s,
+		KubeNamespace:    r.k8sNamespace,
+		K8S:              &r.k8s,
+		RelayersInformer: r.relayersInformer,
+	}
+
+	registerRoutes(engine, d)
 
 	return r
 }
@@ -117,16 +124,6 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 		}
 	}()
 	c.Next()
-}
-
-func (r *Router) decorateCtxWithDeps(c *gin.Context) {
-	c.Set("deps", &deps.Deps{
-		Database:         r.DB,
-		Store:            r.s,
-		KubeNamespace:    r.k8sNamespace,
-		K8S:              &r.k8s,
-		RelayersInformer: r.relayersInformer,
-	})
 }
 
 func (r *Router) handleErrors(c *gin.Context) {
@@ -167,37 +164,36 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 	return id
 }
 
-func registerRoutes(engine *gin.Engine) {
+func registerRoutes(engine *gin.Engine, d *deps.Deps) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
-	account.Register(engine)
+	account.Register(engine, d)
 
 	// @tag.name Denoms
 	// @tag.description Denoms-related endpoints
-	verifieddenoms.Register(engine)
+	verifieddenoms.Register(engine, d)
 
 	// @tag.name Chain
 	// @tag.description Chain-related endpoints
-	chains.Register(engine)
+	chains.Register(engine, d)
 
 	// @tag.name Transactions
 	// @tag.description Transaction-related endpoints
-	tx.Register(engine)
+	tx.Register(engine, d)
 
 	// @tag.name Relayer
 	// @tag.description Relayer-related endpoints
-	relayer.Register(engine)
+	relayer.Register(engine, d)
 
 	// @tag.name Block
 	// @tag.description Blocks-related endpoints
-	block.Register(engine)
+	block.Register(engine, d)
 
 	// @tag.name liquidity
 	// @tag.description pool-related endpoints
-	liquidity.Register(engine)
+	liquidity.Register(engine, d)
 
 	// @tag.name cached
 	// @tag.description cached data endpoints
-	cached.Register(engine)
-
+	cached.Register(engine, d)
 }

@@ -10,10 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine) {
+func Register(router *gin.Engine, d *deps.Deps) {
 	group := router.Group("/pool")
 
-	group.GET("/:poolId/swapfees", getSwapFee)
+	group.GET("/:poolId/swapfees", getSwapFee(d))
 }
 
 // getSwapFee returns the swap fee of past 1 hour n.
@@ -26,32 +26,32 @@ func Register(router *gin.Engine) {
 // @Success 200 {object} SwapFeesResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /pool/{poolID}/swapfees [get]
-func getSwapFee(c *gin.Context) {
+func getSwapFee(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	d := deps.GetDeps(c)
+		poolId := c.Param("poolId")
 
-	poolId := c.Param("poolId")
+		res, err := d.Store.GetSwapFees(poolId)
+		if err != nil {
+			e := apierrors.New(
+				"swap fees",
+				fmt.Sprintf("cannot get swap fees"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot get swap fees: %w", err),
+				"poolId",
+				poolId,
+			)
+			_ = c.Error(e)
 
-	res, err := d.Store.GetSwapFees(poolId)
-	if err != nil {
-		e := apierrors.New(
-			"swap fees",
-			fmt.Sprintf("cannot get swap fees"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot get swap fees: %w", err),
-			"poolId",
-			poolId,
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		fees := sdktypes.Coins{}
+		for _, f := range res {
+			fees = append(fees, sdktypes.NewInt64Coin(f.Denom, f.Amount.Int64()))
+		}
+
+		c.JSON(http.StatusOK, SwapFeesResponse{Fees: fees})
 	}
-
-	fees := sdktypes.Coins{}
-	for _, f := range res {
-		fees = append(fees, sdktypes.NewInt64Coin(f.Denom, f.Amount.Int64()))
-	}
-
-	c.JSON(http.StatusOK, SwapFeesResponse{Fees: fees})
 }

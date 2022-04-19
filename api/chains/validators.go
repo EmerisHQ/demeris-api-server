@@ -37,52 +37,53 @@ const (
 // @Success 200 {object} ValidatorsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /validators [get]
-func GetValidators(c *gin.Context) {
-	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
-	var res ValidatorsResponse
+func GetValidators(d *deps.Deps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+		var res ValidatorsResponse
 
-	d := deps.GetDeps(c)
-	chainName := c.Param("chain")
-	validators, err := d.Database.GetValidators(chainName)
-	if err != nil {
-		e := apierrors.New(
-			"validators",
-			fmt.Sprintf("cannot retrieve validators"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve validators: %w", err),
-			"chain",
-			chainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	adaptValidators := make([]*Validator, 0, len(validators))
-	avatarCache := stringcache.NewStringCache(
-		logger,
-		stringcache.NewStoreBackend(d.Store),
-		avatarCacheDuration,
-		avatarCachePrefix,
-		stringcache.HandlerFunc(fetchKeybaseAvatar),
-	)
-	for _, v := range validators {
-		adapted, err := adaptValidator(c.Request.Context(), avatarCache, v)
+		chainName := c.Param("chain")
+		validators, err := d.Database.GetValidators(chainName)
 		if err != nil {
-			logger.Warnw(
-				"cannot get avatar for validator",
-				"validatorIdentity", v.Identity,
-				"error", err,
+			e := apierrors.New(
+				"validators",
+				fmt.Sprintf("cannot retrieve validators"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve validators: %w", err),
+				"chain",
+				chainName,
 			)
+			_ = c.Error(e)
+
+			return
 		}
 
-		adaptValidators = append(adaptValidators, adapted)
+		adaptValidators := make([]*Validator, 0, len(validators))
+		avatarCache := stringcache.NewStringCache(
+			logger,
+			stringcache.NewStoreBackend(d.Store),
+			avatarCacheDuration,
+			avatarCachePrefix,
+			stringcache.HandlerFunc(fetchKeybaseAvatar),
+		)
+		for _, v := range validators {
+			adapted, err := adaptValidator(c.Request.Context(), avatarCache, v)
+			if err != nil {
+				logger.Warnw(
+					"cannot get avatar for validator",
+					"validatorIdentity", v.Identity,
+					"error", err,
+				)
+			}
+
+			adaptValidators = append(adaptValidators, adapted)
+		}
+
+		res.Validators = adaptValidators
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	res.Validators = adaptValidators
-
-	c.JSON(http.StatusOK, res)
 }
 
 func adaptValidator(ctx context.Context, cache *stringcache.StringCache, r tracelistener.ValidatorRow) (*Validator, error) {
