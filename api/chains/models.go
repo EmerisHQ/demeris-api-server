@@ -1,6 +1,9 @@
 package chains
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
@@ -60,8 +63,28 @@ type Trace struct {
 	CounterpartyName string `json:"counterparty_name,omitempty"`
 }
 
+// IBCDenomHash represents the hash of an IBC denom. Its string representation
+// follow the conventional format of the uppercased hash prefixed by "ibc/", e.g.:
+//   ibc/ABC123XYZ
+type IBCDenomHash string
+
+func (d IBCDenomHash) Hash() string {
+	return strings.ToUpper(string(d))
+}
+
+func (d IBCDenomHash) String() string {
+	return fmt.Sprintf("ibc/%s", d.Hash())
+}
+
+func (d IBCDenomHash) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + d.String() + "\""), nil
+}
+
 type VerifiedTrace struct {
-	IbcDenom  string  `json:"ibc_denom,omitempty"`
+	// IbcDenom is the identifier of this denom in the form of "ibc/<hash>",
+	// where <hash> is uppercased.
+	IbcDenom IBCDenomHash `json:"ibc_denom,omitempty"`
+
 	BaseDenom string  `json:"base_denom,omitempty"`
 	Verified  bool    `json:"verified"`
 	Path      string  `json:"path,omitempty"`

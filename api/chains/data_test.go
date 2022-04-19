@@ -113,7 +113,7 @@ var verifyTraceData = utils.TracelistenerData{
 		{
 			Path:      "transfer/ch1",
 			BaseDenom: "denom2",
-			Hash:      "12345",
+			Hash:      "abc12345",
 			ChainName: "chain1",
 		},
 	},
@@ -186,7 +186,7 @@ var verifyTraceData3Chains = utils.TracelistenerData{
 		{
 			Path:      "transfer/channel-11/transfer/channel-184",
 			BaseDenom: "uakt",
-			Hash:      "12345",
+			Hash:      "abc12345",
 			ChainName: "regen",
 		},
 	},
