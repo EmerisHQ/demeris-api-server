@@ -10,13 +10,13 @@ import (
 
 	"github.com/emerishq/emeris-utils/store"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
-	router.GET("/block_results", GetBlock(d))
+func Register(router *gin.Engine, db *database.Database, s *store.Store) {
+	router.GET("/block_results", GetBlock(db, s))
 }
 
 // GetBlock returns a Tendermint block data at a given height.
@@ -29,7 +29,7 @@ func Register(router *gin.Engine, d *deps.Deps) {
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /block_results [get]
-func GetBlock(d *deps.Deps) gin.HandlerFunc {
+func GetBlock(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		h := c.Query("height")
@@ -60,7 +60,7 @@ func GetBlock(d *deps.Deps) gin.HandlerFunc {
 			return
 		}
 
-		bs := store.NewBlocks(d.Store)
+		bs := store.NewBlocks(s)
 
 		bd, err := bs.Block(hh)
 		if err != nil {

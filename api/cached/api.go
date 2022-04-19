@@ -4,19 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	_ "github.com/gravity-devs/liquidity/x/liquidity/types"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
+func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 	group := router.Group("/cached/cosmos")
 
-	group.GET("/liquidity/v1beta1/pools", getPools(d))
-	group.GET("/liquidity/v1beta1/params", getParams(d))
-	group.GET("/bank/v1beta1/supply", getSupply(d))
-	group.GET("/node_info", getNodeInfo(d))
+	group.GET("/liquidity/v1beta1/pools", getPools(db, s))
+	group.GET("/liquidity/v1beta1/params", getParams(db, s))
+	group.GET("/bank/v1beta1/supply", getSupply(db, s))
+	group.GET("/node_info", getNodeInfo(db, s))
 }
 
 // getPools returns the of all pools.
@@ -28,9 +29,9 @@ func Register(router *gin.Engine, d *deps.Deps) {
 // @Success 200 {object} types.QueryLiquidityPoolsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/pools [get]
-func getPools(d *deps.Deps) gin.HandlerFunc {
+func getPools(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		res, err := d.Store.GetPools()
+		res, err := s.GetPools()
 		if err != nil {
 			e := apierrors.New(
 				"pools",
@@ -57,10 +58,10 @@ func getPools(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} types.QueryParamsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/params [get]
-func getParams(d *deps.Deps) gin.HandlerFunc {
+func getParams(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		res, err := d.Store.GetParams()
+		res, err := s.GetParams()
 		if err != nil {
 			e := apierrors.New(
 				"params",
@@ -87,10 +88,10 @@ func getParams(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} types.QueryTotalSupplyResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
-func getSupply(d *deps.Deps) gin.HandlerFunc {
+func getSupply(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		res, err := d.Store.GetSupply()
+		res, err := s.GetSupply()
 		if err != nil {
 			e := apierrors.New(
 				"supply",
@@ -117,10 +118,10 @@ func getSupply(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} types.QueryTotalSupplyResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
-func getNodeInfo(d *deps.Deps) gin.HandlerFunc {
+func getNodeInfo(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		res, err := d.Store.GetNodeInfo()
+		res, err := s.GetNodeInfo()
 		if err != nil {
 			e := apierrors.New(
 				"node_info",

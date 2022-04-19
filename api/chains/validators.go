@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/lib/keybase"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/emerishq/emeris-utils/logging"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -37,13 +38,13 @@ const (
 // @Success 200 {object} ValidatorsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /validators [get]
-func GetValidators(d *deps.Deps) gin.HandlerFunc {
+func GetValidators(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 		var res ValidatorsResponse
 
 		chainName := c.Param("chain")
-		validators, err := d.Database.GetValidators(chainName)
+		validators, err := db.GetValidators(chainName)
 		if err != nil {
 			e := apierrors.New(
 				"validators",
@@ -62,7 +63,7 @@ func GetValidators(d *deps.Deps) gin.HandlerFunc {
 		adaptValidators := make([]*Validator, 0, len(validators))
 		avatarCache := stringcache.NewStringCache(
 			logger,
-			stringcache.NewStoreBackend(d.Store),
+			stringcache.NewStoreBackend(s),
 			avatarCacheDuration,
 			avatarCachePrefix,
 			stringcache.HandlerFunc(fetchKeybaseAvatar),

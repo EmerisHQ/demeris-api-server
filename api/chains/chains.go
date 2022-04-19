@@ -17,13 +17,13 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
-	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/emeris-utils/logging"
+	"github.com/emerishq/emeris-utils/store"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
@@ -42,11 +42,11 @@ const (
 // @Success 200 {object} ChainsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chains [get]
-func GetChains(d *deps.Deps) gin.HandlerFunc {
+func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res ChainsResponse
 
-		chains, err := d.Database.SimpleChains()
+		chains, err := db.SimpleChains()
 
 		if err != nil {
 			e := apierrors.New(
@@ -118,13 +118,13 @@ func GetChainBech32Config(c *gin.Context) {
 // @Success 200 {object} PrimaryChannelResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/primary_channel/{counterparty} [get]
-func GetPrimaryChannelWithCounterparty(d *deps.Deps) gin.HandlerFunc {
+func GetPrimaryChannelWithCounterparty(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res PrimaryChannelResponse
 
 		chainName := c.Param("chain")
 		counterparty := c.Param("counterparty")
-		chain, err := d.Database.PrimaryChannelCounterparty(chainName, counterparty)
+		chain, err := db.PrimaryChannelCounterparty(chainName, counterparty)
 		if err != nil {
 			e := apierrors.New(
 				"primarychannel",
@@ -161,12 +161,12 @@ func GetPrimaryChannelWithCounterparty(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} PrimaryChannelsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/primary_channel [get]
-func GetPrimaryChannels(d *deps.Deps) gin.HandlerFunc {
+func GetPrimaryChannels(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res PrimaryChannelsResponse
 
 		chainName := c.Param("chain")
-		chain, err := d.Database.PrimaryChannels(chainName)
+		chain, err := db.PrimaryChannels(chainName)
 		if err != nil {
 			e := apierrors.New(
 				"primarychannel",
@@ -204,7 +204,7 @@ func GetPrimaryChannels(d *deps.Deps) gin.HandlerFunc {
 // @Success 200 {object} VerifiedTraceResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
-func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
+func VerifyTrace(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res VerifiedTraceResponse
 
@@ -215,7 +215,7 @@ func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
 
 		res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
 
-		denomTrace, err := d.Database.DenomTrace(chainName, hash)
+		denomTrace, err := db.DenomTrace(chainName, hash)
 
 		if err != nil {
 			cause := fmt.Sprintf("token hash %v not found on chain %v", hash, chainName)
@@ -257,7 +257,7 @@ func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
 			return
 		}
 
-		chainIDsMap, err := d.Database.ChainIDs()
+		chainIDsMap, err := db.ChainIDs()
 
 		if err != nil {
 
@@ -321,7 +321,7 @@ func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
 				return
 			}
 
-			channelInfo, err = d.Database.GetIbcChannelToChain(nextChain, channel, chainID)
+			channelInfo, err = db.GetIbcChannelToChain(nextChain, channel, chainID)
 
 			if err != nil {
 				if errors.As(err, &database.ErrNoDestChain{}) {
@@ -362,7 +362,7 @@ func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
 			nextChain = trace.CounterpartyName
 		}
 
-		nextChainData, err := d.Database.Chain(nextChain)
+		nextChainData, err := db.Chain(nextChain)
 		if err != nil {
 			logger.Errorw(
 				"cannot query chain",
@@ -401,7 +401,7 @@ func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
 			return
 		}
 
-		cbt, err := d.Database.ChainLastBlock(nextChain)
+		cbt, err := db.ChainLastBlock(nextChain)
 		if err != nil {
 			e := apierrors.New(
 				"denom/verify-trace",
@@ -485,14 +485,14 @@ func paths(path string) ([]string, error) {
 // @Success 200 {object} StatusResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/status [get]
-func GetChainStatus(d *deps.Deps) gin.HandlerFunc {
+func GetChainStatus(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res StatusResponse
 
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		cbt, err := d.Database.ChainLastBlock(chain.ChainName)
+		cbt, err := db.ChainLastBlock(chain.ChainName)
 		if err != nil {
 			res.Online = false
 			c.JSON(http.StatusOK, res)
@@ -1046,7 +1046,7 @@ func GetEpochProvisions(c *gin.Context) {
 // @Success 200 {object} APRResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/APR [get]
-func GetStakingAPR(d *deps.Deps) gin.HandlerFunc {
+func GetStakingAPR(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
@@ -1054,7 +1054,7 @@ func GetStakingAPR(d *deps.Deps) gin.HandlerFunc {
 
 		aprCache := stringcache.NewStringCache(
 			logger,
-			stringcache.NewStoreBackend(d.Store),
+			stringcache.NewStoreBackend(s),
 			aprCacheDuration,
 			aprCachePrefix,
 			getAPR(c),

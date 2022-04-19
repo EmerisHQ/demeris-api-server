@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, d *deps.Deps) {
-	router.GET("/verified_denoms", GetVerifiedDenoms(d))
+func Register(router *gin.Engine, db *database.Database) {
+	router.GET("/verified_denoms", GetVerifiedDenoms(db))
 }
 
 // GetVerifiedDenoms returns the list of verified denoms.
@@ -22,11 +22,11 @@ func Register(router *gin.Engine, d *deps.Deps) {
 // @Success 200 {object} VerifiedDenomsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /verified_denoms [get]
-func GetVerifiedDenoms(d *deps.Deps) gin.HandlerFunc {
+func GetVerifiedDenoms(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res VerifiedDenomsResponse
 
-		chains, err := d.Database.Chains()
+		chains, err := db.Chains()
 
 		if err != nil {
 			e := apierrors.New(
