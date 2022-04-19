@@ -206,41 +206,14 @@ func GetPrimaryChannels(d *deps.Deps) gin.HandlerFunc {
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
 func VerifyTrace(d *deps.Deps) gin.HandlerFunc {
 	return func(c *gin.Context) {
-    var res VerifiedTraceResponse
-
-    logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
-
-    chainName := c.Param("chain")
-    hash := c.Param("hash")
-
-    res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
-
-    denomTrace, err := d.Database.DenomTrace(chainName, hash)
-
-    if err != nil {
-      cause := fmt.Sprintf("token hash %v not found on chain %v", hash, chainName)
-
-      logger.Errorw(
-        cause,
-        "hash", hash,
-        "chainName", chainName,
-      )
-
-      res.VerifiedTrace.Verified = false
-      res.VerifiedTrace.Cause = cause
-
-      c.JSON(http.StatusOK, res)
-      return
-    }
+		var res VerifiedTraceResponse
 
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
 		chainName := c.Param("chain")
 		hash := c.Param("hash")
 
-		hash = strings.ToLower(hash)
-
-		res.VerifiedTrace.IbcDenom = fmt.Sprintf("ibc/%s", hash)
+		res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
 
 		denomTrace, err := d.Database.DenomTrace(chainName, hash)
 
