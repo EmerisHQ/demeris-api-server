@@ -282,21 +282,7 @@ func GetDelegatorRewards(c *gin.Context) {
 		return
 	}
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.DelegatorRewards(context.Background(), &sdkutilities.DelegatorRewardsPayload{
 		ChainName:    chainName,
@@ -390,7 +376,7 @@ func GetNumbersByAddress(c *gin.Context) {
 			return
 		}*/
 
-	resp, err := fetchNumbers(dd, address)
+	resp, err := fetchNumbers(c, dd, address)
 	if err != nil {
 		e := apierrors.New(
 			"numbers",
@@ -435,7 +421,7 @@ func GetUserTickets(c *gin.Context) {
 	c.JSON(http.StatusOK, UserTicketsResponse{Tickets: tickets})
 }
 
-func fetchNumbers(cns []cns.Chain, account string) ([]tracelistener.AuthRow, error) {
+func fetchNumbers(c *gin.Context, cns []cns.Chain, account string) ([]tracelistener.AuthRow, error) {
 	queryGroup, _ := errgroup.WithContext(context.Background())
 
 	results := make([]tracelistener.AuthRow, len(cns))
@@ -444,7 +430,7 @@ func fetchNumbers(cns []cns.Chain, account string) ([]tracelistener.AuthRow, err
 		iChain := chain
 		idx := i
 		queryGroup.Go(func() error {
-			row, err := apiutils.FetchAccountNumbers(iChain, account)
+			row, err := apiutils.FetchAccountNumbers(c, iChain, account)
 			if err != nil {
 				return fmt.Errorf("unable to get account numbers, %w", err)
 			}

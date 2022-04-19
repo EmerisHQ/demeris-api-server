@@ -528,21 +528,7 @@ func GetChainStatus(c *gin.Context) {
 func GetChainSupply(c *gin.Context) {
 	paginationKey, exists := c.GetQuery("key")
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	payload := &sdkutilities.SupplyPayload{
 		ChainName: chain.ChainName,
@@ -605,20 +591,7 @@ func GetDenomSupply(c *gin.Context) {
 	denom := c.Param("denom")
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name", chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	payload := &sdkutilities.SupplyDenomPayload{
 		ChainName: chain.ChainName,
@@ -663,21 +636,7 @@ func GetDenomSupply(c *gin.Context) {
 func GetChainTx(c *gin.Context) {
 	txHash := c.Param("tx")
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
 		ChainName: chain.ChainName,
@@ -716,7 +675,7 @@ func GetNumbersByAddress(c *gin.Context) {
 	address := c.Param("address")
 	chainInfo := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	resp, err := apiutils.FetchAccountNumbers(chainInfo, address)
+	resp, err := apiutils.FetchAccountNumbers(c, chainInfo, address)
 	if err != nil {
 		e := apierrors.New(
 			"numbers",
@@ -749,21 +708,7 @@ func GetNumbersByAddress(c *gin.Context) {
 func GetInflation(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
 		ChainName: chain.ChainName,
@@ -799,21 +744,7 @@ func GetInflation(c *gin.Context) {
 func GetStakingParams(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
 		ChainName: chain.ChainName,
@@ -849,21 +780,7 @@ func GetStakingParams(c *gin.Context) {
 func GetStakingPool(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
 		ChainName: chain.ChainName,
@@ -898,21 +815,7 @@ func GetStakingPool(c *gin.Context) {
 // @Router /chain/{chainName}/mint/params [get]
 func GetMintParams(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.MintParams(context.Background(), &sdkutilities.MintParamsPayload{
 		ChainName: chain.ChainName,
@@ -947,21 +850,7 @@ func GetMintParams(c *gin.Context) {
 // @Router /chain/{chainName}/mint/annual_provisions [get]
 func GetAnnualProvisions(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.MintAnnualProvision(context.Background(), &sdkutilities.MintAnnualProvisionPayload{
 		ChainName: chain.ChainName,
@@ -997,21 +886,7 @@ func GetAnnualProvisions(c *gin.Context) {
 func GetEpochProvisions(c *gin.Context) {
 	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.MintEpochProvisions(context.Background(), &sdkutilities.MintEpochProvisionsPayload{
 		ChainName: chain.ChainName,
@@ -1097,21 +972,7 @@ func GetStakingAPR(c *gin.Context) {
 func getAPR(c *gin.Context) stringcache.HandlerFunc {
 	return func(ctx context.Context, key string) (string, error) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-		client, err := sdkservice.Client(chain.MajorSDKVersion())
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
+		client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 		// get number of bonded tokens from staking/pool data
 		stakingPoolRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{

@@ -91,21 +91,7 @@ func GetDestTx(c *gin.Context) {
 		return
 	}
 
-	client, err := sdkservice.Client(srcChainInfo.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with srcChainInfo name %v", srcChainInfo.CosmosSDKVersion, srcChainInfo.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve srcChainInfo's sdk-service: %w", err),
-			"name",
-			srcChain,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, srcChainInfo.MajorSDKVersion())
 
 	sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
 		ChainName: srcChainInfo.ChainName,

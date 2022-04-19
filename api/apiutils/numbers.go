@@ -8,18 +8,16 @@ import (
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
+	"github.com/gin-gonic/gin"
 )
 
 // FetchAccountNumbers returns a tracelistener.AuthRow containing sequence
 // and account numbers given a hex-encoded address.
-func FetchAccountNumbers(chain cns.Chain, account string) (tracelistener.AuthRow, error) {
+func FetchAccountNumbers(c *gin.Context, chain cns.Chain, account string) (tracelistener.AuthRow, error) {
 	chainVersion := chain.MajorSDKVersion()
 	chainName := chain.ChainName
 
-	client, err := sdkservice.Client(chainVersion)
-	if err != nil {
-		return tracelistener.AuthRow{}, fmt.Errorf("cannot create sdkservice client, %w", err)
-	}
+	client := sdkservice.GetSDKServiceClient(c, chainVersion)
 
 	res, err := client.AccountNumbers(context.Background(), &sdkutilities.AccountNumbersPayload{
 		ChainName:    chainName,

@@ -12,6 +12,7 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/config"
 	apiDb "github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/sdkservice"
 	cnsDb "github.com/emerishq/emeris-cns-server/cns/database"
 
 	"github.com/alicebob/miniredis/v2"
@@ -220,6 +221,9 @@ func Setup() *TestingCtx {
 	kube := mocks.Client{}
 	informer := mocks.GenericInformer{}
 
+	clients, err := sdkservice.InitializeClients()
+	checkNoError(err, l)
+
 	r := router.New(
 		dbi,
 		l,
@@ -227,6 +231,7 @@ func Setup() *TestingCtx {
 		&kube,
 		c.KubernetesNamespace,
 		&informer,
+		clients,
 		c.Debug,
 	)
 

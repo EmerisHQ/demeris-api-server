@@ -65,21 +65,7 @@ func Tx(c *gin.Context) {
 		return
 	}
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	txhash, err := relayTx(client, d, txRequest.TxBytes, chainName, txRequest.Owner)
 
@@ -199,21 +185,7 @@ func GetTxFeeEstimate(c *gin.Context) {
 		return
 	}
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
+	client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
 
 	sdkRes, err := client.EstimateFees(context.Background(), &sdkutilities.EstimateFeesPayload{
 		ChainName: chainName,

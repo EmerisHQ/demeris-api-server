@@ -9,6 +9,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/cached"
 	"github.com/emerishq/demeris-api-server/api/liquidity"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/sdkservice"
 	"k8s.io/client-go/informers"
 
 	"github.com/emerishq/demeris-api-server/api/relayer"
@@ -48,6 +49,7 @@ func New(
 	kubeClient kube.Client,
 	kubeNamespace string,
 	relayersInformer informers.GenericInformer,
+	sdkServiceClients sdkservice.SDKServiceClients,
 	debug bool,
 ) *Router {
 	gin.SetMode(gin.ReleaseMode)
@@ -59,6 +61,7 @@ func New(
 	engine := gin.New()
 
 	engine.Use(logging.AddLoggerMiddleware(l))
+	engine.Use(sdkservice.SetSDKServiceMiddleware(sdkServiceClients))
 	r := &Router{
 		g:                engine,
 		DB:               db,

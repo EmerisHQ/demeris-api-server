@@ -10,6 +10,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/config"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router"
+	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
 	"github.com/gofrs/uuid"
@@ -81,5 +82,8 @@ func setup(t *testing.T) (router.Router, config.Config, *observer.ObservedLogs, 
 	observedZapCore, observedLogs := observer.New(zap.InfoLevel)
 	observedLogger := zap.New(observedZapCore)
 
-	return *router.New(db, observedLogger.Sugar(), s, nil, "", nil, cfg.Debug), *cfg, observedLogs, func() { tServer.Stop() }
+	clients, err := sdkservice.InitializeClients()
+	require.NoError(t, err)
+
+	return *router.New(db, observedLogger.Sugar(), s, nil, "", nil, clients, cfg.Debug), *cfg, observedLogs, func() { tServer.Stop() }
 }
