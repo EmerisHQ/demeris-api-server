@@ -2,13 +2,7 @@ name: Generate Swagger
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - cmd/**
-      - cns/**
-      - utils/**
-      - go.mod
-      - go.sum
+  pull_request:
 
 jobs:
   generate-swagger:
