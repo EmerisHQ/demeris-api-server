@@ -23,14 +23,14 @@ import (
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
-func Register(router *gin.Engine, db *database.Database, s *store.Store) {
+func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
 	group := router.Group("/account/:address")
 	group.GET("/balance", GetBalancesByAddress(db))
 	group.GET("/stakingbalances", GetDelegationsByAddress(db))
 	group.GET("/unbondingdelegations", GetUnbondingDelegationsByAddress(db))
-	group.GET("/numbers", GetNumbersByAddress(db))
+	group.GET("/numbers", GetNumbersByAddress(db, sdkServiceClients))
 	group.GET("/tickets", GetUserTickets(db, s))
-	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(db))
+	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(db, sdkServiceClients))
 }
 
 // GetBalancesByAddress returns account of an address.
@@ -257,7 +257,7 @@ func GetUnbondingDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 // @Success 200 {object} DelegatorRewardsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/delegatorrewards/{chain} [get]
-func GetDelegatorRewards(db *database.Database) gin.HandlerFunc {
+func GetDelegatorRewards(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res DelegatorRewardsResponse
 
@@ -282,7 +282,11 @@ func GetDelegatorRewards(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
 		sdkRes, err := client.DelegatorRewards(context.Background(), &sdkutilities.DelegatorRewardsPayload{
 			ChainName:    chainName,
@@ -346,7 +350,7 @@ func GetDelegatorRewards(db *database.Database) gin.HandlerFunc {
 // @Success 200 {object} NumbersResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/numbers [get]
-func GetNumbersByAddress(db *database.Database) gin.HandlerFunc {
+func GetNumbersByAddress(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res NumbersResponse
 
@@ -377,7 +381,7 @@ func GetNumbersByAddress(db *database.Database) gin.HandlerFunc {
 				return
 			}*/
 
-		resp, err := fetchNumbers(c, dd, address)
+		resp, err := fetchNumbers(dd, address, sdkServiceClients)
 		if err != nil {
 			e := apierrors.New(
 				"numbers",
@@ -424,7 +428,7 @@ func GetUserTickets(db *database.Database, s *store.Store) gin.HandlerFunc {
 	}
 }
 
-func fetchNumbers(c *gin.Context, cns []cns.Chain, account string) ([]tracelistener.AuthRow, error) {
+func fetchNumbers(cns []cns.Chain, account string, sdkServiceClients sdkservice.SDKServiceClients) ([]tracelistener.AuthRow, error) {
 	queryGroup, _ := errgroup.WithContext(context.Background())
 
 	results := make([]tracelistener.AuthRow, len(cns))
@@ -433,7 +437,7 @@ func fetchNumbers(c *gin.Context, cns []cns.Chain, account string) ([]traceliste
 		iChain := chain
 		idx := i
 		queryGroup.Go(func() error {
-			row, err := apiutils.FetchAccountNumbers(c, iChain, account)
+			row, err := apiutils.FetchAccountNumbers(iChain, account, sdkServiceClients)
 			if err != nil {
 				return fmt.Errorf("unable to get account numbers, %w", err)
 			}

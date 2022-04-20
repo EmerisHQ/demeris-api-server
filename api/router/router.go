@@ -57,7 +57,6 @@ func New(
 	engine := gin.New()
 
 	engine.Use(logging.AddLoggerMiddleware(l))
-	engine.Use(sdkservice.SetSDKServiceMiddleware(sdkServiceClients))
 	r := &Router{
 		g:  engine,
 		DB: db,
@@ -79,7 +78,7 @@ func New(
 
 	relayersInformer := relayer.NewInformer(genericInformer, kubeNamespace)
 
-	registerRoutes(engine, r.DB, r.s, relayersInformer)
+	registerRoutes(engine, r.DB, r.s, relayersInformer, sdkServiceClients)
 
 	return r
 }
@@ -154,10 +153,11 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 	return id
 }
 
-func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, relayersInformer *relayer.Informer) {
+func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, relayersInformer *relayer.Informer,
+	sdkServiceClients sdkservice.SDKServiceClients) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
-	account.Register(engine, db, s)
+	account.Register(engine, db, s, sdkServiceClients)
 
 	// @tag.name Denoms
 	// @tag.description Denoms-related endpoints
@@ -165,11 +165,11 @@ func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, r
 
 	// @tag.name Chain
 	// @tag.description Chain-related endpoints
-	chains.Register(engine, db, s)
+	chains.Register(engine, db, s, sdkServiceClients)
 
 	// @tag.name Transactions
 	// @tag.description Transaction-related endpoints
-	tx.Register(engine, db, s)
+	tx.Register(engine, db, s, sdkServiceClients)
 
 	// @tag.name Relayer
 	// @tag.description Relayer-related endpoints

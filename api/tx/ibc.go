@@ -51,7 +51,7 @@ func getIBCSeqFromTx(data []byte) []string {
 // @Success 200 {object} DestTxResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /tx/{srcChain}/{destChain}/{txHash} [get]
-func GetDestTx(db *database.Database) gin.HandlerFunc {
+func GetDestTx(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		srcChain := c.Param("src-chain")
@@ -91,7 +91,11 @@ func GetDestTx(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		client := sdkservice.GetSDKServiceClient(c, srcChainInfo.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(srcChainInfo.ChainName, srcChainInfo.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
 		sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
 			ChainName: srcChainInfo.ChainName,

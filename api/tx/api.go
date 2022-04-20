@@ -14,10 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, db *database.Database, s *store.Store) {
-	router.POST("/tx/:chain", Tx(db, s))
-	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx(db))
-	router.POST("/tx/:chain/simulate", GetTxFeeEstimate(db))
+func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
+	router.POST("/tx/:chain", Tx(db, s, sdkServiceClients))
+	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx(db, sdkServiceClients))
+	router.POST("/tx/:chain/simulate", GetTxFeeEstimate(db, sdkServiceClients))
 	router.GET("/tx/ticket/:chain/:ticket", GetTicket(db, s))
 }
 
@@ -31,7 +31,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 // @Success 200 {object} TxResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/{chainName} [post]
-func Tx(db *database.Database, s *store.Store) gin.HandlerFunc {
+func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// var tx typestx.Tx
 		var txRequest TxRequest
@@ -65,7 +65,11 @@ func Tx(db *database.Database, s *store.Store) gin.HandlerFunc {
 			return
 		}
 
-		client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
 		txhash, err := relayTx(client, s, txRequest.TxBytes, chainName, txRequest.Owner)
 
@@ -154,7 +158,7 @@ func GetTicket(db *database.Database, s *store.Store) gin.HandlerFunc {
 // @Success 200 {object} TxFeeEstimateRes
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/fees/{chainName} [post]
-func GetTxFeeEstimate(db *database.Database) gin.HandlerFunc {
+func GetTxFeeEstimate(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var txRequest TxFeeEstimateReq
 
@@ -186,7 +190,11 @@ func GetTxFeeEstimate(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		client := sdkservice.GetSDKServiceClient(c, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
 		sdkRes, err := client.EstimateFees(context.Background(), &sdkutilities.EstimateFeesPayload{
 			ChainName: chainName,

@@ -5,18 +5,14 @@ import (
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
-	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	sdkserviceclient "github.com/emerishq/sdk-service-meta/gen/grpc/sdk_utilities/client"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
-	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 )
 
 const (
 	sdkServiceURLFmt = "sdk-service-v%s:9090"
 )
-
-type SDKServiceClients map[string]sdkutilities.Client
 
 var (
 	availableVersions = []string{"42", "44"}
@@ -34,11 +30,27 @@ func SdkServiceURL(version string) string {
 	return fmt.Sprintf(sdkServiceURLFmt, version)
 }
 
-func SDKServiceClientKey(version string) string {
+type SDKServiceClients map[string]sdkutilities.Client
+
+func (clients SDKServiceClients) GetSDKServiceClient(chainName, version string) (sdkutilities.Client, *apierrors.Error) {
 	if v, ok := sdkExceptionMappings[version]; ok {
 		version = v
 	}
-	return fmt.Sprintf("sdk-service-v%s", version)
+
+	client, ok := clients[version]
+	if !ok {
+		return client, apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", version, chainName),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chain's sdk-service for version %s", version),
+			"name",
+			chainName,
+		)
+	}
+
+	return client, nil
 }
 
 func InitializeClients() (SDKServiceClients, error) {
@@ -85,28 +97,4 @@ func Client(sdkVersion string) (sdkutilities.Client, error) {
 	}
 
 	return cc, nil
-}
-
-func SetSDKServiceMiddleware(clients SDKServiceClients) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		for _, version := range availableVersions {
-			value, ok := clients[version]
-			if !ok {
-				e := apierrors.New(
-					"sdk-service",
-					fmt.Sprintf("cannot retrieve sdk-service with version %s", version),
-					http.StatusInternalServerError,
-				)
-				_ = c.Error(e)
-				c.Abort()
-				return
-			}
-			c.Set(SDKServiceClientKey(version), value)
-		}
-		c.Next()
-	}
-}
-
-func GetSDKServiceClient(c *gin.Context, version string) sdkutilities.Client {
-	return ginutils.GetValue[sdkutilities.Client](c, SDKServiceClientKey(version))
 }
