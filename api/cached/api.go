@@ -4,19 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	_ "github.com/gravity-devs/liquidity/x/liquidity/types"
 )
 
-func Register(router *gin.Engine) {
+func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 	group := router.Group("/cached/cosmos")
 
-	group.GET("/liquidity/v1beta1/pools", getPools)
-	group.GET("/liquidity/v1beta1/params", getParams)
-	group.GET("/bank/v1beta1/supply", getSupply)
-	group.GET("/node_info", getNodeInfo)
+	group.GET("/liquidity/v1beta1/pools", getPools(db, s))
+	group.GET("/liquidity/v1beta1/params", getParams(db, s))
+	group.GET("/bank/v1beta1/supply", getSupply(db, s))
+	group.GET("/node_info", getNodeInfo(db, s))
 }
 
 // getPools returns the of all pools.
@@ -28,24 +29,24 @@ func Register(router *gin.Engine) {
 // @Success 200 {object} types.QueryLiquidityPoolsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/pools [get]
-func getPools(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getPools(db *database.Database, s *store.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		res, err := s.GetPools()
+		if err != nil {
+			e := apierrors.New(
+				"pools",
+				fmt.Sprintf("cannot retrieve pools"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot query pools: %w", err),
+			)
+			_ = c.Error(e)
 
-	res, err := d.Store.GetPools()
-	if err != nil {
-		e := apierrors.New(
-			"pools",
-			fmt.Sprintf("cannot retrieve pools"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot query pools: %w", err),
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getParams returns the params of liquidity module.
@@ -57,24 +58,25 @@ func getPools(c *gin.Context) {
 // @Success 200 {object} types.QueryParamsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /cosmos/liquidity/v1beta1/params [get]
-func getParams(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getParams(db *database.Database, s *store.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	res, err := d.Store.GetParams()
-	if err != nil {
-		e := apierrors.New(
-			"params",
-			fmt.Sprintf("cannot retrieve params"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve params: %w", err),
-		)
-		_ = c.Error(e)
+		res, err := s.GetParams()
+		if err != nil {
+			e := apierrors.New(
+				"params",
+				fmt.Sprintf("cannot retrieve params"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve params: %w", err),
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getSupply returns the total supply.
@@ -86,24 +88,25 @@ func getParams(c *gin.Context) {
 // @Success 200 {object} types.QueryTotalSupplyResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
-func getSupply(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getSupply(db *database.Database, s *store.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	res, err := d.Store.GetSupply()
-	if err != nil {
-		e := apierrors.New(
-			"supply",
-			fmt.Sprintf("cannot retrieve total supply"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve total supply: %w", err),
-		)
-		_ = c.Error(e)
+		res, err := s.GetSupply()
+		if err != nil {
+			e := apierrors.New(
+				"supply",
+				fmt.Sprintf("cannot retrieve total supply"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve total supply: %w", err),
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }
 
 // getNodeInfo returns output of Cosmos's /node_info endpoint.
@@ -115,22 +118,23 @@ func getSupply(c *gin.Context) {
 // @Success 200 {object} types.QueryTotalSupplyResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router / [get]
-func getNodeInfo(c *gin.Context) {
-	d := deps.GetDeps(c)
+func getNodeInfo(db *database.Database, s *store.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	res, err := d.Store.GetNodeInfo()
-	if err != nil {
-		e := apierrors.New(
-			"node_info",
-			fmt.Sprintf("cannot retrieve node_info"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve node_info: %w", err),
-		)
-		_ = c.Error(e)
+		res, err := s.GetNodeInfo()
+		if err != nil {
+			e := apierrors.New(
+				"node_info",
+				fmt.Sprintf("cannot retrieve node_info"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve node_info: %w", err),
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, res)
 	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, res)
 }

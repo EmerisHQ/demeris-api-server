@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
@@ -51,143 +51,144 @@ func getIBCSeqFromTx(data []byte) []string {
 // @Success 200 {object} DestTxResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /tx/{srcChain}/{destChain}/{txHash} [get]
-func GetDestTx(c *gin.Context) {
-	d := deps.GetDeps(c)
+func GetDestTx(db *database.Database) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	srcChain := c.Param("src-chain")
-	destChain := c.Param("dest-chain")
-	txHash := c.Param("tx-hash")
+		srcChain := c.Param("src-chain")
+		destChain := c.Param("dest-chain")
+		txHash := c.Param("tx-hash")
 
-	srcChainInfo, err := d.Database.Chain(srcChain)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve srcChainInfo with name %v", srcChain),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve srcChainInfo: %w", err),
-			"name",
-			srcChain,
-		)
-		_ = c.Error(e)
+		srcChainInfo, err := db.Chain(srcChain)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve srcChainInfo with name %v", srcChain),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve srcChainInfo: %w", err),
+				"name",
+				srcChain,
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		// validate destination srcChainInfo is present
+		destChainInfo, err := db.Chain(destChain)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve srcChainInfo with name %v", destChain),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve srcChainInfo: %w", err),
+				"name",
+				destChain,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		client := sdkservice.GetSDKServiceClient(c, srcChainInfo.MajorSDKVersion())
+
+		sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
+			ChainName: srcChainInfo.ChainName,
+			Hash:      txHash,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve tx from sdk-service, %v", err),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve tx from sdk-service: %w", err),
+				"txHash",
+				txHash,
+				"src srcChainInfo name",
+				srcChain,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		// This query always returns an array of sequence numbers.
+		// Emeris-generated IBC transfers are always sent out alone, meaning that
+		// there are no more than 1 IBC transfer per tx.
+		// This code is ready to be adapted to support multiple IBC transfer/transaction, but
+		// for now we just get the first seq number found and roll with it.
+		r := getIBCSeqFromTx(sdkRes)
+		if len(r) == 0 {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("provided transaction is not ibc transfer"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("provided transaction is not ibc transfer: %w", err),
+				"txHash",
+				txHash,
+				"src srcChainInfo name",
+				srcChain,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		seqNum := r[0]
+		url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, seqNum)
+
+		httpClient := &http.Client{
+			Timeout: timeout,
+		}
+
+		// we're validating inputs and hence gosec-G107 can be ignored
+		resp, err := httpClient.Get(url) // nolint: gosec
+		if err != nil || resp.StatusCode != http.StatusOK {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve destination tx: %w", err),
+				"txHash",
+				txHash,
+				"dest srcChainInfo name",
+				destChain,
+				"status_code",
+				resp.Status,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+		defer resp.Body.Close()
+
+		bz, err := io.ReadAll(resp.Body)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve destination tx: %w", err),
+				"txHash",
+				txHash,
+				"dest srcChainInfo name",
+				destChain,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		otherSideTxHash := gjson.GetBytes(bz, txPath)
+		c.JSON(http.StatusOK, DestTxResponse{
+			DestChain: destChain,
+			TxHash:    otherSideTxHash.String(),
+		})
 	}
-
-	// validate destination srcChainInfo is present
-	destChainInfo, err := d.Database.Chain(destChain)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve srcChainInfo with name %v", destChain),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve srcChainInfo: %w", err),
-			"name",
-			destChain,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	client := sdkservice.GetSDKServiceClient(c, srcChainInfo.MajorSDKVersion())
-
-	sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
-		ChainName: srcChainInfo.ChainName,
-		Hash:      txHash,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve tx from sdk-service, %v", err),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve tx from sdk-service: %w", err),
-			"txHash",
-			txHash,
-			"src srcChainInfo name",
-			srcChain,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	// This query always returns an array of sequence numbers.
-	// Emeris-generated IBC transfers are always sent out alone, meaning that
-	// there are no more than 1 IBC transfer per tx.
-	// This code is ready to be adapted to support multiple IBC transfer/transaction, but
-	// for now we just get the first seq number found and roll with it.
-	r := getIBCSeqFromTx(sdkRes)
-	if len(r) == 0 {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("provided transaction is not ibc transfer"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("provided transaction is not ibc transfer: %w", err),
-			"txHash",
-			txHash,
-			"src srcChainInfo name",
-			srcChain,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	seqNum := r[0]
-	url := fmt.Sprintf("http://%s:26657/tx_search?query=\"recv_packet.packet_sequence=%s\"", destChainInfo.ChainName, seqNum)
-
-	httpClient := &http.Client{
-		Timeout: timeout,
-	}
-
-	// we're validating inputs and hence gosec-G107 can be ignored
-	resp, err := httpClient.Get(url) // nolint: gosec
-	if err != nil || resp.StatusCode != http.StatusOK {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve destination tx: %w", err),
-			"txHash",
-			txHash,
-			"dest srcChainInfo name",
-			destChain,
-			"status_code",
-			resp.Status,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-	defer resp.Body.Close()
-
-	bz, err := io.ReadAll(resp.Body)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve tx with packet sequence %s on %s", seqNum, destChain),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve destination tx: %w", err),
-			"txHash",
-			txHash,
-			"dest srcChainInfo name",
-			destChain,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	otherSideTxHash := gjson.GetBytes(bz, txPath)
-	c.JSON(http.StatusOK, DestTxResponse{
-		DestChain: destChain,
-		TxHash:    otherSideTxHash.String(),
-	})
 }

@@ -16,16 +16,15 @@ import (
 	cnsmodels "github.com/emerishq/demeris-backend-models/cns"
 
 	v1 "github.com/allinbits/starport-operator/api/v1"
-	"github.com/emerishq/demeris-api-server/api/router/deps"
 	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine) {
+func Register(router *gin.Engine, db *database.Database, i *Informer) {
 	rel := router.Group("/relayer")
 
-	rel.GET("/status", getRelayerStatus)
-	rel.GET("/balance", getRelayerBalance)
+	rel.GET("/status", getRelayerStatus(i))
+	rel.GET("/balance", getRelayerBalance(db, i))
 }
 
 // getRelayerStatus returns status of relayer.
@@ -37,52 +36,52 @@ func Register(router *gin.Engine) {
 // @Success 200 {object} RelayerStatusResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /relayer/status [get]
-func getRelayerStatus(c *gin.Context) {
-	var res RelayerStatusResponse
+func getRelayerStatus(ri *Informer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res RelayerStatusResponse
 
-	d := deps.GetDeps(c)
+		obj, err := ri.Informer.Lister().Get(k8stypes.NamespacedName{
+			Namespace: ri.Namespace,
+			Name:      "relayer",
+		}.String())
 
-	obj, err := d.RelayersInformer.Lister().Get(k8stypes.NamespacedName{
-		Namespace: d.KubeNamespace,
-		Name:      "relayer",
-	}.String())
+		if err != nil && !errors.Is(err, k8s.ErrNotFound) {
+			e := apierrors.New(
+				"status",
+				fmt.Sprintf("cannot query relayer status"),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot query relayer status: %w", err),
+				"obj",
+				obj,
+			)
+			_ = c.Error(e)
 
-	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := apierrors.New(
-			"status",
-			fmt.Sprintf("cannot query relayer status"),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot query relayer status: %w", err),
-			"obj",
-			obj,
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		relayer, err := k8s.GetRelayerFromObj(obj)
+		if err != nil && !errors.Is(err, k8s.ErrNotFound) {
+			e := apierrors.New(
+				"status",
+				fmt.Sprintf("cannot query relayer status"),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot unstructure relayer status: %w", err),
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		res.Running = true
+
+		if errors.Is(err, k8s.ErrNotFound) || relayer.Status.Phase != v1.RelayerPhaseRunning {
+			res.Running = false
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	relayer, err := k8s.GetRelayerFromObj(obj)
-	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := apierrors.New(
-			"status",
-			fmt.Sprintf("cannot query relayer status"),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot unstructure relayer status: %w", err),
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	res.Running = true
-
-	if errors.Is(err, k8s.ErrNotFound) || relayer.Status.Phase != v1.RelayerPhaseRunning {
-		res.Running = false
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // getRelayerBalance returns the balance of the various relayer accounts.
@@ -94,73 +93,52 @@ func getRelayerStatus(c *gin.Context) {
 // @Success 200 {object} RelayerBalances
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /relayer/balance [get]
-func getRelayerBalance(c *gin.Context) {
-	var res RelayerBalances
+func getRelayerBalance(db *database.Database, ri *Informer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res RelayerBalances
 
-	d := deps.GetDeps(c)
+		obj, err := ri.Informer.Lister().Get(k8stypes.NamespacedName{
+			Namespace: ri.Namespace,
+			Name:      "relayer",
+		}.String())
 
-	obj, err := d.RelayersInformer.Lister().Get(k8stypes.NamespacedName{
-		Namespace: d.KubeNamespace,
-		Name:      "relayer",
-	}.String())
+		if err != nil {
+			e := apierrors.New(
+				"status",
+				fmt.Sprintf("cannot query relayer status"),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot query relayer status: %w", err),
+				"obj",
+				obj,
+			)
+			_ = c.Error(e)
 
-	if err != nil {
-		e := apierrors.New(
-			"status",
-			fmt.Sprintf("cannot query relayer status"),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot query relayer status: %w", err),
-			"obj",
-			obj,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	relayer, err := k8s.GetRelayerFromObj(obj)
-	if err != nil && !errors.Is(err, k8s.ErrNotFound) {
-		e := apierrors.New(
-			"status",
-			fmt.Sprintf("cannot query relayer status"),
-			http.StatusInternalServerError,
-		).WithLogContext(
-			fmt.Errorf("cannot unstructure relayer status: %w", err),
-		)
-		_ = c.Error(e)
-		return
-	}
-
-	chains := []string{}
-	addresses := []string{}
-
-	for _, cs := range relayer.Status.ChainStatuses {
-		chains = append(chains, cs.ID)
-		addresses = append(addresses, cs.AccountAddress)
-	}
-
-	thresh, err := relayerThresh(chains, d.Database)
-	if err != nil {
-		e := apierrors.New(
-			"status",
-			fmt.Sprintf("cannot retrieve relayer status"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve relayer status: %w", err),
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	for i := 0; i < len(addresses); i++ {
-		t, found := thresh[chains[i]]
-		if !found {
-			continue
+			return
 		}
 
-		enough, err := enoughBalance(addresses[i], t, d.Database)
+		relayer, err := k8s.GetRelayerFromObj(obj)
+		if err != nil && !errors.Is(err, k8s.ErrNotFound) {
+			e := apierrors.New(
+				"status",
+				fmt.Sprintf("cannot query relayer status"),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot unstructure relayer status: %w", err),
+			)
+			_ = c.Error(e)
+			return
+		}
+
+		chains := []string{}
+		addresses := []string{}
+
+		for _, cs := range relayer.Status.ChainStatuses {
+			chains = append(chains, cs.ID)
+			addresses = append(addresses, cs.AccountAddress)
+		}
+
+		thresh, err := relayerThresh(chains, db)
 		if err != nil {
 			e := apierrors.New(
 				"status",
@@ -174,15 +152,36 @@ func getRelayerBalance(c *gin.Context) {
 			return
 		}
 
-		res.Balances = append(res.Balances, RelayerBalance{
-			Address:       addresses[i],
-			ChainName:     chains[i],
-			EnoughBalance: enough,
-		})
+		for i := 0; i < len(addresses); i++ {
+			t, found := thresh[chains[i]]
+			if !found {
+				continue
+			}
 
+			enough, err := enoughBalance(addresses[i], t, db)
+			if err != nil {
+				e := apierrors.New(
+					"status",
+					fmt.Sprintf("cannot retrieve relayer status"),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot retrieve relayer status: %w", err),
+				)
+				_ = c.Error(e)
+
+				return
+			}
+
+			res.Balances = append(res.Balances, RelayerBalance{
+				Address:       addresses[i],
+				ChainName:     chains[i],
+				EnoughBalance: enough,
+			})
+
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 func relayerThresh(chains []string, db *database.Database) (map[string]cnsmodels.Denom, error) {

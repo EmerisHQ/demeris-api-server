@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emerishq/demeris-api-server/api/router/deps"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/gin-gonic/gin"
 )
@@ -19,35 +19,35 @@ import (
 // @Success 200 {object} FeeResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/fee [get]
-func GetFee(c *gin.Context) {
-	var res FeeResponse
+func GetFee(db *database.Database) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res FeeResponse
 
-	d := deps.GetDeps(c)
+		chainName := c.Param("chain")
 
-	chainName := c.Param("chain")
+		chain, err := db.Chain(chainName)
 
-	chain, err := d.Database.Chain(chainName)
+		if err != nil {
+			e := apierrors.New(
+				"fee",
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
+				"name",
+				chainName,
+			)
+			_ = c.Error(e)
 
-	if err != nil {
-		e := apierrors.New(
-			"fee",
-			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain: %w", err),
-			"name",
-			chainName,
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		res = FeeResponse{
+			Denoms: chain.FeeTokens(),
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	res = FeeResponse{
-		Denoms: chain.FeeTokens(),
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // GetFeeAddress returns the fee address for a given chain, looked up by the chain name attribute.
@@ -60,35 +60,35 @@ func GetFee(c *gin.Context) {
 // @Success 200 {object} FeeAddressResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/address [get]
-func GetFeeAddress(c *gin.Context) {
-	var res FeeAddressResponse
+func GetFeeAddress(db *database.Database) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res FeeAddressResponse
 
-	d := deps.GetDeps(c)
+		chainName := c.Param("chain")
 
-	chainName := c.Param("chain")
+		chain, err := db.Chain(chainName)
 
-	chain, err := d.Database.Chain(chainName)
+		if err != nil {
+			e := apierrors.New(
+				"feeaddress",
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
+				"name",
+				chainName,
+			)
+			_ = c.Error(e)
 
-	if err != nil {
-		e := apierrors.New(
-			"feeaddress",
-			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain: %w", err),
-			"name",
-			chainName,
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		res = FeeAddressResponse{
+			FeeAddress: chain.DemerisAddresses,
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	res = FeeAddressResponse{
-		FeeAddress: chain.DemerisAddresses,
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // GetFeeAddresses returns the fee address for all chains.
@@ -100,37 +100,37 @@ func GetFeeAddress(c *gin.Context) {
 // @Success 200 {object} FeeAddressesResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chains/fee/addresses [get]
-func GetFeeAddresses(c *gin.Context) {
-	var res FeeAddressesResponse
+func GetFeeAddresses(db *database.Database) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res FeeAddressesResponse
 
-	d := deps.GetDeps(c)
+		chains, err := db.Chains()
 
-	chains, err := d.Database.Chains()
+		if err != nil {
+			e := apierrors.New(
+				"feeaddress",
+				fmt.Sprintf("cannot retrieve chains"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chains: %w", err),
+			)
+			_ = c.Error(e)
 
-	if err != nil {
-		e := apierrors.New(
-			"feeaddress",
-			fmt.Sprintf("cannot retrieve chains"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chains: %w", err),
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		for _, c := range chains {
+			res.FeeAddresses = append(
+				res.FeeAddresses,
+				FeeAddress{
+					ChainName:  c.ChainName,
+					FeeAddress: c.DemerisAddresses,
+				},
+			)
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	for _, c := range chains {
-		res.FeeAddresses = append(
-			res.FeeAddresses,
-			FeeAddress{
-				ChainName:  c.ChainName,
-				FeeAddress: c.DemerisAddresses,
-			},
-		)
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // GetFeeToken returns the fee token for a given chain, looked up by the chain name attribute.
@@ -143,33 +143,33 @@ func GetFeeAddresses(c *gin.Context) {
 // @Success 200 {object} FeeTokenResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/token [get]
-func GetFeeToken(c *gin.Context) {
-	var res FeeTokenResponse
+func GetFeeToken(db *database.Database) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var res FeeTokenResponse
 
-	d := deps.GetDeps(c)
+		chainName := c.Param("chain")
 
-	chainName := c.Param("chain")
+		chain, err := db.Chain(chainName)
 
-	chain, err := d.Database.Chain(chainName)
+		if err != nil {
+			e := apierrors.New(
+				"feetoken",
+				fmt.Sprintf("cannot retrieve chain with name %v", chainName),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain: %w", err),
+				"name",
+				chainName,
+			)
+			_ = c.Error(e)
 
-	if err != nil {
-		e := apierrors.New(
-			"feetoken",
-			fmt.Sprintf("cannot retrieve chain with name %v", chainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain: %w", err),
-			"name",
-			chainName,
-		)
-		_ = c.Error(e)
+			return
+		}
 
-		return
+		for _, cc := range chain.FeeTokens() {
+			res.FeeTokens = append(res.FeeTokens, cc)
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	for _, cc := range chain.FeeTokens() {
-		res.FeeTokens = append(res.FeeTokens, cc)
-	}
-
-	c.JSON(http.StatusOK, res)
 }

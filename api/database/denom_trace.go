@@ -2,19 +2,19 @@ package database
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
+// DenomTrace returns the denom trace for a given chain by its hash. Hash param is case-insensitive.
 func (d *Database) DenomTrace(chain string, hash string) (tracelistener.IBCDenomTraceRow, error) {
-	hash = strings.ToLower(hash)
 	var denomTraces []tracelistener.IBCDenomTraceRow
 
+	// note: lower() since Tracelistener stores hashes in lowercase
 	q := `
 	SELECT * FROM tracelistener.denom_traces
 	WHERE chain_name=?
-	AND hash=?
+	AND hash=lower(?)
 	AND base_denom != ''
 	AND delete_height IS NULL
 	LIMIT 1
