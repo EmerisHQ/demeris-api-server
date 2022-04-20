@@ -170,3 +170,12 @@ type Pagination struct {
 type APRResponse struct {
 	APR float64 `json:"apr,omitempty"`
 }
+
+type ChainPrimaryChannels struct {
+	Channels map[string]string `json:"channels"`
+}
+
+// /chains/primary_channels
+type ChainsPrimaryChannelResponse struct {
+	Chains map[string]ChainPrimaryChannels `json:"chains"`
+}

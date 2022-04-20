@@ -17,6 +17,7 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/ibcclient"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
@@ -1315,5 +1316,27 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 		// calculate staking APR
 		apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
 		return apr.String(), nil
+	}
+}
+
+// EstimatePrimaryChannels estimates the primary channels of all chains
+// @Summary Gets the primary channels of all chains
+// @Description Gets primary channels
+// @Tags Chain
+// @ID estimate-primary-channels
+// @Produce json
+// @Success 200 {object} ChainsPrimaryChannelResponse
+// @Failure 500,400 {object} apierrors.UserFacingError
+// @Router /chains/primary_channels [get]
+func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+
+		resp, _ := ibcclient.IbcChannelClientState("cosmos-hub", "channel-141", "transfer")
+
+		logger.Debug(*resp)
+
+		res := ChainsPrimaryChannelResponse{}
+		c.JSON(http.StatusOK, res)
 	}
 }

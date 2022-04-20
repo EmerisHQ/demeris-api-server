@@ -13,6 +13,7 @@ import (
 func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 	router.GET("/chains", GetChains(db))
 	router.GET("/chains/fee/addresses", GetFeeAddresses(db))
+	router.GET("/chains/primary_channels", EstimatePrimaryChannels(db, s))
 
 	chain := router.Group("/chain/:chain")
 
