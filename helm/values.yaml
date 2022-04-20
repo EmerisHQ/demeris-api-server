@@ -10,8 +10,8 @@ resources:
     cpu: 200m
     memory: 256Mi
   limits:
-    cpu: 200m
-    memory: 256Mi
+    cpu: 400m
+    memory: 512Mi
 
 ports:
   http: 8000
@@ -25,3 +25,7 @@ debug: true
 serviceMonitorEnabled: true
 serviceMonitorLabels:
   release: monitoring-stack
+
+hpaMinReplicas: 3
+hpaMaxReplicas: 5
+hpaAverageMemoryUtilization: 90
