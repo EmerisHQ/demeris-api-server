@@ -32,7 +32,7 @@ func SdkServiceURL(version string) string {
 
 type SDKServiceClients map[string]sdkutilities.Client
 
-func (clients SDKServiceClients) GetSDKServiceClient(chainName, version string) (sdkutilities.Client, *apierrors.Error) {
+func (clients SDKServiceClients) GetSDKServiceClient(version string) (sdkutilities.Client, *apierrors.Error) {
 	if v, ok := sdkExceptionMappings[version]; ok {
 		version = v
 	}
@@ -41,12 +41,8 @@ func (clients SDKServiceClients) GetSDKServiceClient(chainName, version string) 
 	if !ok {
 		return client, apierrors.New(
 			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", version, chainName),
+			fmt.Sprintf("cannot retrieve sdk-service for version %s", version),
 			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service for version %s", version),
-			"name",
-			chainName,
 		)
 	}
 

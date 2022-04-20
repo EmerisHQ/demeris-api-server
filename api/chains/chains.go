@@ -532,7 +532,7 @@ func GetChainSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 		paginationKey, exists := c.GetQuery("key")
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -601,7 +601,7 @@ func GetDenomSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 		denom := c.Param("denom")
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -653,7 +653,7 @@ func GetChainTx(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc 
 		txHash := c.Param("tx")
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -733,7 +733,7 @@ func GetInflation(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFun
 	return func(c *gin.Context) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -775,7 +775,7 @@ func GetStakingParams(sdkServiceClients sdkservice.SDKServiceClients) gin.Handle
 	return func(c *gin.Context) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -817,7 +817,7 @@ func GetStakingPool(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 	return func(c *gin.Context) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -858,7 +858,7 @@ func GetStakingPool(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 func GetMintParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -899,7 +899,7 @@ func GetMintParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFu
 func GetAnnualProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -941,7 +941,7 @@ func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Hand
 	return func(c *gin.Context) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -1033,10 +1033,10 @@ func GetStakingAPR(db *database.Database, s *store.Store, sdkServiceClients sdks
 func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stringcache.HandlerFunc {
 	return func(ctx context.Context, key string) (string, error) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
-			return "", e.Unwrap()
+			return "", fmt.Errorf(e.Error())
 		}
 
 		// get number of bonded tokens from staking/pool data

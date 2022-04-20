@@ -65,7 +65,7 @@ func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKS
 			return
 		}
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
@@ -190,7 +190,7 @@ func GetTxFeeEstimate(db *database.Database, sdkServiceClients sdkservice.SDKSer
 			return
 		}
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return

@@ -16,9 +16,9 @@ func FetchAccountNumbers(chain cns.Chain, account string, sdkServiceClients sdks
 	chainVersion := chain.MajorSDKVersion()
 	chainName := chain.ChainName
 
-	client, e := sdkServiceClients.GetSDKServiceClient(chainName, chainVersion)
+	client, e := sdkServiceClients.GetSDKServiceClient(chainVersion)
 	if e != nil {
-		return tracelistener.AuthRow{}, fmt.Errorf(e.Cause)
+		return tracelistener.AuthRow{}, fmt.Errorf(e.Error())
 	}
 
 	res, err := client.AccountNumbers(context.Background(), &sdkutilities.AccountNumbersPayload{

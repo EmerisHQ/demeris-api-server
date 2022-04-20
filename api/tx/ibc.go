@@ -91,7 +91,7 @@ func GetDestTx(db *database.Database, sdkServiceClients sdkservice.SDKServiceCli
 			return
 		}
 
-		client, e := sdkServiceClients.GetSDKServiceClient(srcChainInfo.ChainName, srcChainInfo.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(srcChainInfo.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return

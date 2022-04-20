@@ -282,7 +282,7 @@ func GetDelegatorRewards(db *database.Database, sdkServiceClients sdkservice.SDK
 			return
 		}
 
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.ChainName, chain.MajorSDKVersion())
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
 			_ = c.Error(e)
 			return
