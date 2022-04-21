@@ -1248,12 +1248,10 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 // @Description Gets status for all enabled chains.
 // @Produce json
 // @Success 200 {object} ChainsStatusesResponse
-// @Failure 500,403 {object} apierrors.UserFacingError
+// @Failure 500 {object} apierrors.UserFacingError
 // @Router /chains/status [get]
 func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		res := NewChainsStatusesResponse()
-
 		statuses, err := db.ChainsOnlineStatuses()
 		if err != nil {
 			e := apierrors.New(
@@ -1268,6 +1266,7 @@ func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
+		res := NewChainsStatusesResponse(len(statuses))
 		for _, s := range statuses {
 			res.Chains[s.ChainName] = ChainStatus{
 				Online: s.Online,

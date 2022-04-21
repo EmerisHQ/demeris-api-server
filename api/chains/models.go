@@ -179,8 +179,8 @@ type ChainsStatusesResponse struct {
 	Chains map[string]ChainStatus `json:"chains"`
 }
 
-func NewChainsStatusesResponse() ChainsStatusesResponse {
+func NewChainsStatusesResponse(sz int) ChainsStatusesResponse {
 	return ChainsStatusesResponse{
-		Chains: make(map[string]ChainStatus),
+		Chains: make(map[string]ChainStatus, sz),
 	}
 }
