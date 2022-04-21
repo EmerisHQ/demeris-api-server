@@ -174,7 +174,10 @@ func (d *Database) ChainsOnlineStatuses() ([]ChainOnlineStatusRow, error) {
 	q := `
 	SELECT
 		c.chain_name,
-		parse_interval(c.valid_block_thresh) > current_timestamp() - b.block_time online
+		coalesce(
+			parse_interval(c.valid_block_thresh) > current_timestamp() - b.block_time,
+			false
+		) online
 	FROM cns.chains c
 	LEFT JOIN tracelistener.blocktime b
 	ON c.chain_name = b.chain_name
