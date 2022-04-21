@@ -1256,7 +1256,15 @@ func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
 
 		statuses, err := db.ChainsOnlineStatuses()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, res)
+			e := apierrors.New(
+				"chain",
+				"cannot retrieve online status for chains",
+				http.StatusInternalServerError,
+			).WithLogContext(
+				err,
+			)
+
+			_ = c.Error(e)
 			return
 		}
 
