@@ -15,6 +15,7 @@ type Config struct {
 	KubernetesConfigMode   string
 	KubernetesNamespace    string `validate:"required"`
 	SentryDSN              string
+	SentryEnvironment      string
 	SentrySampleRate       float64
 	SentryTracesSampleRate float64
 
@@ -37,6 +38,7 @@ func Read() (*Config, error) {
 		"ListenAddr":             ":9090",
 		"RedisAddr":              ":6379",
 		"KubernetesNamespace":    "emeris",
+		"SentryEnvironment":      "notset",
 		"SentrySampleRate":       "1.0",
 		"SentryTracesSampleRate": "0.3",
 	})

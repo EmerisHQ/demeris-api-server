@@ -88,6 +88,7 @@ func main() {
 		Dsn:              cfg.SentryDSN,
 		SampleRate:       cfg.SentrySampleRate,
 		TracesSampleRate: cfg.SentryTracesSampleRate,
+		Environment:      cfg.SentryEnvironment,
 		AttachStacktrace: true,
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
