@@ -5,7 +5,28 @@ import (
 
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/lib/pq"
 )
+
+type ChainWithStatus struct {
+	ID                  uint64                  `db:"id" json:"-"`
+	Enabled             bool                    `db:"enabled" json:"enabled"`
+	ChainName           string                  `db:"chain_name" json:"chain_name"`
+	Logo                string                  `db:"logo" json:"logo"`
+	DisplayName         string                  `db:"display_name" json:"display_name"`
+	PrimaryChannel      cns.DbStringMap         `db:"primary_channel" json:"primary_channel"`
+	Denoms              cns.DenomList           `db:"denoms" json:"denoms"`
+	DemerisAddresses    pq.StringArray          `db:"demeris_addresses" json:"demeris_addresses"`
+	GenesisHash         string                  `db:"genesis_hash" json:"genesis_hash"`
+	NodeInfo            cns.NodeInfo            `db:"node_info" json:"node_info"`
+	ValidBlockThresh    cns.Threshold           `db:"valid_block_thresh" json:"valid_block_thresh" swaggertype:"primitive,integer"`
+	DerivationPath      string                  `db:"derivation_path" json:"derivation_path"`
+	SupportedWallets    pq.StringArray          `db:"supported_wallets" json:"supported_wallets"`
+	BlockExplorer       string                  `db:"block_explorer" json:"block_explorer"`
+	PublicNodeEndpoints cns.PublicNodeEndpoints `db:"public_node_endpoints" json:"public_node_endpoints,omitempty"`
+	CosmosSDKVersion    string                  `db:"cosmos_sdk_version" json:"cosmos_sdk_version,omitempty"`
+	Online              bool                    `db:"online" json:"online" `
+}
 
 func (d *Database) Chain(name string) (cns.Chain, error) {
 	var c cns.Chain
@@ -99,9 +120,25 @@ func (d *Database) VerifiedDenoms() (map[string]cns.DenomList, error) {
 	return ret, nil
 }
 
-func (d *Database) SimpleChains() ([]cns.Chain, error) {
-	var c []cns.Chain
-	return c, d.dbi.Exec("select chain_name, display_name, logo from cns.chains where enabled=TRUE", nil, &c)
+func (d *Database) ChainsWithStatus() ([]ChainWithStatus, error) {
+	q := `
+	SELECT
+		c.*,
+		coalesce(
+			parse_interval(c.valid_block_thresh) > current_timestamp() - b.block_time,
+			false
+		) online
+	FROM cns.chains c
+	LEFT JOIN tracelistener.blocktime b
+	ON c.chain_name = b.chain_name
+	WHERE c.enabled;
+	`
+	var rows []ChainWithStatus
+	if err := d.dbi.Exec(q, nil, &rows); err != nil {
+		return nil, err
+	}
+
+	return rows, nil
 }
 
 func (d *Database) ChainIDs() (map[string]string, error) {

@@ -40,13 +40,13 @@ const (
 // @Description Gets list of supported chains.
 // @Produce json
 // @Success 200 {object} ChainsResponse
-// @Failure 500,403 {object} apierrors.UserFacingError
+// @Failure 400 {object} apierrors.UserFacingError
 // @Router /chains [get]
 func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res ChainsResponse
 
-		chains, err := db.SimpleChains()
+		chains, err := db.ChainsWithStatus()
 
 		if err != nil {
 			e := apierrors.New(
@@ -61,14 +61,7 @@ func GetChains(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		for _, cc := range chains {
-			res.Chains = append(res.Chains, SupportedChain{
-				ChainName:   cc.ChainName,
-				DisplayName: cc.DisplayName,
-				Logo:        cc.Logo,
-			})
-		}
-
+		res.Chains = chains
 		c.JSON(http.StatusOK, res)
 	}
 }
