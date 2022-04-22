@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -97,7 +96,7 @@ func GetDestTx(db *database.Database, sdkServiceClients sdkservice.SDKServiceCli
 			return
 		}
 
-		sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
+		sdkRes, err := client.QueryTx(c.Request.Context(), &sdkutilities.QueryTxPayload{
 			ChainName: srcChainInfo.ChainName,
 			Hash:      txHash,
 		})

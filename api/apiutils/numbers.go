@@ -12,7 +12,7 @@ import (
 
 // FetchAccountNumbers returns a tracelistener.AuthRow containing sequence
 // and account numbers given a hex-encoded address.
-func FetchAccountNumbers(chain cns.Chain, account string, sdkServiceClients sdkservice.SDKServiceClients) (tracelistener.AuthRow, error) {
+func FetchAccountNumbers(ctx context.Context, chain cns.Chain, account string, sdkServiceClients sdkservice.SDKServiceClients) (tracelistener.AuthRow, error) {
 	chainVersion := chain.MajorSDKVersion()
 	chainName := chain.ChainName
 
@@ -21,7 +21,7 @@ func FetchAccountNumbers(chain cns.Chain, account string, sdkServiceClients sdks
 		return tracelistener.AuthRow{}, fmt.Errorf(e.Error())
 	}
 
-	res, err := client.AccountNumbers(context.Background(), &sdkutilities.AccountNumbersPayload{
+	res, err := client.AccountNumbers(ctx, &sdkutilities.AccountNumbersPayload{
 		ChainName:    chainName,
 		Bech32Prefix: &chain.NodeInfo.Bech32Config.PrefixAccount,
 		AddresHex:    &account,

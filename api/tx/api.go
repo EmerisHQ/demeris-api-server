@@ -71,7 +71,7 @@ func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKS
 			return
 		}
 
-		txhash, err := relayTx(client, s, txRequest.TxBytes, chainName, txRequest.Owner)
+		txhash, err := relayTx(c.Request.Context(), client, s, txRequest.TxBytes, chainName, txRequest.Owner)
 
 		if err != nil {
 			e := apierrors.New("tx", fmt.Sprintf("relaying tx failed, %v", err), http.StatusBadRequest).WithLogContext(
@@ -91,8 +91,8 @@ func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKS
 // relayTx relays the tx to the specifc endpoint
 // relayTx will also perform the ticketing mechanism
 // Always expect broadcast mode to be `async`
-func relayTx(services sdkutilities.Client, store *store.Store, txBytes []byte, chainName string, owner string) (string, error) {
-	res, err := services.BroadcastTx(context.Background(), &sdkutilities.BroadcastTxPayload{
+func relayTx(ctx context.Context, services sdkutilities.Client, store *store.Store, txBytes []byte, chainName string, owner string) (string, error) {
+	res, err := services.BroadcastTx(ctx, &sdkutilities.BroadcastTxPayload{
 		ChainName: chainName,
 		TxBytes:   txBytes,
 	})
@@ -196,7 +196,7 @@ func GetTxFeeEstimate(db *database.Database, sdkServiceClients sdkservice.SDKSer
 			return
 		}
 
-		sdkRes, err := client.EstimateFees(context.Background(), &sdkutilities.EstimateFeesPayload{
+		sdkRes, err := client.EstimateFees(c.Request.Context(), &sdkutilities.EstimateFeesPayload{
 			ChainName: chainName,
 			TxBytes:   txRequest.TxBytes,
 		})

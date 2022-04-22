@@ -288,7 +288,7 @@ func GetDelegatorRewards(db *database.Database, sdkServiceClients sdkservice.SDK
 			return
 		}
 
-		sdkRes, err := client.DelegatorRewards(context.Background(), &sdkutilities.DelegatorRewardsPayload{
+		sdkRes, err := client.DelegatorRewards(c.Request.Context(), &sdkutilities.DelegatorRewardsPayload{
 			ChainName:    chainName,
 			Bech32Prefix: &chain.NodeInfo.Bech32Config.MainPrefix,
 			AddresHex:    &address,
@@ -381,7 +381,7 @@ func GetNumbersByAddress(db *database.Database, sdkServiceClients sdkservice.SDK
 				return
 			}*/
 
-		resp, err := fetchNumbers(dd, address, sdkServiceClients)
+		resp, err := fetchNumbers(c.Request.Context(), dd, address, sdkServiceClients)
 		if err != nil {
 			e := apierrors.New(
 				"numbers",
@@ -428,8 +428,8 @@ func GetUserTickets(db *database.Database, s *store.Store) gin.HandlerFunc {
 	}
 }
 
-func fetchNumbers(cns []cns.Chain, account string, sdkServiceClients sdkservice.SDKServiceClients) ([]tracelistener.AuthRow, error) {
-	queryGroup, _ := errgroup.WithContext(context.Background())
+func fetchNumbers(ctx context.Context, cns []cns.Chain, account string, sdkServiceClients sdkservice.SDKServiceClients) ([]tracelistener.AuthRow, error) {
+	queryGroup, _ := errgroup.WithContext(ctx)
 
 	results := make([]tracelistener.AuthRow, len(cns))
 
@@ -437,7 +437,7 @@ func fetchNumbers(cns []cns.Chain, account string, sdkServiceClients sdkservice.
 		iChain := chain
 		idx := i
 		queryGroup.Go(func() error {
-			row, err := apiutils.FetchAccountNumbers(iChain, account, sdkServiceClients)
+			row, err := apiutils.FetchAccountNumbers(ctx, iChain, account, sdkServiceClients)
 			if err != nil {
 				return fmt.Errorf("unable to get account numbers, %w", err)
 			}
