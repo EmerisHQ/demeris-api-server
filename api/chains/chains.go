@@ -1332,8 +1332,19 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 	return func(c *gin.Context) {
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
-		resp, _ := ibcclient.IbcChannelClientState("cosmos-hub", "channel-141", "transfer")
+		resp, err := ibcclient.IbcChannelClientState("cosmos-hub", "channel-141", "transfer")
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("failed to retrieve IbcChannelClientState"),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("failed to retrieve IbcChannelClientState: %w", err),
+			)
+			_ = c.Error(e)
 
+			return
+		}
 		logger.Debug(*resp)
 
 		res := ChainsPrimaryChannelResponse{}
