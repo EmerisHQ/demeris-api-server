@@ -12,8 +12,10 @@ import (
 )
 
 func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
-	router.GET("/chains", GetChains(db))
-	router.GET("/chains/fee/addresses", GetFeeAddresses(db))
+	router.Group("/chains").
+		GET("", GetChains(db)).
+		GET("/status", GetChainsStatuses(db)).
+		GET("/fee/addresses", GetFeeAddresses(db))
 
 	chain := router.Group("/chain/:chain")
 

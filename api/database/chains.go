@@ -164,3 +164,30 @@ func (d *Database) PrimaryChannels(chainName string) ([]cns.ChannelQuery, error)
 		"chain_name": chainName,
 	})
 }
+
+type ChainOnlineStatusRow struct {
+	ChainName string `db:"chain_name"`
+	Online    bool   `db:"online"`
+}
+
+func (d *Database) ChainsOnlineStatuses() ([]ChainOnlineStatusRow, error) {
+	q := `
+	SELECT
+		c.chain_name,
+		coalesce(
+			parse_interval(c.valid_block_thresh) > current_timestamp() - b.block_time,
+			false
+		) online
+	FROM cns.chains c
+	LEFT JOIN tracelistener.blocktime b
+	ON c.chain_name = b.chain_name
+	WHERE c.enabled;
+	`
+
+	var rows []ChainOnlineStatusRow
+	if err := d.dbi.DB.Select(&rows, q); err != nil {
+		return nil, err
+	}
+
+	return rows, nil
+}

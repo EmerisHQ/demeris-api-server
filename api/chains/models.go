@@ -170,3 +170,17 @@ type Pagination struct {
 type APRResponse struct {
 	APR float64 `json:"apr,omitempty"`
 }
+
+type ChainStatus struct {
+	Online bool `json:"online"`
+}
+
+type ChainsStatusesResponse struct {
+	Chains map[string]ChainStatus `json:"chains"`
+}
+
+func NewChainsStatusesResponse(sz int) ChainsStatusesResponse {
+	return ChainsStatusesResponse{
+		Chains: make(map[string]ChainStatus, sz),
+	}
+}
