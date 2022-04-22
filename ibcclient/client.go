@@ -22,5 +22,8 @@ func IbcChannelClientState(chainName string, channelId, portId string) (*ibcchan
 	}()
 
 	iq := ibcchannel.NewQueryClient(grpcConn)
-	return iq.ChannelClientState(context.Background(), &ibcchannel.QueryChannelClientStateRequest{})
+	return iq.ChannelClientState(context.Background(), &ibcchannel.QueryChannelClientStateRequest{
+		ChannelId: channelId,
+		PortId:    portId,
+	})
 }
