@@ -10,22 +10,22 @@ import (
 
 type ChainWithStatus struct {
 	ID                  uint64                  `db:"id" json:"-"`
-	Enabled             bool                    `db:"enabled" json:"enabled"`
-	ChainName           string                  `db:"chain_name" json:"chain_name"`
-	Logo                string                  `db:"logo" json:"logo"`
-	DisplayName         string                  `db:"display_name" json:"display_name"`
-	PrimaryChannel      cns.DbStringMap         `db:"primary_channel" json:"primary_channel"`
-	Denoms              cns.DenomList           `db:"denoms" json:"denoms"`
-	DemerisAddresses    pq.StringArray          `db:"demeris_addresses" json:"demeris_addresses"`
-	GenesisHash         string                  `db:"genesis_hash" json:"genesis_hash"`
-	NodeInfo            cns.NodeInfo            `db:"node_info" json:"node_info"`
-	ValidBlockThresh    cns.Threshold           `db:"valid_block_thresh" json:"valid_block_thresh" swaggertype:"primitive,integer"`
-	DerivationPath      string                  `db:"derivation_path" json:"derivation_path"`
-	SupportedWallets    pq.StringArray          `db:"supported_wallets" json:"supported_wallets"`
-	BlockExplorer       string                  `db:"block_explorer" json:"block_explorer"`
+	Enabled             bool                    `db:"enabled" json:"enabled,omitempty"`
+	ChainName           string                  `db:"chain_name" json:"chain_name,omitempty"`
+	Logo                string                  `db:"logo" json:"logo,omitempty"`
+	DisplayName         string                  `db:"display_name" json:"display_name,omitempty"`
+	PrimaryChannel      cns.DbStringMap         `db:"primary_channel" json:"primary_channel,omitempty"`
+	Denoms              cns.DenomList           `db:"denoms" json:"denoms,omitempty"`
+	DemerisAddresses    pq.StringArray          `db:"demeris_addresses" json:"demeris_addresses,omitempty"`
+	GenesisHash         string                  `db:"genesis_hash" json:"genesis_hash,omitempty"`
+	NodeInfo            cns.NodeInfo            `db:"node_info" json:"node_info,omitempty"`
+	ValidBlockThresh    cns.Threshold           `db:"valid_block_thresh" json:"valid_block_thresh,omitempty" swaggertype:"primitive,integer"`
+	DerivationPath      string                  `db:"derivation_path" json:"derivation_path,omitempty"`
+	SupportedWallets    pq.StringArray          `db:"supported_wallets" json:"supported_wallets,omitempty"`
+	BlockExplorer       string                  `db:"block_explorer" json:"block_explorer,omitempty"`
 	PublicNodeEndpoints cns.PublicNodeEndpoints `db:"public_node_endpoints" json:"public_node_endpoints,omitempty"`
 	CosmosSDKVersion    string                  `db:"cosmos_sdk_version" json:"cosmos_sdk_version,omitempty"`
-	Online              bool                    `db:"online" json:"online" `
+	Online              bool                    `db:"online" json:"online,omitempty" `
 }
 
 func (d *Database) Chain(name string) (cns.Chain, error) {
