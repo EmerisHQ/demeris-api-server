@@ -32,3 +32,28 @@ func (d *Database) DenomTrace(chain string, hash string) (tracelistener.IBCDenom
 
 	return denomTraces[0], nil
 }
+
+// DenomTraces returns the all the denom trace for a given chain. Hash param is case-insensitive.
+func (d *Database) DenomTraces(chain string, hash string) ([]tracelistener.IBCDenomTraceRow, error) {
+	var denomTraces []tracelistener.IBCDenomTraceRow
+
+	// note: lower() since Tracelistener stores hashes in lowercase
+	q := `
+	SELECT * FROM tracelistener.denom_traces
+	WHERE chain_name=?
+	AND base_denom != ''
+	AND delete_height IS NULL
+	`
+
+	q = d.dbi.DB.Rebind(q)
+
+	if err := d.dbi.DB.Select(&denomTraces, q, chain); err != nil {
+		return []tracelistener.IBCDenomTraceRow{}, err
+	}
+
+	if len(denomTraces) == 0 {
+		return []tracelistener.IBCDenomTraceRow{}, fmt.Errorf("query done but returned no result")
+	}
+
+	return denomTraces, nil
+}
