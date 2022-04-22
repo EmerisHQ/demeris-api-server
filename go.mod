@@ -13,11 +13,17 @@ require (
 	github.com/alicebob/miniredis/v2 v2.18.0
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cockroachdb/cockroach-go/v2 v2.2.8
+<<<<<<< Updated upstream
 	github.com/cosmos/cosmos-sdk v0.45.3
 	github.com/cosmos/ibc-go/v3 v3.0.0
 	github.com/emerishq/demeris-backend-models v1.5.0
 	github.com/emerishq/emeris-cns-server v0.0.0-20220414063114-da66288211fc
 	github.com/emerishq/emeris-utils v1.4.1-0.20220420052543-d4feeb98403f
+=======
+	github.com/cosmos/cosmos-sdk v0.45.1
+	github.com/emerishq/demeris-backend-models v1.5.0
+	github.com/emerishq/emeris-utils v1.4.0
+>>>>>>> Stashed changes
 	github.com/emerishq/sdk-service-meta v0.0.0-20220331063503-f6dcfa168e93
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.1
@@ -29,7 +35,11 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/stretchr/testify v1.7.1
 	github.com/swaggo/swag v1.8.0
+<<<<<<< Updated upstream
 	github.com/tendermint/tendermint v0.34.19
+=======
+	github.com/tendermint/tendermint v0.34.14
+>>>>>>> Stashed changes
 	github.com/tidwall/gjson v1.14.0
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.uber.org/zap v1.21.0
@@ -57,11 +67,18 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
+<<<<<<< Updated upstream
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/gaia/v7 v7.0.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
+=======
+	github.com/cosmos/gaia/v5 v5.0.8 // indirect
+	github.com/cosmos/go-bip39 v1.0.0 // indirect
+	github.com/cosmos/iavl v0.17.3 // indirect
+	github.com/cosmos/ibc-go/v3 v3.0.0 // indirect
+>>>>>>> Stashed changes
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
@@ -153,12 +170,22 @@ require (
 	github.com/rakyll/statik v0.1.7 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
+<<<<<<< Updated upstream
+=======
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	github.com/rs/cors v1.7.0 // indirect
+	github.com/rs/zerolog v1.23.0 // indirect
+>>>>>>> Stashed changes
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
+<<<<<<< Updated upstream
 	github.com/spf13/cobra v1.4.0 // indirect
+=======
+	github.com/spf13/cobra v1.3.0 // indirect
+>>>>>>> Stashed changes
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
