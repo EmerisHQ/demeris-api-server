@@ -124,7 +124,7 @@ func (d *Database) ChainsWithStatus() ([]ChainWithStatus, error) {
 	q := `
 	SELECT
 		c.enabled,c.chain_name,c.logo,c.display_name,c.primary_channel,c.denoms,c.demeris_addresses,
-		c.genesis_hash,c.node_info,c.valid_block_thresh,c.derivation_path,supported_wallets,
+		c.genesis_hash,c.node_info,c.valid_block_thresh,c.derivation_path,c.supported_wallets,
 		c.block_explorer,c.public_node_endpoints,c.cosmos_sdk_version,
 		coalesce(
 			parse_interval(c.valid_block_thresh) > current_timestamp() - b.block_time,
