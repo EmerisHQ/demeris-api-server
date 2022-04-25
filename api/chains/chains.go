@@ -40,7 +40,7 @@ const (
 // @Description Gets list of supported chains.
 // @Produce json
 // @Success 200 {object} ChainsResponse
-// @Failure 400 {object} apierrors.UserFacingError
+// @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chains [get]
 func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -52,7 +52,7 @@ func GetChains(db *database.Database) gin.HandlerFunc {
 			e := apierrors.New(
 				"chains",
 				fmt.Sprintf("cannot retrieve chains"),
-				http.StatusBadRequest,
+				http.StatusInternalServerError,
 			).WithLogContext(
 				fmt.Errorf("cannot retrieve chains: %w", err),
 			)
