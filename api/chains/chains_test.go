@@ -20,6 +20,7 @@ import (
 const (
 	chainEndpointUrl       = "http://%s/chain/%s"
 	chainsEndpointUrl      = "http://%s/chains"
+	chainsStatusesUrl      = "http://%s/chains/status"
 	chainStatusUrl         = "http://%s/chain/%s/status"
 	chainSupplyUrl         = "http://%s/chain/%s/supply"
 	verifyTraceEndpointUrl = "http://%s/chain/%s/denom/verify_trace/%s"
@@ -330,5 +331,49 @@ func TestGetChainSupply(t *testing.T) {
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 		})
 	}
+	utils.TruncateCNSDB(testingCtx, t)
+}
+
+func TestGetChainsStatuses(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+
+	// arrange
+	testChains := []cns.Chain{
+		chainWithoutPublicEndpoints,
+		chainWithPublicEndpoints,
+		disabledChain,
+	}
+	for _, c := range testChains {
+		err := testingCtx.CnsDB.AddChain(c)
+		require.NoError(t, err)
+	}
+
+	// act
+	resp, err := http.Get(fmt.Sprintf(chainsStatusesUrl, testingCtx.Cfg.ListenAddr))
+	require.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
+
+	// assert
+	body, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	respStruct := chains.ChainsStatusesResponse{}
+	err = json.Unmarshal(body, &respStruct)
+	require.NoError(t, err)
+
+	expectedResult := chains.ChainsStatusesResponse{
+		Chains: map[string]chains.ChainStatus{
+			chainWithoutPublicEndpoints.ChainName: {
+				Online: false,
+			},
+			chainWithPublicEndpoints.ChainName: {
+				Online: true,
+			},
+		},
+	}
+	require.Equal(t, expectedResult, respStruct)
+	require.Equal(t, 200, resp.StatusCode)
+
 	utils.TruncateCNSDB(testingCtx, t)
 }
