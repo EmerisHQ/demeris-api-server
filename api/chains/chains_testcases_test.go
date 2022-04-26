@@ -24,15 +24,15 @@ var getChainTestCases = []struct {
 	},
 	{
 		"Get Chain - Without PublicEndpoint",
-		chainWithoutPublicEndpoints,
-		chainWithoutPublicEndpoints.ChainName,
+		utils.ChainWithoutPublicEndpoints,
+		utils.ChainWithoutPublicEndpoints.ChainName,
 		200,
 		true,
 	},
 	{
 		"Get Chain - With PublicEndpoints",
-		chainWithPublicEndpoints,
-		chainWithPublicEndpoints.ChainName,
+		utils.ChainWithPublicEndpoints,
+		utils.ChainWithPublicEndpoints.ChainName,
 		200,
 		true,
 	},
@@ -52,7 +52,7 @@ var getChainsTestCases = []struct {
 	},
 	{
 		"Get Chains - 2 Chains (With & Without)",
-		[]cns.Chain{chainWithoutPublicEndpoints, chainWithPublicEndpoints},
+		[]cns.Chain{utils.ChainWithoutPublicEndpoints, utils.ChainWithPublicEndpoints},
 		200,
 		true,
 	},
@@ -70,8 +70,8 @@ var verifyTraceTestCases = []struct {
 }{
 	{
 		"chain1->ch1->Chain2",
-		verifyTraceData,
-		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		utils.VerifyTraceData,
+		[]cns.Chain{utils.ChainWithPublicEndpoints, utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"abc12345",
 		"",
@@ -80,8 +80,8 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"wrong hash",
-		verifyTraceData,
-		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		utils.VerifyTraceData,
+		[]cns.Chain{utils.ChainWithPublicEndpoints, utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"xyz",
 		"token hash xyz not found on chain chain1",
@@ -99,12 +99,12 @@ var verifyTraceTestCases = []struct {
 					ChainName: "chain1",
 				},
 			},
-			Channels:    verifyTraceData.Channels,
-			Connections: verifyTraceData.Connections,
-			Clients:     verifyTraceData.Clients,
-			BlockTimes:  verifyTraceData.BlockTimes,
+			Channels:    utils.VerifyTraceData.Channels,
+			Connections: utils.VerifyTraceData.Connections,
+			Clients:     utils.VerifyTraceData.Clients,
+			BlockTimes:  utils.VerifyTraceData.BlockTimes,
 		},
-		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		[]cns.Chain{utils.ChainWithPublicEndpoints, utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"abc12345",
 		"",
@@ -122,12 +122,12 @@ var verifyTraceTestCases = []struct {
 					ChainName: "chain1",
 				},
 			},
-			Channels:    verifyTraceData.Channels,
-			Connections: verifyTraceData.Connections,
-			Clients:     verifyTraceData.Clients,
-			BlockTimes:  verifyTraceData.BlockTimes,
+			Channels:    utils.VerifyTraceData.Channels,
+			Connections: utils.VerifyTraceData.Connections,
+			Clients:     utils.VerifyTraceData.Clients,
+			BlockTimes:  utils.VerifyTraceData.BlockTimes,
 		},
-		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		[]cns.Chain{utils.ChainWithPublicEndpoints, utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"abc12345",
 		"no destination chain found",
@@ -137,8 +137,8 @@ var verifyTraceTestCases = []struct {
 	{
 		"no matching connection id",
 		utils.TracelistenerData{
-			Denoms:   verifyTraceData.Denoms,
-			Channels: verifyTraceData.Channels,
+			Denoms:   utils.VerifyTraceData.Denoms,
+			Channels: utils.VerifyTraceData.Channels,
 			Connections: []utils.Connection{
 				{
 					ChainName:           "chain1",
@@ -148,12 +148,12 @@ var verifyTraceTestCases = []struct {
 					CounterConnectionID: "conn2",
 					CounterClientID:     "cl2",
 				},
-				verifyTraceData.Connections[1],
+				utils.VerifyTraceData.Connections[1],
 			},
-			Clients:    verifyTraceData.Clients,
-			BlockTimes: verifyTraceData.BlockTimes,
+			Clients:    utils.VerifyTraceData.Clients,
+			BlockTimes: utils.VerifyTraceData.BlockTimes,
 		},
-		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		[]cns.Chain{utils.ChainWithPublicEndpoints, utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"abc12345",
 		"no destination chain found",
@@ -163,7 +163,7 @@ var verifyTraceTestCases = []struct {
 	{
 		"Channels.hops incorrect conn",
 		utils.TracelistenerData{
-			Denoms: verifyTraceData.Denoms,
+			Denoms: utils.VerifyTraceData.Denoms,
 			Channels: []utils.Channel{
 				{
 					ChannelID:        "ch1",
@@ -178,11 +178,11 @@ var verifyTraceTestCases = []struct {
 					ChainName:        "chain2",
 				},
 			},
-			Connections: verifyTraceData.Connections,
-			Clients:     verifyTraceData.Clients,
-			BlockTimes:  verifyTraceData.BlockTimes,
+			Connections: utils.VerifyTraceData.Connections,
+			Clients:     utils.VerifyTraceData.Clients,
+			BlockTimes:  utils.VerifyTraceData.BlockTimes,
 		},
-		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		[]cns.Chain{utils.ChainWithPublicEndpoints, utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"abc12345",
 		"no destination chain found",
@@ -191,8 +191,8 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"destination chain doesn't exist",
-		verifyTraceData,
-		[]cns.Chain{chainWithoutPublicEndpoints},
+		utils.VerifyTraceData,
+		[]cns.Chain{utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"abc12345",
 		"no chain with name chain2 found",
@@ -201,9 +201,9 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"dest chain not enabled",
-		verifyTraceData,
+		utils.VerifyTraceData,
 		[]cns.Chain{
-			chainWithoutPublicEndpoints,
+			utils.ChainWithoutPublicEndpoints,
 			{
 				Enabled:          false,
 				ChainName:        "chain2",
@@ -230,10 +230,10 @@ var verifyTraceTestCases = []struct {
 	{
 		"dest chain offline",
 		utils.TracelistenerData{
-			Denoms:      verifyTraceData.Denoms,
-			Channels:    verifyTraceData.Channels,
-			Connections: verifyTraceData.Connections,
-			Clients:     verifyTraceData.Clients,
+			Denoms:      utils.VerifyTraceData.Denoms,
+			Channels:    utils.VerifyTraceData.Channels,
+			Connections: utils.VerifyTraceData.Connections,
+			Clients:     utils.VerifyTraceData.Clients,
 			BlockTimes: []utils.BlockTime{
 				{
 					ChainName: "chain2",
@@ -241,7 +241,7 @@ var verifyTraceTestCases = []struct {
 				},
 			},
 		},
-		[]cns.Chain{chainWithPublicEndpoints, chainWithoutPublicEndpoints},
+		[]cns.Chain{utils.ChainWithPublicEndpoints, utils.ChainWithoutPublicEndpoints},
 		"chain1",
 		"abc12345",
 		"status offline",
@@ -250,9 +250,9 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"primary channel mismatch in chains data",
-		verifyTraceData,
+		utils.VerifyTraceData,
 		[]cns.Chain{
-			chainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints,
 			{
 				Enabled:          true,
 				ChainName:        "chain1",
@@ -278,9 +278,9 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"primary channel mismatch in chains data",
-		verifyTraceData,
+		utils.VerifyTraceData,
 		[]cns.Chain{
-			chainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints,
 			{
 				Enabled:          true,
 				ChainName:        "chain1",
@@ -306,7 +306,7 @@ var verifyTraceTestCases = []struct {
 	},
 	{
 		"akash->cosmoshub->regen",
-		verifyTraceData3Chains,
+		utils.VerifyTraceData3Chains,
 		[]cns.Chain{
 			{
 				Enabled:          true,

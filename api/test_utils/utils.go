@@ -175,7 +175,7 @@ type TestingCtx struct {
 
 // Setup Set up HTTP server, CDB and Redis in new ports.
 // K8s clients are mocked.
-func Setup() *TestingCtx {
+func Setup(runServer bool) *TestingCtx {
 
 	c := &config.Config{
 		DatabaseConnectionURL: "FILLME",
@@ -194,9 +194,9 @@ func Setup() *TestingCtx {
 
 	// --- CDB ---
 	cdbTestServer, err := testserver.NewTestServer()
-	checkNoError(err, l)
+	CheckNoError(err, l)
 
-	checkNoError(cdbTestServer.WaitForInit(), l)
+	CheckNoError(cdbTestServer.WaitForInit(), l)
 
 	c.DatabaseConnectionURL = cdbTestServer.PGURL().String()
 	checkNotNil(c.DatabaseConnectionURL, "CDB conn. string", l)
@@ -205,48 +205,54 @@ func Setup() *TestingCtx {
 	// A big no-no here, using one service's internals inside the other
 	// But no other way, since one service writes and the other reads, sharing the DB schemas
 	cns, err := cnsDb.New(c.DatabaseConnectionURL)
-	checkNoError(err, l)
+	CheckNoError(err, l)
 
 	dbi, err := apiDb.Init(c)
-	checkNoError(err, l)
+	CheckNoError(err, l)
 
-	// --- Redis ---
-	miniRedis, err := miniredis.Run()
-	checkNoError(err, l)
-	c.RedisAddr = miniRedis.Addr()
-	s, err := store.NewClient(c.RedisAddr)
-	checkNoError(err, l)
+	r := &router.Router{DB: dbi}
 
-	// --- K8s ---
-	kube := mocks.Client{}
-	informer := mocks.GenericInformer{}
+	if runServer {
 
-	clients, err := sdkservice.InitializeClients()
-	checkNoError(err, l)
+		// --- Redis ---
+		miniRedis, err := miniredis.Run()
+		CheckNoError(err, l)
+		c.RedisAddr = miniRedis.Addr()
+		s, err := store.NewClient(c.RedisAddr)
+		CheckNoError(err, l)
 
-	r := router.New(
-		dbi,
-		l,
-		s,
-		&kube,
-		c.KubernetesNamespace,
-		&informer,
-		clients,
-		c.Debug,
-	)
+		// --- K8s ---
+		kube := mocks.Client{}
+		informer := mocks.GenericInformer{}
 
-	// --- HTTP server ---
-	port, err := getFreePort()
-	checkNoError(err, l)
-	c.ListenAddr = "127.0.0.1:" + port
+		clients, err := sdkservice.InitializeClients()
+		CheckNoError(err, l)
 
-	ch := make(chan struct{})
-	go func() {
-		close(ch)
-		err := r.Serve(c.ListenAddr)
-		checkNoError(err, l)
-	}()
-	<-ch // Wait for the goroutine to start. Still hack!!
+		r = router.New(
+			dbi,
+			l,
+			s,
+			&kube,
+			c.KubernetesNamespace,
+			&informer,
+			clients,
+			c.Debug,
+		)
+
+		// --- HTTP server ---
+		port, err := getFreePort()
+		CheckNoError(err, l)
+		c.ListenAddr = "127.0.0.1:" + port
+
+		ch := make(chan struct{})
+		go func() {
+			close(ch)
+			err := r.Serve(c.ListenAddr)
+			CheckNoError(err, l)
+		}()
+		<-ch // Wait for the goroutine to start. Still hack!!
+
+	}
 
 	return &TestingCtx{
 		Cfg:    c,
@@ -326,7 +332,7 @@ func getFreePort() (port string, err error) {
 	return port, nil
 }
 
-func checkNoError(err error, logger *zap.SugaredLogger) {
+func CheckNoError(err error, logger *zap.SugaredLogger) {
 	if err != nil {
 		logger.Error(err)
 		os.Exit(-1)

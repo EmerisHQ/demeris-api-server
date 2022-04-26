@@ -43,22 +43,22 @@ func TestGetChain(t *testing.T) {
 		},
 		{
 			"Get Chain - Without PublicEndpoint",
-			chainWithoutPublicEndpoints,
-			chainWithoutPublicEndpoints.ChainName,
+			utils.ChainWithoutPublicEndpoints,
+			utils.ChainWithoutPublicEndpoints.ChainName,
 			200,
 			true,
 		},
 		{
 			"Get Chain - With PublicEndpoints",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			200,
 			true,
 		},
 		{
 			"Get Chain - Disabled",
-			disabledChain,
-			disabledChain.ChainName,
+			utils.DisabledChain,
+			utils.DisabledChain.ChainName,
 			400,
 			true,
 		},
@@ -192,7 +192,7 @@ func toSupportedChain(c cns.Chain) chains.SupportedChain {
 
 func TestGetChainStatus(t *testing.T) {
 	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
 	tests := []struct {
 		name             string
@@ -204,24 +204,24 @@ func TestGetChainStatus(t *testing.T) {
 	}{
 		{
 			"Get Chain Status - Without PublicEndpoint",
-			chainWithoutPublicEndpoints,
-			chainWithoutPublicEndpoints.ChainName,
+			utils.ChainWithoutPublicEndpoints,
+			utils.ChainWithoutPublicEndpoints.ChainName,
 			200,
 			chains.StatusResponse{Online: false},
 			true,
 		},
 		{
 			"Get Chain Status - Enabled",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			200,
 			chains.StatusResponse{Online: true},
 			true,
 		},
 		{
 			"Get Chain Status - Disabled",
-			disabledChain,
-			disabledChain.ChainName,
+			utils.DisabledChain,
+			utils.DisabledChain.ChainName,
 			400,
 			chains.StatusResponse{Online: false},
 			true,
@@ -274,8 +274,8 @@ func TestGetChainSupply(t *testing.T) {
 	}{
 		{
 			"Get Chain Supply - Enabled",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			500,
 			chains.SupplyResponse{Supply: []chains.Coin(nil), Pagination: chains.Pagination{}},
 			true,
@@ -319,13 +319,13 @@ func TestGetChainSupply(t *testing.T) {
 
 func TestGetChainsStatuses(t *testing.T) {
 	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
 	// arrange
 	testChains := []cns.Chain{
-		chainWithoutPublicEndpoints,
-		chainWithPublicEndpoints,
-		disabledChain,
+		utils.ChainWithoutPublicEndpoints,
+		utils.ChainWithPublicEndpoints,
+		utils.DisabledChain,
 	}
 	for _, c := range testChains {
 		err := testingCtx.CnsDB.AddChain(c)
@@ -347,10 +347,10 @@ func TestGetChainsStatuses(t *testing.T) {
 
 	expectedResult := chains.ChainsStatusesResponse{
 		Chains: map[string]chains.ChainStatus{
-			chainWithoutPublicEndpoints.ChainName: {
+			utils.ChainWithoutPublicEndpoints.ChainName: {
 				Online: false,
 			},
-			chainWithPublicEndpoints.ChainName: {
+			utils.ChainWithPublicEndpoints.ChainName: {
 				Online: true,
 			},
 		},

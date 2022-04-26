@@ -12,7 +12,7 @@ var testingCtx *utils.TestingCtx
 func TestMain(m *testing.M) {
 
 	// global setup
-	testingCtx = utils.Setup()
+	testingCtx = utils.Setup(true)
 
 	// Run test suites
 	exitVal := m.Run()
