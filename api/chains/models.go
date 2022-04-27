@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	db "github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+
+	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
 type ChainsResponse struct {
@@ -171,11 +174,37 @@ type APRResponse struct {
 	APR float64 `json:"apr,omitempty"`
 }
 
+type PrimaryChannelEstimation struct {
+	CurrentPrimaryChannel         string
+	EstimatedPrimaryChannel       string
+	EstimatedPrimaryChannelDenom  string
+	EstimatedPrimaryChannelSupply int
+}
+
 type ChainPrimaryChannels struct {
-	Channels map[string]string `json:"channels"`
+	CounterpartyChain map[string]PrimaryChannelEstimation `json:"channels"`
 }
 
 // /chains/primary_channels
 type ChainsPrimaryChannelResponse struct {
-	Chains map[string]ChainPrimaryChannels `json:"chains"`
+	Chains map[string]map[string]PrimaryChannelEstimation `json:"chains"`
 }
+
+type DenomInfo struct {
+	Denom      string
+	Supply     int
+	DenomTrace db.ChannelConnectionMatchingDenom
+}
+
+type DenomInfos []DenomInfo
+
+type ChainInfo struct {
+	ChainName                  string
+	ChainChannelMapping        map[string]DenomInfos
+	CurrentPrimaryChannelMap   map[string]string
+	EstimatedPrimaryChannelMap map[string]DenomInfo
+	DenomInfos                 DenomInfos
+	Client                     *sdkutilities.Client
+}
+
+type ChainInfos map[string]ChainInfo
