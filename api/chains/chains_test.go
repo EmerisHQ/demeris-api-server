@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
+	"github.com/emerishq/demeris-api-server/api/database"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 
 	"github.com/emerishq/demeris-backend-models/cns"
@@ -102,13 +103,16 @@ func TestGetChain(t *testing.T) {
 }
 
 func TestGetChains(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+
 	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			// if we have a populated Chain store, add it
 			if len(tt.dataStruct) != 0 {
 				for _, c := range tt.dataStruct {
-					err := testingCtx.CnsDB.AddChain(c)
+					err := testingCtx.CnsDB.AddChain(c.chain)
 					require.NoError(t, err)
 				}
 			}
@@ -131,7 +135,7 @@ func TestGetChains(t *testing.T) {
 
 				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 				for _, c := range tt.dataStruct {
-					require.Contains(t, respStruct.Chains, toSupportedChain(c))
+					require.Contains(t, respStruct.Chains, toChainWithStatus(c))
 				}
 			}
 		})
@@ -181,12 +185,25 @@ func TestVerifyTrace(t *testing.T) {
 	}
 }
 
-func toSupportedChain(c cns.Chain) chains.SupportedChain {
+func toChainWithStatus(c testChainWithStatus) database.ChainWithStatus {
 
-	return chains.SupportedChain{
-		ChainName:   c.ChainName,
-		DisplayName: c.DisplayName,
-		Logo:        c.Logo,
+	return database.ChainWithStatus{
+		Enabled:             c.chain.Enabled,
+		ChainName:           c.chain.ChainName,
+		Logo:                c.chain.Logo,
+		DisplayName:         c.chain.DisplayName,
+		PrimaryChannel:      c.chain.PrimaryChannel,
+		Denoms:              c.chain.Denoms,
+		DemerisAddresses:    c.chain.DemerisAddresses,
+		GenesisHash:         c.chain.GenesisHash,
+		NodeInfo:            c.chain.NodeInfo,
+		ValidBlockThresh:    c.chain.ValidBlockThresh,
+		DerivationPath:      c.chain.DerivationPath,
+		SupportedWallets:    c.chain.SupportedWallets,
+		BlockExplorer:       c.chain.BlockExplorer,
+		PublicNodeEndpoints: c.chain.PublicNodeEndpoints,
+		CosmosSDKVersion:    c.chain.CosmosSDKVersion,
+		Online:              c.online,
 	}
 }
 

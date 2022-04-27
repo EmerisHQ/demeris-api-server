@@ -38,21 +38,35 @@ var getChainTestCases = []struct {
 	},
 }
 
+type testChainWithStatus struct {
+	chain  cns.Chain
+	online bool
+}
+
 var getChainsTestCases = []struct {
 	name             string
-	dataStruct       []cns.Chain
+	dataStruct       []testChainWithStatus
 	expectedHttpCode int
 	success          bool
 }{
 	{
 		"Get Chains - Nothing in DB",
-		[]cns.Chain{}, // ignored
+		[]testChainWithStatus{}, // ignored
 		200,
 		true,
 	},
 	{
 		"Get Chains - 2 Chains (With & Without)",
-		[]cns.Chain{utils.ChainWithoutPublicEndpoints, utils.ChainWithPublicEndpoints},
+		[]testChainWithStatus{
+			{
+				chain:  utils.ChainWithoutPublicEndpoints,
+				online: false,
+			},
+			{
+				chain:  utils.ChainWithPublicEndpoints,
+				online: true,
+			},
+		},
 		200,
 		true,
 	},
