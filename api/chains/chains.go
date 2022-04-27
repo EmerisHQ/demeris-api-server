@@ -1422,7 +1422,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			if err != nil {
 				cause := fmt.Sprintf("cannot convert supply for chain: %s - denom: %s", chain.ChainName, denom)
 				if sdkRes != nil && len(sdkRes.Coins) != 1 {
-					cause = fmt.Sprintf("chain: %s - denom: %s, supply %d", chain.ChainName, denom, sdkRes.Coins[0].Amount)
+					cause = fmt.Sprintf("chain: %s - denom: %s, supply %s", chain.ChainName, denom, sdkRes.Coins[0].Amount)
 				}
 				e := apierrors.New(
 					"chains",
