@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
-	"github.com/emerishq/demeris-api-server/api/database"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 
 	"github.com/emerishq/demeris-backend-models/cns"
@@ -104,7 +103,7 @@ func TestGetChain(t *testing.T) {
 
 func TestGetChains(t *testing.T) {
 	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
 	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -135,7 +134,7 @@ func TestGetChains(t *testing.T) {
 
 				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 				for _, c := range tt.dataStruct {
-					require.Contains(t, respStruct.Chains, toChainWithStatus(c))
+					require.Contains(t, respStruct.Chains, utils.ToChainWithStatus(c.chain, c.online))
 				}
 			}
 		})
@@ -182,28 +181,6 @@ func TestVerifyTrace(t *testing.T) {
 		})
 		utils.TruncateTracelistener(testingCtx, t)
 		utils.TruncateCNSDB(testingCtx, t)
-	}
-}
-
-func toChainWithStatus(c testChainWithStatus) database.ChainWithStatus {
-
-	return database.ChainWithStatus{
-		Enabled:             c.chain.Enabled,
-		ChainName:           c.chain.ChainName,
-		Logo:                c.chain.Logo,
-		DisplayName:         c.chain.DisplayName,
-		PrimaryChannel:      c.chain.PrimaryChannel,
-		Denoms:              c.chain.Denoms,
-		DemerisAddresses:    c.chain.DemerisAddresses,
-		GenesisHash:         c.chain.GenesisHash,
-		NodeInfo:            c.chain.NodeInfo,
-		ValidBlockThresh:    c.chain.ValidBlockThresh,
-		DerivationPath:      c.chain.DerivationPath,
-		SupportedWallets:    c.chain.SupportedWallets,
-		BlockExplorer:       c.chain.BlockExplorer,
-		PublicNodeEndpoints: c.chain.PublicNodeEndpoints,
-		CosmosSDKVersion:    c.chain.CosmosSDKVersion,
-		Online:              c.online,
 	}
 }
 

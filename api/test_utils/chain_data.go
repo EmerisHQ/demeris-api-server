@@ -175,7 +175,7 @@ var VerifyTraceData = TracelistenerData{
 	BlockTimes: []BlockTime{
 		{
 			ChainName: "chain2",
-			Time:      time.Now(),
+			Time:      time.Now().UTC(),
 		},
 	},
 }
@@ -290,7 +290,7 @@ var VerifyTraceData3Chains = TracelistenerData{
 	BlockTimes: []BlockTime{
 		{
 			ChainName: "akash",
-			Time:      time.Now(),
+			Time:      time.Now().UTC(),
 		},
 	},
 }

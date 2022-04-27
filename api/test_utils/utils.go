@@ -7,10 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/emeris-utils/store"
 	"github.com/stretchr/testify/require"
 
 	"github.com/emerishq/demeris-api-server/api/config"
+	"github.com/emerishq/demeris-api-server/api/database"
 	apiDb "github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	cnsDb "github.com/emerishq/emeris-cns-server/cns/database"
@@ -343,5 +345,27 @@ func checkNotNil(obj interface{}, whatObj string, logger *zap.SugaredLogger) {
 	if obj == nil {
 		logger.Error(fmt.Printf("Value is nil: %s", whatObj))
 		os.Exit(-1)
+	}
+}
+
+func ToChainWithStatus(c cns.Chain, online bool) database.ChainWithStatus {
+
+	return database.ChainWithStatus{
+		Enabled:             c.Enabled,
+		ChainName:           c.ChainName,
+		Logo:                c.Logo,
+		DisplayName:         c.DisplayName,
+		PrimaryChannel:      c.PrimaryChannel,
+		Denoms:              c.Denoms,
+		DemerisAddresses:    c.DemerisAddresses,
+		GenesisHash:         c.GenesisHash,
+		NodeInfo:            c.NodeInfo,
+		ValidBlockThresh:    c.ValidBlockThresh,
+		DerivationPath:      c.DerivationPath,
+		SupportedWallets:    c.SupportedWallets,
+		BlockExplorer:       c.BlockExplorer,
+		PublicNodeEndpoints: c.PublicNodeEndpoints,
+		CosmosSDKVersion:    c.CosmosSDKVersion,
+		Online:              online,
 	}
 }
