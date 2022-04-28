@@ -18,20 +18,25 @@ base_denoms as (
     from
         (
             select
-                chain_name,
-                jsonb_array_elements(denoms) ->> 'name' as base_token,
-                jsonb_array_elements(denoms) ->> 'fee_token' as fee_token,
-                jsonb_array_elements(denoms) ->> 'stakable' as stakable
+                c.chain_name,
+                jsonb_array_elements(c.denoms) ->> 'name' as base_token,
+                jsonb_array_elements(c.denoms) ->> 'fee_token' as fee_token,
+                jsonb_array_elements(c.denoms) ->> 'stakable' as stakable,
+                coalesce(
+                    parse_interval(c.valid_block_thresh) > current_timestamp() - b.block_time,
+                    false
+                ) online
             from
-                cns.chains
+                cns.chains as c
+                left join tracelistener.blocktime b on c.chain_name = b.chain_name
             where
-                enabled = TRUE
+                c.enabled = TRUE
         )
     where
         fee_token = 'true'
 )
-select distinct
-    ibc_token.chain_name as chain_name,
+select
+    distinct ibc_token.chain_name as chain_name,
     channel_info.channel_id as channel_id,
     channel_info.from_chain as counterparty_chain,
     channel_info.counterparty_channel_id as counterparty_channel_id,
@@ -97,6 +102,8 @@ from
     and channel_info.path = ibc_token.path
     inner join base_denoms on base_denoms.chain_name = channel_info.from_chain
     and base_denoms.base_token = ibc_token.base_denom
+where
+    base_denoms.online = true
 order by
     ibc_token.chain_name,
     channel_info.from_chain;

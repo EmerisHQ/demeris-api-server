@@ -1248,7 +1248,8 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
 		res := ChainsPrimaryChannelResponse{
-			Chains: make(map[string]map[string]PrimaryChannelEstimation),
+			Chains:      make(map[string]map[string]PrimaryChannelEstimation),
+			FailureLogs: make(FailLogs, 0),
 		}
 
 		chains, err := db.Chains()
@@ -1281,7 +1282,6 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 
 		logger.Debugw("first part is done! yay", "num matching channels", len(matchingChannels), "channels", matchingChannels)
 		chainInfos := make(ChainInfos)
-		// var clients map[string]sdkutilities.Client
 		for _, chain := range chains {
 			ci := ChainInfo{
 				ChainName:                  chain.ChainName,
@@ -1292,25 +1292,14 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 				Broken:                     false,
 			}
 
-			client, err := sdkservice.Client(chain.MajorSDKVersion())
+			client, err := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 			if err != nil {
-				// e := apierrors.New(
-				// 	"chains",
-				// 	fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-				// 	http.StatusBadRequest,
-				// ).WithLogContext(
-				// 	fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-				// 	"name", chain.ChainName,
-				// )
-				// _ = c.Error(e)
-
-				// return
 				logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
 				ci.Broken = true
+				res.LogFailure(chain.ChainName, "", "failed to get sdk service client")
 				continue
 			}
-			// clients[chain.ChainName] = client
-			// ci.Client = &clients[chain.ChainName]
+
 			ci.Client = &client
 			chainInfos[chain.ChainName] = ci
 		}
@@ -1319,11 +1308,14 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 
 		for _, channelPair := range matchingChannels {
 			chain := chainInfos[channelPair.ChainName]
+			denom := "ibc/" + strings.ToUpper(channelPair.Hash)
+
 			if chain.Broken {
+				res.LogFailure(chain.ChainName, denom, "chain status is broken - skipping getting supply")
 				continue
 			}
+
 			logger.Debugw("got chain", "chain", channelPair.ChainName, "channelPair", channelPair)
-			denom := "ibc/" + strings.ToUpper(channelPair.Hash)
 
 			payload := &sdkutilities.SupplyDenomPayload{
 				ChainName: chain.ChainName,
@@ -1331,47 +1323,27 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			}
 
 			logger.Debugw("going through channel pair", "channel pair", channelPair)
-			// client, err := sdkServiceClients.GetSDKServiceClient(chain.Chain.MajorSDKVersion())
-
-			// if err != nil {
-			// 	logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
-			// 	chain.Broken = true
-			// 	continue
-			// }
-			// sdkRes, err := client.SupplyDenom(context.Background(), payload)
 
 			if chain.Client == nil {
 				logger.Errorw("chain client not found", "chain", channelPair.ChainName, "err", err)
-				chain.Broken = true
+				res.LogFailure(chain.ChainName, denom, "chain client not found - skipping getting supply")
 				continue
 			}
 
 			sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
 			if sdkRes == nil {
 				logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
+				res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
 				continue
 			}
-			if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
-
-				// don't return?
-				// todo: find a way to pass skip chains that are broken
-				// cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
-				// if sdkRes != nil && len(sdkRes.Coins) != 1 {
-				// 	cause = fmt.Sprintf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
-				// }
-				// e := apierrors.New(
-				// 	"chains",
-				// 	cause,
-				// 	http.StatusBadRequest,
-				// ).WithLogContext(
-				// 	fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
-				// 	"chain name", chain.ChainName,
-				// 	"denom name", denom,
-				// )
-				// _ = c.Error(e)
-
-				logger.Errorw("chain broken lol", "chain", channelPair.ChainName, "err", err)
-				chain.Broken = true
+			if err != nil { // Expected exactly one response
+				logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
+				res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
+				continue
+			}
+			if len(sdkRes.Coins) != 1 { // Expected exactly one response
+				logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
+				res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
 				continue
 			}
 
@@ -1386,21 +1358,8 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			supply, err := strconv.ParseUint(amountString, 10, 64)
 			if err != nil {
 				logger.Errorw("cannot parse supply", "chain", channelPair.ChainName, "err", err)
+				res.LogFailure(chain.ChainName, denom, fmt.Sprintf("cannot parse supply, actual: %v normalized: %v", sdkRes.Coins[0].Amount, amountString))
 				continue
-				// cause := fmt.Sprintf("cannot convert supply for chain: %s - denom: %s", chain.ChainName, denom)
-				// if sdkRes != nil && len(sdkRes.Coins) != 1 {
-				// 	cause = fmt.Sprintf("chain: %s - denom: %s, supply %s", chain.ChainName, denom, amountString)
-				// }
-				// e := apierrors.New(
-				// 	"chains",
-				// 	cause,
-				// 	http.StatusBadRequest,
-				// ).WithLogContext(
-				// 	fmt.Errorf("cannot convert denom supply: %w", err),
-				// 	"chain name", chain.ChainName,
-				// 	"denom name", denom,
-				// )
-				// _ = c.Error(e)
 			}
 			logger.Debugw("converted!", "channel pair", channelPair)
 
@@ -1417,9 +1376,6 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 
 		logger.Debugw("almost done")
 		for chainName, info := range chainInfos {
-			if info.Broken {
-				continue
-			}
 			for counterparty, denomList := range info.ChainChannelMapping {
 				max := denomList[0]
 				for _, d := range denomList {
@@ -1441,220 +1397,71 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			}
 		}
 
-		// payload := &sdkutilities.SupplyDenomPayload{
-		// 	ChainName: chain.ChainName,
-		// 	Denom:     &denom,
-		// }
-
-		// sdkRes, err := client.SupplyDenom(context.Background(), payload)
-		// if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
-		// 	cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
-		// 	if sdkRes != nil && len(sdkRes.Coins) != 1 {
-		// 		cause = fmt.Sprintf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
-		// 	}
-		// 	e := apierrors.New(
-		// 		"chains",
-		// 		cause,
-		// 		http.StatusBadRequest,
-		// 	).WithLogContext(
-		// 		fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
-		// 		"chain name", chain.ChainName,
-		// 		"denom name", denom,
-		// 	)
-		// 	_ = c.Error(e)
-
-		// 	return
-		// }
-
-		// var chainInfos ChainInfos
-		// for _, cc := range chains {
-		// 	chainInfos[cc.ChainName] = ChainInfo{
-		// 		ChainName:                cc.ChainName,
-		// 		CurrentPrimaryChannelMap: cc.PrimaryChannel,
-		// 	}
-
-		// 	// fetch denom traces
-		// 	denomTraces, err := db.DenomTraces(cc.ChainName)
-		// 	if err != nil {
-		// 		e := apierrors.New(
-		// 			"chains",
-		// 			fmt.Sprintf("failed to get denom traces with chain name %v", chain.ChainName),
-		// 			http.StatusInternalServerError,
-		// 		).WithLogContext(
-		// 			fmt.Errorf("cannot get chain denom traces %w", err),
-		// 			"name",
-		// 			cc.ChainName,
-		// 		)
-		// 		_ = c.Error(e)
-
-		// 		return
-		// 	}
-
-		// 	for _, dd := range denomTraces {
-		// 		chainInfos[cc.ChainName].DenomInfo[dd.Hash].DenomTrace = dd
-		// 	}
-
-		// 	// fetch total chain supply
-		// 	supply, err := getChainTotalSupply(c, &cc)
-		// 	if err != nil {
-		// 		e := apierrors.New(
-		// 			"chains",
-		// 			fmt.Sprintf("failed to get chain supply sdk version %s with chain name %v", cc.CosmosSDKVersion, chain.ChainName),
-		// 			http.StatusInternalServerError,
-		// 		).WithLogContext(
-		// 			fmt.Errorf("cannot get chain supply %w", err),
-		// 			"name",
-		// 			cc.ChainName,
-		// 		)
-		// 		_ = c.Error(e)
-
-		// 		return
-		// 	}
-
-		// 	// for each ibc coin, get the balance and map it to the denom trace of the coin
-		// 	for _, s := range supply {
-		// 		if s.Denom[:4] != "ibc/" {
-		// 			continue
-		// 		}
-		// 		hash := s.Denom[4:]
-
-		// 		balance, err := strconv.Atoi(s.Amount)
-		// 		if err != nil {
-		// 			e := apierrors.New(
-		// 				"chains",
-		// 				fmt.Sprintf("failed to convert balance %s for denom %s to int on chain %s", s.Denom, s.Amount, cc.ChainName),
-		// 				http.StatusInternalServerError,
-		// 			).WithLogContext(
-		// 				fmt.Errorf("cannot convert string %w", err),
-		// 				"name",
-		// 				cc.ChainName,
-		// 			)
-		// 			_ = c.Error(e)
-
-		// 			return
-		// 		}
-
-		// 		denomTrace, err := db.DenomTrace(cc.ChainName, hash)
-
-		// 		if err != nil {
-		// 			cause := fmt.Sprintf("token hash %v not found on chain %v", hash, cc.ChainName)
-		// 			logger.Errorw(
-		// 				cause,
-		// 				"hash", hash,
-		// 				"chainName", cc.ChainName,
-		// 			)
-		// 			continue
-		// 		}
-
-		// 		res.VerifiedTrace.Path = denomTrace.Path
-		// 		res.VerifiedTrace.BaseDenom = denomTrace.BaseDenom
-
-		// 		pathsElements, err := paths(denomTrace.Path)
-		// 		if err != nil {
-		// 			cause := fmt.Sprintf("unsupported path %s", denomTrace.Path)
-
-		// 			logger.Errorw(
-		// 				"invalid denom",
-		// 				"hash", hash,
-		// 				"path", res.VerifiedTrace.Path,
-		// 				"err", cause,
-		// 			)
-
-		// 			res.VerifiedTrace.Verified = false
-		// 			res.VerifiedTrace.Cause = cause
-
-		// 			c.JSON(http.StatusOK, res)
-
-		// 			return
-		// 		}
-		// 		chainInfos[cc.ChainName].DenomInfo[s.Denom] = DenomInfo{
-		// 			Denom:   s.Denom,
-		// 			Balance: balance,
-		// 		}
-		// 	}
-
-		// }
-
-		// // reuse channel is probably better
-		// resp, err := ibcclient.IbcChannelClientState("cosmos-hub", "channel-141", "transfer")
-		// if err != nil {
-		// 	e := apierrors.New(
-		// 		"chains",
-		// 		fmt.Sprintf("failed to retrieve IbcChannelClientState"),
-		// 		http.StatusInternalServerError,
-		// 	).WithLogContext(
-		// 		fmt.Errorf("failed to retrieve IbcChannelClientState: %w", err),
-		// 	)
-		// 	_ = c.Error(e)
-
-		// 	return
-		// }
-		// logger.Debug(*resp)
-
 		c.JSON(http.StatusOK, res)
 	}
 }
 
 // gets total chain supply for coins
-// func getChainTotalSupply(c *gin.Context, chain *cns.Chain) ([]Coin, error) {
-// 	var paginationKey *string
-// 	sup := make([]Coin, 0)
+func getChainTotalSupply(c *gin.Context, chain *cns.Chain) ([]Coin, error) {
+	var paginationKey *string
+	sup := make([]Coin, 0)
 
-// 	client, err := sdkservice.Client(chain.MajorSDKVersion())
-// 	if err != nil {
-// 		e := apierrors.New(
-// 			"chains",
-// 			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-// 			http.StatusBadRequest,
-// 		).WithLogContext(
-// 			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-// 			"name",
-// 			chain.ChainName,
-// 		)
-// 		_ = c.Error(e)
+	client, err := sdkservice.Client(chain.MajorSDKVersion())
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
 
-// 		return sup, err
-// 	}
+		return sup, err
+	}
 
-// 	for {
-// 		payload := &sdkutilities.SupplyPayload{
-// 			ChainName: chain.ChainName,
-// 		}
-// 		if paginationKey != nil {
-// 			payload.PaginationKey = paginationKey
-// 		}
+	for {
+		payload := &sdkutilities.SupplyPayload{
+			ChainName: chain.ChainName,
+		}
+		if paginationKey != nil {
+			payload.PaginationKey = paginationKey
+		}
 
-// 		sdkRes, err := client.Supply(context.Background(), payload)
-// 		if err != nil {
-// 			e := apierrors.New(
-// 				"chains",
-// 				fmt.Sprintf("cannot retrieve supply from sdk-service"),
-// 				http.StatusBadRequest,
-// 			).WithLogContext(
-// 				fmt.Errorf("cannot retrieve supply from sdk-service: %w", err),
-// 				"name",
-// 				chain.ChainName,
-// 			)
-// 			_ = c.Error(e)
+		sdkRes, err := client.Supply(context.Background(), payload)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve supply from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve supply from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
 
-// 			return sup, err
-// 		}
+			return sup, err
+		}
 
-// 		for _, s := range sdkRes.Coins {
-// 			sup = append(sup, Coin{
-// 				Denom:  s.Denom,
-// 				Amount: s.Amount,
-// 			})
-// 		}
+		for _, s := range sdkRes.Coins {
+			sup = append(sup, Coin{
+				Denom:  s.Denom,
+				Amount: s.Amount,
+			})
+		}
 
-// 		if sdkRes.Pagination.NextKey != nil {
-// 			paginationKey = sdkRes.Pagination.NextKey
-// 		} else {
-// 			break
-// 		}
-// 	}
-// 	return sup, nil
-// }
+		if sdkRes.Pagination.NextKey != nil {
+			paginationKey = sdkRes.Pagination.NextKey
+		} else {
+			break
+		}
+	}
+	return sup, nil
+}
+
 // GetChainsStatuses returns the status of all the enabled chains.
 // @Summary Gets status for all enabled chains.
 // @Tags Chain

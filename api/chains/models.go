@@ -187,7 +187,16 @@ type ChainPrimaryChannels struct {
 
 // /chains/primary_channels
 type ChainsPrimaryChannelResponse struct {
-	Chains map[string]map[string]PrimaryChannelEstimation `json:"chains"`
+	Chains      map[string]map[string]PrimaryChannelEstimation `json:"chains"`
+	FailureLogs FailLogs                                       `json:"failed"`
+}
+
+func (c *ChainsPrimaryChannelResponse) LogFailure(chainName, denom, message string) {
+	c.FailureLogs = append(c.FailureLogs, FailLog{
+		ChainName: chainName,
+		Denom:     denom,
+		Message:   message,
+	})
 }
 
 type DenomInfo struct {
@@ -210,6 +219,15 @@ type ChainInfo struct {
 }
 
 type ChainInfos map[string]ChainInfo
+
+type FailLog struct {
+	ChainName string
+	Denom     string
+	Message   string
+}
+
+type FailLogs []FailLog
+
 type ChainStatus struct {
 	Online bool `json:"online"`
 }
