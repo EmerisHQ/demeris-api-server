@@ -39,7 +39,7 @@ func AllIbcChannelClientStates(chainName string, channelPorts []ChannelPort) ([]
 
 	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:%d", chainName, grpcport), grpc.WithInsecure())
 	if err != nil {
-		return &ibcchannel.QueryChannelClientStateResponse{}, err
+		return []ibcchannel.QueryChannelClientStateResponse{}, err
 	}
 	defer func() {
 		_ = grpcConn.Close()
@@ -48,7 +48,6 @@ func AllIbcChannelClientStates(chainName string, channelPorts []ChannelPort) ([]
 	iq := ibcchannel.NewQueryClient(grpcConn)
 
 	for _, cp := range channelPorts {
-		iq := ibcchannel.NewQueryClient(grpcConn)
 		res, err := iq.ChannelClientState(context.Background(), &ibcchannel.QueryChannelClientStateRequest{
 			ChannelId: cp.Channel,
 			PortId:    cp.Port,
@@ -56,7 +55,7 @@ func AllIbcChannelClientStates(chainName string, channelPorts []ChannelPort) ([]
 		if err != nil {
 			return resp, err
 		}
-		resp = append(resp, res)
+		resp = append(resp, *res)
 	}
 
 	return resp, nil
