@@ -96,18 +96,20 @@ func (d *Database) GetChannelMatchingDenoms() (ChannelConnectionMatchingDenoms, 
 			stakable
 		from
 			(
-			select
-				chain_name,
-				jsonb_array_elements(denoms) ->> 'name' as base_token,
-				jsonb_array_elements(denoms) ->> 'fee_token' as fee_token,
-				jsonb_array_elements(denoms) ->> 'stakable' as stakable
-			from
-				cns.chains
-		)
+				select
+					chain_name,
+					jsonb_array_elements(denoms) ->> 'name' as base_token,
+					jsonb_array_elements(denoms) ->> 'fee_token' as fee_token,
+					jsonb_array_elements(denoms) ->> 'stakable' as stakable
+				from
+					cns.chains
+				where
+					enabled = TRUE
+			)
 		where
 			fee_token = 'true'
 	)
-	select
+	select distinct
 		ibc_token.chain_name as chain_name,
 		channel_info.channel_id as channel_id,
 		channel_info.from_chain as counterparty_chain,
@@ -150,6 +152,7 @@ func (d *Database) GetChannelMatchingDenoms() (ChannelConnectionMatchingDenoms, 
 					where
 						port = 'transfer'
 						and state = 3
+						and height = 0
 				) as src_channel on src.connection_id = src_channel.connection_id
 				and src.chain_name = src_channel.chain_name
 				inner join (
@@ -165,6 +168,7 @@ func (d *Database) GetChannelMatchingDenoms() (ChannelConnectionMatchingDenoms, 
 					where
 						port = 'transfer'
 						and state = 3
+						and height = 0
 				) as dest_channel on src.counter_connection_id = dest_channel.connection_id
 				and src_channel.counter_channel_id = dest_channel.channel_id
 				and src_channel.channel_id = dest_channel.counter_channel_id
@@ -172,7 +176,9 @@ func (d *Database) GetChannelMatchingDenoms() (ChannelConnectionMatchingDenoms, 
 		and channel_info.path = ibc_token.path
 		inner join base_denoms on base_denoms.chain_name = channel_info.from_chain
 		and base_denoms.base_token = ibc_token.base_denom
-		order by ibc_token.chain_name, channel_info.from_chain
+	order by
+		ibc_token.chain_name,
+		channel_info.from_chain
 	`
 
 	q = d.dbi.DB.Rebind(q)
