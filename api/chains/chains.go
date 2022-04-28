@@ -1363,7 +1363,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			return
 		}
 
-		logger.Debugw("first part is done! yay")
+		logger.Debugw("first part is done! yay", "num matching channels", len(matchingChannels), "channels", matchingChannels)
 		chainInfos := make(ChainInfos)
 		// var clients map[string]sdkutilities.Client
 		for _, chain := range chains {
@@ -1398,6 +1398,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 
 		for _, channelPair := range matchingChannels {
 			chain := chainInfos[channelPair.ChainName]
+			logger.Debugw("got chain", "chain", channelPair.ChainName, "channelPair", channelPair)
 			denom := "ibc/" + strings.ToUpper(channelPair.Hash)
 
 			payload := &sdkutilities.SupplyDenomPayload{
