@@ -8,7 +8,7 @@ import (
 )
 
 func (d *Database) QueryIBCClientTrace(chain string, channel string) ([]cns.IbcClientInfo, error) {
-	var clients []cns.IbcClientInfo
+	clients := []cns.IbcClientInfo{}
 
 	q := `
 	SELECT 
