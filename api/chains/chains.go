@@ -1433,22 +1433,31 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			}
 
 			logger.Debugw("got response!", "channel pair", channelPair, "response", sdkRes)
-			supply, err := strconv.Atoi(sdkRes.Coins[0].Amount)
+
+			var amountString string
+			if strings.Contains(sdkRes.Coins[0].Amount, "ibc/") {
+				amountString = strings.Split(sdkRes.Coins[0].Amount, "ibc/")[0]
+			} else {
+				amountString = sdkRes.Coins[0].Amount
+			}
+			supply, err := strconv.ParseUint(amountString, 10, 64)
 			if err != nil {
-				cause := fmt.Sprintf("cannot convert supply for chain: %s - denom: %s", chain.ChainName, denom)
-				if sdkRes != nil && len(sdkRes.Coins) != 1 {
-					cause = fmt.Sprintf("chain: %s - denom: %s, supply %s", chain.ChainName, denom, sdkRes.Coins[0].Amount)
-				}
-				e := apierrors.New(
-					"chains",
-					cause,
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("cannot convert denom supply: %w", err),
-					"chain name", chain.ChainName,
-					"denom name", denom,
-				)
-				_ = c.Error(e)
+				logger.Errorw("cannot parse supply", "chain", channelPair.ChainName, "err", err)
+				continue
+				// cause := fmt.Sprintf("cannot convert supply for chain: %s - denom: %s", chain.ChainName, denom)
+				// if sdkRes != nil && len(sdkRes.Coins) != 1 {
+				// 	cause = fmt.Sprintf("chain: %s - denom: %s, supply %s", chain.ChainName, denom, amountString)
+				// }
+				// e := apierrors.New(
+				// 	"chains",
+				// 	cause,
+				// 	http.StatusBadRequest,
+				// ).WithLogContext(
+				// 	fmt.Errorf("cannot convert denom supply: %w", err),
+				// 	"chain name", chain.ChainName,
+				// 	"denom name", denom,
+				// )
+				// _ = c.Error(e)
 			}
 			logger.Debugw("converted!", "channel pair", channelPair)
 

@@ -178,7 +178,7 @@ type PrimaryChannelEstimation struct {
 	CurrentPrimaryChannel         string
 	EstimatedPrimaryChannel       string
 	EstimatedPrimaryChannelDenom  string
-	EstimatedPrimaryChannelSupply int
+	EstimatedPrimaryChannelSupply uint64
 }
 
 type ChainPrimaryChannels struct {
@@ -192,7 +192,7 @@ type ChainsPrimaryChannelResponse struct {
 
 type DenomInfo struct {
 	Denom      string
-	Supply     int
+	Supply     uint64
 	DenomTrace db.ChannelConnectionMatchingDenom
 }
 
