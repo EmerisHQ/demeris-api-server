@@ -1329,9 +1329,11 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 // @Router /chains/primary_channels [get]
 func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
-		var res ChainsPrimaryChannelResponse
+		res := ChainsPrimaryChannelResponse{
+			Chains: make(map[string]map[string]PrimaryChannelEstimation),
+		}
 
 		chains, err := db.Chains()
 		if err != nil {
@@ -1351,7 +1353,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 		if err != nil {
 			e := apierrors.New(
 				"chains",
-				fmt.Sprintf("failed to get matching channels"),
+				"failed to get matching channels",
 				http.StatusInternalServerError,
 			).WithLogContext(
 				fmt.Errorf("cannot get matching channels %w", err),
@@ -1361,12 +1363,15 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			return
 		}
 
-		var chainInfos ChainInfos
+		logger.Debugw("first part is done! yay")
+		chainInfos := make(ChainInfos)
 		// var clients map[string]sdkutilities.Client
 		for _, chain := range chains {
 			ci := ChainInfo{
-				ChainName:                chain.ChainName,
-				CurrentPrimaryChannelMap: chain.PrimaryChannel,
+				ChainName:                  chain.ChainName,
+				CurrentPrimaryChannelMap:   chain.PrimaryChannel,
+				ChainChannelMapping:        make(map[string]DenomInfos),
+				EstimatedPrimaryChannelMap: make(map[string]DenomInfo),
 			}
 
 			client, err := sdkservice.Client(chain.MajorSDKVersion())
@@ -1385,9 +1390,11 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			}
 			// clients[chain.ChainName] = client
 			// ci.Client = &clients[chain.ChainName]
-			ci.Client = &client
+			ci.Client = client
 			chainInfos[chain.ChainName] = ci
 		}
+
+		logger.Debugw("second part is done! yay")
 
 		for _, channelPair := range matchingChannels {
 			chain := chainInfos[channelPair.ChainName]
@@ -1398,6 +1405,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 				Denom:     &denom,
 			}
 
+			logger.Debugw("going through channel pair", "channel pair", channelPair)
 			sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
 			if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 
@@ -1418,6 +1426,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 				_ = c.Error(e)
 			}
 
+			logger.Debugw("got response!", "channel pair", channelPair)
 			supply, err := strconv.Atoi(sdkRes.Coins[0].Amount)
 			if err != nil {
 				cause := fmt.Sprintf("cannot convert supply for chain: %s - denom: %s", chain.ChainName, denom)
@@ -1435,6 +1444,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 				)
 				_ = c.Error(e)
 			}
+			logger.Debugw("converted!", "channel pair", channelPair)
 
 			di := DenomInfo{
 				Denom:      denom,
@@ -1445,6 +1455,9 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			chain.ChainChannelMapping[channelPair.CounterpartyChain] = append(chain.ChainChannelMapping[channelPair.CounterpartyChain], di)
 		}
 
+		logger.Debugw("third part is done! yay")
+
+		logger.Debugw("almost done")
 		for chainName, info := range chainInfos {
 			for counterparty, denomList := range info.ChainChannelMapping {
 				max := denomList[0]
@@ -1457,6 +1470,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			}
 
 			for counterpartyName, denom := range chainInfos[chainName].EstimatedPrimaryChannelMap {
+				res.Chains[chainName] = make(map[string]PrimaryChannelEstimation)
 				res.Chains[chainName][counterpartyName] = PrimaryChannelEstimation{
 					CurrentPrimaryChannel:         chainInfos[chainName].CurrentPrimaryChannelMap[counterpartyName],
 					EstimatedPrimaryChannel:       denom.DenomTrace.ChannelId,
