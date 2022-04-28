@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
+	"github.com/emerishq/demeris-api-server/api/database"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 
 	"github.com/emerishq/demeris-backend-models/cns"
@@ -19,6 +20,7 @@ import (
 const (
 	chainEndpointUrl       = "http://%s/chain/%s"
 	chainsEndpointUrl      = "http://%s/chains"
+	chainsStatusesUrl      = "http://%s/chains/status"
 	chainStatusUrl         = "http://%s/chain/%s/status"
 	chainSupplyUrl         = "http://%s/chain/%s/supply"
 	verifyTraceEndpointUrl = "http://%s/chain/%s/denom/verify_trace/%s"
@@ -101,13 +103,16 @@ func TestGetChain(t *testing.T) {
 }
 
 func TestGetChains(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+
 	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			// if we have a populated Chain store, add it
 			if len(tt.dataStruct) != 0 {
 				for _, c := range tt.dataStruct {
-					err := testingCtx.CnsDB.AddChain(c)
+					err := testingCtx.CnsDB.AddChain(c.chain)
 					require.NoError(t, err)
 				}
 			}
@@ -130,7 +135,7 @@ func TestGetChains(t *testing.T) {
 
 				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 				for _, c := range tt.dataStruct {
-					require.Contains(t, respStruct.Chains, toSupportedChain(c))
+					require.Contains(t, respStruct.Chains, toChainWithStatus(c))
 				}
 			}
 		})
@@ -180,12 +185,25 @@ func TestVerifyTrace(t *testing.T) {
 	}
 }
 
-func toSupportedChain(c cns.Chain) chains.SupportedChain {
+func toChainWithStatus(c testChainWithStatus) database.ChainWithStatus {
 
-	return chains.SupportedChain{
-		ChainName:   c.ChainName,
-		DisplayName: c.DisplayName,
-		Logo:        c.Logo,
+	return database.ChainWithStatus{
+		Enabled:             c.chain.Enabled,
+		ChainName:           c.chain.ChainName,
+		Logo:                c.chain.Logo,
+		DisplayName:         c.chain.DisplayName,
+		PrimaryChannel:      c.chain.PrimaryChannel,
+		Denoms:              c.chain.Denoms,
+		DemerisAddresses:    c.chain.DemerisAddresses,
+		GenesisHash:         c.chain.GenesisHash,
+		NodeInfo:            c.chain.NodeInfo,
+		ValidBlockThresh:    c.chain.ValidBlockThresh,
+		DerivationPath:      c.chain.DerivationPath,
+		SupportedWallets:    c.chain.SupportedWallets,
+		BlockExplorer:       c.chain.BlockExplorer,
+		PublicNodeEndpoints: c.chain.PublicNodeEndpoints,
+		CosmosSDKVersion:    c.chain.CosmosSDKVersion,
+		Online:              c.online,
 	}
 }
 
@@ -313,5 +331,49 @@ func TestGetChainSupply(t *testing.T) {
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 		})
 	}
+	utils.TruncateCNSDB(testingCtx, t)
+}
+
+func TestGetChainsStatuses(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+
+	// arrange
+	testChains := []cns.Chain{
+		chainWithoutPublicEndpoints,
+		chainWithPublicEndpoints,
+		disabledChain,
+	}
+	for _, c := range testChains {
+		err := testingCtx.CnsDB.AddChain(c)
+		require.NoError(t, err)
+	}
+
+	// act
+	resp, err := http.Get(fmt.Sprintf(chainsStatusesUrl, testingCtx.Cfg.ListenAddr))
+	require.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
+
+	// assert
+	body, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	respStruct := chains.ChainsStatusesResponse{}
+	err = json.Unmarshal(body, &respStruct)
+	require.NoError(t, err)
+
+	expectedResult := chains.ChainsStatusesResponse{
+		Chains: map[string]chains.ChainStatus{
+			chainWithoutPublicEndpoints.ChainName: {
+				Online: false,
+			},
+			chainWithPublicEndpoints.ChainName: {
+				Online: true,
+			},
+		},
+	}
+	require.Equal(t, expectedResult, respStruct)
+	require.Equal(t, 200, resp.StatusCode)
+
 	utils.TruncateCNSDB(testingCtx, t)
 }

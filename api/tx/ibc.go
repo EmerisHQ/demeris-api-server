@@ -51,7 +51,7 @@ func getIBCSeqFromTx(data []byte) []string {
 // @Success 200 {object} DestTxResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /tx/{srcChain}/{destChain}/{txHash} [get]
-func GetDestTx(db *database.Database) gin.HandlerFunc {
+func GetDestTx(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		srcChain := c.Param("src-chain")
@@ -91,19 +91,9 @@ func GetDestTx(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		client, err := sdkservice.Client(srcChainInfo.MajorSDKVersion())
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve sdk-service for version %s with srcChainInfo name %v", srcChainInfo.CosmosSDKVersion, srcChainInfo.ChainName),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve srcChainInfo's sdk-service: %w", err),
-				"name",
-				srcChain,
-			)
+		client, e := sdkServiceClients.GetSDKServiceClient(srcChainInfo.MajorSDKVersion())
+		if e != nil {
 			_ = c.Error(e)
-
 			return
 		}
 

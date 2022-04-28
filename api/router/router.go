@@ -9,6 +9,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/cached"
 	"github.com/emerishq/demeris-api-server/api/liquidity"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/sdkservice"
 	"k8s.io/client-go/informers"
 
 	"github.com/emerishq/demeris-api-server/api/relayer"
@@ -44,6 +45,7 @@ func New(
 	kubeClient kube.Client,
 	kubeNamespace string,
 	genericInformer informers.GenericInformer,
+	sdkServiceClients sdkservice.SDKServiceClients,
 	debug bool,
 ) *Router {
 	gin.SetMode(gin.ReleaseMode)
@@ -76,7 +78,7 @@ func New(
 
 	relayersInformer := relayer.NewInformer(genericInformer, kubeNamespace)
 
-	registerRoutes(engine, r.DB, r.s, relayersInformer)
+	registerRoutes(engine, r.DB, r.s, relayersInformer, sdkServiceClients)
 
 	return r
 }
@@ -151,10 +153,11 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 	return id
 }
 
-func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, relayersInformer *relayer.Informer) {
+func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, relayersInformer *relayer.Informer,
+	sdkServiceClients sdkservice.SDKServiceClients) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
-	account.Register(engine, db, s)
+	account.Register(engine, db, s, sdkServiceClients)
 
 	// @tag.name Denoms
 	// @tag.description Denoms-related endpoints
@@ -162,11 +165,11 @@ func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, r
 
 	// @tag.name Chain
 	// @tag.description Chain-related endpoints
-	chains.Register(engine, db, s)
+	chains.Register(engine, db, s, sdkServiceClients)
 
 	// @tag.name Transactions
 	// @tag.description Transaction-related endpoints
-	tx.Register(engine, db, s)
+	tx.Register(engine, db, s, sdkServiceClients)
 
 	// @tag.name Relayer
 	// @tag.description Relayer-related endpoints

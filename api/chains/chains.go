@@ -40,19 +40,19 @@ const (
 // @Description Gets list of supported chains.
 // @Produce json
 // @Success 200 {object} ChainsResponse
-// @Failure 500,403 {object} apierrors.UserFacingError
+// @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chains [get]
 func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res ChainsResponse
 
-		chains, err := db.SimpleChains()
+		chains, err := db.ChainsWithStatus()
 
 		if err != nil {
 			e := apierrors.New(
 				"chains",
 				fmt.Sprintf("cannot retrieve chains"),
-				http.StatusBadRequest,
+				http.StatusInternalServerError,
 			).WithLogContext(
 				fmt.Errorf("cannot retrieve chains: %w", err),
 			)
@@ -61,14 +61,7 @@ func GetChains(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		for _, cc := range chains {
-			res.Chains = append(res.Chains, SupportedChain{
-				ChainName:   cc.ChainName,
-				DisplayName: cc.DisplayName,
-				Logo:        cc.Logo,
-			})
-		}
-
+		res.Chains = chains
 		c.JSON(http.StatusOK, res)
 	}
 }
@@ -527,69 +520,62 @@ func GetChainStatus(db *database.Database) gin.HandlerFunc {
 // @Success 200 {object} SupplyResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/supply [get]
-func GetChainSupply(c *gin.Context) {
-	paginationKey, exists := c.GetQuery("key")
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+func GetChainSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		paginationKey, exists := c.GetQuery("key")
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		return
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
+
+		payload := &sdkutilities.SupplyPayload{
+			ChainName: chain.ChainName,
+		}
+
+		if exists {
+			payload.PaginationKey = &paginationKey
+		}
+
+		sdkRes, err := client.Supply(context.Background(), payload)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve supply from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve supply from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		sup := make([]Coin, 0)
+
+		res := SupplyResponse{Supply: sup, Pagination: Pagination{}}
+
+		if sdkRes.Pagination.NextKey != nil {
+			res.Pagination.NextKey = *sdkRes.Pagination.NextKey
+		}
+
+		if sdkRes.Pagination.Total != nil {
+			res.Pagination.Total = *sdkRes.Pagination.Total
+		}
+
+		for _, s := range sdkRes.Coins {
+			res.Supply = append(res.Supply, Coin{
+				Denom:  s.Denom,
+				Amount: s.Amount,
+			})
+		}
+
+		c.JSON(http.StatusOK, res)
 	}
-
-	payload := &sdkutilities.SupplyPayload{
-		ChainName: chain.ChainName,
-	}
-
-	if exists {
-		payload.PaginationKey = &paginationKey
-	}
-
-	sdkRes, err := client.Supply(context.Background(), payload)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve supply from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve supply from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	sup := make([]Coin, 0)
-
-	res := SupplyResponse{Supply: sup, Pagination: Pagination{}}
-
-	if sdkRes.Pagination.NextKey != nil {
-		res.Pagination.NextKey = *sdkRes.Pagination.NextKey
-	}
-
-	if sdkRes.Pagination.Total != nil {
-		res.Pagination.Total = *sdkRes.Pagination.Total
-	}
-
-	for _, s := range sdkRes.Coins {
-		res.Supply = append(res.Supply, Coin{
-			Denom:  s.Denom,
-			Amount: s.Amount,
-		})
-	}
-
-	c.JSON(http.StatusOK, res)
 }
 
 // GetDenomSupply returns the total supply of a given denom.
@@ -603,52 +589,45 @@ func GetChainSupply(c *gin.Context) {
 // @Success 200 {object} SupplyResponse
 // @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/supply/:denom [get]
-func GetDenomSupply(c *gin.Context) {
-	denom := c.Param("denom")
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+func GetDenomSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		denom := c.Param("denom")
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name", chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	payload := &sdkutilities.SupplyDenomPayload{
-		ChainName: chain.ChainName,
-		Denom:     &denom,
-	}
-
-	sdkRes, err := client.SupplyDenom(context.Background(), payload)
-	if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
-		cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
-		if sdkRes != nil && len(sdkRes.Coins) != 1 {
-			cause = fmt.Sprintf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
 		}
-		e := apierrors.New(
-			"chains",
-			cause,
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
-			"chain name", chain.ChainName,
-			"denom name", denom,
-		)
-		_ = c.Error(e)
 
-		return
+		payload := &sdkutilities.SupplyDenomPayload{
+			ChainName: chain.ChainName,
+			Denom:     &denom,
+		}
+
+		sdkRes, err := client.SupplyDenom(context.Background(), payload)
+		if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
+			cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
+			if sdkRes != nil && len(sdkRes.Coins) != 1 {
+				cause = fmt.Sprintf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
+			}
+			e := apierrors.New(
+				"chains",
+				cause,
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
+				"chain name", chain.ChainName,
+				"denom name", denom,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		res := SupplyResponse{Supply: []Coin{{Denom: denom, Amount: sdkRes.Coins[0].Amount}}}
+		c.JSON(http.StatusOK, res)
 	}
-
-	res := SupplyResponse{Supply: []Coin{{Denom: denom, Amount: sdkRes.Coins[0].Amount}}}
-	c.JSON(http.StatusOK, res)
 }
 
 // GetChainTx returns the tx info of a given chain.
@@ -662,46 +641,39 @@ func GetDenomSupply(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/txs/{txhash} [get]
-func GetChainTx(c *gin.Context) {
-	txHash := c.Param("tx")
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+func GetChainTx(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		txHash := c.Param("tx")
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		return
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
+
+		sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
+			ChainName: chain.ChainName,
+			Hash:      txHash,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve tx from sdk-service, %v", err),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve tx from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes)
 	}
-
-	sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
-		ChainName: chain.ChainName,
-		Hash:      txHash,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve tx from sdk-service, %v", err),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve tx from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes)
 }
 
 // GetNumbersByAddress returns sequence and account number of an address.
@@ -714,29 +686,31 @@ func GetChainTx(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/numbers/{address} [get]
-func GetNumbersByAddress(c *gin.Context) {
-	address := c.Param("address")
-	chainInfo := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+func GetNumbersByAddress(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		address := c.Param("address")
+		chainInfo := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	resp, err := apiutils.FetchAccountNumbers(chainInfo, address)
-	if err != nil {
-		e := apierrors.New(
-			"numbers",
-			fmt.Sprintf("cannot retrieve account/sequence numbers for address %v", address),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot query nodes auth for address: %w", err),
-			"address",
-			address,
-			"chain",
-			chainInfo,
-		)
-		_ = c.Error(e)
+		resp, err := apiutils.FetchAccountNumbers(chainInfo, address, sdkServiceClients)
+		if err != nil {
+			e := apierrors.New(
+				"numbers",
+				fmt.Sprintf("cannot retrieve account/sequence numbers for address %v", address),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot query nodes auth for address: %w", err),
+				"address",
+				address,
+				"chain",
+				chainInfo,
+			)
+			_ = c.Error(e)
 
-		return
+			return
+		}
+
+		c.JSON(http.StatusOK, NumbersResponse{Numbers: resp})
 	}
-
-	c.JSON(http.StatusOK, NumbersResponse{Numbers: resp})
 }
 
 // GetInflation returns the inflation of a specific chain
@@ -748,45 +722,37 @@ func GetNumbersByAddress(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/inflation [get]
-func GetInflation(c *gin.Context) {
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+func GetInflation(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
-		return
+		sdkRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve inflation from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve inflation from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintInflation)
 	}
-
-	sdkRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve inflation from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve inflation from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintInflation)
 }
 
 // GetStakingParams returns the staking parameters of a specific chain
@@ -798,45 +764,37 @@ func GetInflation(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/staking/params [get]
-func GetStakingParams(c *gin.Context) {
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+func GetStakingParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
-		return
+		sdkRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve staking params from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve staking params from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingParams)
 	}
-
-	sdkRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve staking params from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve staking params from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingParams)
 }
 
 // GetStakingPool returns the staking pool of a specific chain
@@ -848,45 +806,37 @@ func GetStakingParams(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/staking/pool [get]
-func GetStakingPool(c *gin.Context) {
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+func GetStakingPool(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
-		return
+		sdkRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve staking pool from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve staking pool from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingPool)
 	}
-
-	sdkRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve staking pool from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve staking pool from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.StakingPool)
 }
 
 // GetMintParams returns the minting parameters of a specific chain
@@ -898,44 +848,36 @@ func GetStakingPool(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/params [get]
-func GetMintParams(c *gin.Context) {
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+func GetMintParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
-		return
+		sdkRes, err := client.MintParams(context.Background(), &sdkutilities.MintParamsPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve mint params from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve mint params from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintParams)
 	}
-
-	sdkRes, err := client.MintParams(context.Background(), &sdkutilities.MintParamsPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve mint params from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve mint params from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintParams)
 }
 
 // GetAnnualProvisions returns the annual provisions of a specific chain
@@ -947,44 +889,36 @@ func GetMintParams(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/annual_provisions [get]
-func GetAnnualProvisions(c *gin.Context) {
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+func GetAnnualProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
-		return
+		sdkRes, err := client.MintAnnualProvision(context.Background(), &sdkutilities.MintAnnualProvisionPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve mint annual provision from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve mint annual provision from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintAnnualProvision)
 	}
-
-	sdkRes, err := client.MintAnnualProvision(context.Background(), &sdkutilities.MintAnnualProvisionPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve mint annual provision from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve mint annual provision from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintAnnualProvision)
 }
 
 // GetEpochProvisions returns the epoch provisions of a specific chain
@@ -996,45 +930,37 @@ func GetAnnualProvisions(c *gin.Context) {
 // @Success 200 {object} json.RawMessage
 // @Failure 400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/mint/epoch_provisions [get]
-func GetEpochProvisions(c *gin.Context) {
-	chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
 
-		return
+		sdkRes, err := client.MintEpochProvisions(context.Background(), &sdkutilities.MintEpochProvisionsPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve mint epoch provisions from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve mint epoch provisions from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintEpochProvisions)
 	}
-
-	sdkRes, err := client.MintEpochProvisions(context.Background(), &sdkutilities.MintEpochProvisionsPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve mint epoch provisions from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve mint epoch provisions from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return
-	}
-
-	c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.MintEpochProvisions)
 }
 
 // GetStakingAPR returns the staking APR of a specific chain
@@ -1046,7 +972,7 @@ func GetEpochProvisions(c *gin.Context) {
 // @Success 200 {object} APRResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/APR [get]
-func GetStakingAPR(db *database.Database, s *store.Store) gin.HandlerFunc {
+func GetStakingAPR(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
@@ -1057,7 +983,7 @@ func GetStakingAPR(db *database.Database, s *store.Store) gin.HandlerFunc {
 			stringcache.NewStoreBackend(s),
 			aprCacheDuration,
 			aprCachePrefix,
-			getAPR(c),
+			getAPR(c, sdkServiceClients),
 		)
 		aprString, err := aprCache.Get(c.Request.Context(), chainName, false)
 		if err != nil {
@@ -1097,23 +1023,13 @@ func GetStakingAPR(db *database.Database, s *store.Store) gin.HandlerFunc {
 	}
 }
 
-func getAPR(c *gin.Context) stringcache.HandlerFunc {
+func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stringcache.HandlerFunc {
 	return func(ctx context.Context, key string) (string, error) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-		client, err := sdkservice.Client(chain.MajorSDKVersion())
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-				"name",
-				chain.ChainName,
-			)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
 			_ = c.Error(e)
-
-			return "", err
+			return "", fmt.Errorf(e.Error())
 		}
 
 		// get number of bonded tokens from staking/pool data
@@ -1327,7 +1243,7 @@ func getAPR(c *gin.Context) stringcache.HandlerFunc {
 // @Success 200 {object} ChainsPrimaryChannelResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chains/primary_channels [get]
-func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerFunc {
+func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
@@ -1395,7 +1311,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			}
 			// clients[chain.ChainName] = client
 			// ci.Client = &clients[chain.ChainName]
-			ci.Client = client
+			ci.Client = &client
 			chainInfos[chain.ChainName] = ci
 		}
 
@@ -1415,15 +1331,26 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			}
 
 			logger.Debugw("going through channel pair", "channel pair", channelPair)
-			client, err := sdkservice.Client(chain.Chain.MajorSDKVersion())
-			if err != nil {
-				logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
+			// client, err := sdkServiceClients.GetSDKServiceClient(chain.Chain.MajorSDKVersion())
+
+			// if err != nil {
+			// 	logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
+			// 	chain.Broken = true
+			// 	continue
+			// }
+			// sdkRes, err := client.SupplyDenom(context.Background(), payload)
+
+			if chain.Client == nil {
+				logger.Errorw("chain client not found", "chain", channelPair.ChainName, "err", err)
 				chain.Broken = true
 				continue
 			}
-			sdkRes, err := client.SupplyDenom(context.Background(), payload)
 
-			// sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
+			sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
+			if sdkRes == nil {
+				logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
+				continue
+			}
 			if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 
 				// don't return?
@@ -1728,3 +1655,38 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 // 	}
 // 	return sup, nil
 // }
+// GetChainsStatuses returns the status of all the enabled chains.
+// @Summary Gets status for all enabled chains.
+// @Tags Chain
+// @ID statuses
+// @Description Gets status for all enabled chains.
+// @Produce json
+// @Success 200 {object} ChainsStatusesResponse
+// @Failure 500 {object} apierrors.UserFacingError
+// @Router /chains/status [get]
+func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		statuses, err := db.ChainsOnlineStatuses()
+		if err != nil {
+			e := apierrors.New(
+				"chain",
+				"cannot retrieve online status for chains",
+				http.StatusInternalServerError,
+			).WithLogContext(
+				err,
+			)
+
+			_ = c.Error(e)
+			return
+		}
+
+		res := NewChainsStatusesResponse(len(statuses))
+		for _, s := range statuses {
+			res.Chains[s.ChainName] = ChainStatus{
+				Online: s.Online,
+			}
+		}
+
+		c.JSON(http.StatusOK, res)
+	}
+}

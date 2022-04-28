@@ -6,14 +6,17 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, db *database.Database, s *store.Store) {
-	router.GET("/chains", GetChains(db))
-	router.GET("/chains/fee/addresses", GetFeeAddresses(db))
-	router.GET("/chains/primary_channels", EstimatePrimaryChannels(db, s))
+func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
+	router.Group("/chains").
+		GET("", GetChains(db)).
+		GET("/status", GetChainsStatuses(db)).
+		GET("/fee/addresses", GetFeeAddresses(db)).
+		GET("/primary_channels", EstimatePrimaryChannels(db, s, sdkServiceClients))
 
 	chain := router.Group("/chain/:chain")
 
@@ -30,17 +33,17 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 		GET("", GetChain).
 		GET("/bech32", GetChainBech32Config).
 		GET("/status", GetChainStatus(db)).
-		GET("/supply", GetChainSupply).
-		GET("/supply/:denom", GetDenomSupply).
-		GET("/txs/:tx", GetChainTx).
-		GET("/numbers/:address", GetNumbersByAddress).
-		GET("/mint/inflation", GetInflation).
-		GET("/mint/params", GetMintParams).
-		GET("/mint/annual_provisions", GetAnnualProvisions).
-		GET("/mint/epoch_provisions", GetEpochProvisions).
-		GET("/staking/params", GetStakingParams).
-		GET("/apr", GetStakingAPR(db, s)).
-		GET("/staking/pool", GetStakingPool)
+		GET("/supply", GetChainSupply(sdkServiceClients)).
+		GET("/supply/:denom", GetDenomSupply(sdkServiceClients)).
+		GET("/txs/:tx", GetChainTx(sdkServiceClients)).
+		GET("/numbers/:address", GetNumbersByAddress(sdkServiceClients)).
+		GET("/mint/inflation", GetInflation(sdkServiceClients)).
+		GET("/mint/params", GetMintParams(sdkServiceClients)).
+		GET("/mint/annual_provisions", GetAnnualProvisions(sdkServiceClients)).
+		GET("/mint/epoch_provisions", GetEpochProvisions(sdkServiceClients)).
+		GET("/staking/params", GetStakingParams(sdkServiceClients)).
+		GET("/apr", GetStakingAPR(db, s, sdkServiceClients)).
+		GET("/staking/pool", GetStakingPool(sdkServiceClients))
 
 	chain.Group("/fee").
 		GET("", GetFee(db)).

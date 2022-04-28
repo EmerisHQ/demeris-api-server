@@ -9,6 +9,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/config"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router"
+	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
@@ -83,6 +84,11 @@ func main() {
 
 	go informer.Informer().Run(make(chan struct{}))
 
+	sdkServiceClients, err := sdkservice.InitializeClients()
+	if err != nil {
+		l.Panicw("cannot initialize sdk-service clients", "error", err)
+	}
+
 	r := router.New(
 		dbi,
 		l,
@@ -90,6 +96,7 @@ func main() {
 		kubeClient,
 		cfg.KubernetesNamespace,
 		informer,
+		sdkServiceClients,
 		cfg.Debug,
 	)
 

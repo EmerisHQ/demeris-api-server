@@ -14,10 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, db *database.Database, s *store.Store) {
-	router.POST("/tx/:chain", Tx(db, s))
-	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx(db))
-	router.POST("/tx/:chain/simulate", GetTxFeeEstimate(db))
+func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
+	router.POST("/tx/:chain", Tx(db, s, sdkServiceClients))
+	router.GET("/tx/:src-chain/:dest-chain/:tx-hash", GetDestTx(db, sdkServiceClients))
+	router.POST("/tx/:chain/simulate", GetTxFeeEstimate(db, sdkServiceClients))
 	router.GET("/tx/ticket/:chain/:ticket", GetTicket(db, s))
 }
 
@@ -31,7 +31,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store) {
 // @Success 200 {object} TxResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/{chainName} [post]
-func Tx(db *database.Database, s *store.Store) gin.HandlerFunc {
+func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// var tx typestx.Tx
 		var txRequest TxRequest
@@ -65,19 +65,9 @@ func Tx(db *database.Database, s *store.Store) gin.HandlerFunc {
 			return
 		}
 
-		client, err := sdkservice.Client(chain.MajorSDKVersion())
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-				http.StatusInternalServerError,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-				"name",
-				chainName,
-			)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
 			_ = c.Error(e)
-
 			return
 		}
 
@@ -168,7 +158,7 @@ func GetTicket(db *database.Database, s *store.Store) gin.HandlerFunc {
 // @Success 200 {object} TxFeeEstimateRes
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /tx/fees/{chainName} [post]
-func GetTxFeeEstimate(db *database.Database) gin.HandlerFunc {
+func GetTxFeeEstimate(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var txRequest TxFeeEstimateReq
 
@@ -200,19 +190,9 @@ func GetTxFeeEstimate(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		client, err := sdkservice.Client(chain.MajorSDKVersion())
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-				http.StatusInternalServerError,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-				"name",
-				chainName,
-			)
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
 			_ = c.Error(e)
-
 			return
 		}
 

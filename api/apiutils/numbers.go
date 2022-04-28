@@ -12,13 +12,13 @@ import (
 
 // FetchAccountNumbers returns a tracelistener.AuthRow containing sequence
 // and account numbers given a hex-encoded address.
-func FetchAccountNumbers(chain cns.Chain, account string) (tracelistener.AuthRow, error) {
+func FetchAccountNumbers(chain cns.Chain, account string, sdkServiceClients sdkservice.SDKServiceClients) (tracelistener.AuthRow, error) {
 	chainVersion := chain.MajorSDKVersion()
 	chainName := chain.ChainName
 
-	client, err := sdkservice.Client(chainVersion)
-	if err != nil {
-		return tracelistener.AuthRow{}, fmt.Errorf("cannot create sdkservice client, %w", err)
+	client, e := sdkServiceClients.GetSDKServiceClient(chainVersion)
+	if e != nil {
+		return tracelistener.AuthRow{}, fmt.Errorf(e.Error())
 	}
 
 	res, err := client.AccountNumbers(context.Background(), &sdkutilities.AccountNumbersPayload{

@@ -2,7 +2,9 @@ package sdkservice
 
 import (
 	"fmt"
+	"net/http"
 
+	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	sdkserviceclient "github.com/emerishq/sdk-service-meta/gen/grpc/sdk_utilities/client"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	"google.golang.org/grpc"
@@ -12,16 +14,52 @@ const (
 	sdkServiceURLFmt = "sdk-service-v%s:9090"
 )
 
-// map of sdk versions to sdk service versions in case of any exceptions
-var sdkExceptionMappings = map[string]string{
-	"45": "44",
-}
+var (
+	availableVersions = []string{"42", "44"}
+
+	// map of sdk versions to sdk service versions in case of any exceptions
+	sdkExceptionMappings = map[string]string{
+		"45": "44",
+	}
+)
 
 func SdkServiceURL(version string) string {
 	if v, ok := sdkExceptionMappings[version]; ok {
 		version = v
 	}
 	return fmt.Sprintf(sdkServiceURLFmt, version)
+}
+
+type SDKServiceClients map[string]sdkutilities.Client
+
+func (clients SDKServiceClients) GetSDKServiceClient(version string) (sdkutilities.Client, *apierrors.Error) {
+	if v, ok := sdkExceptionMappings[version]; ok {
+		version = v
+	}
+
+	client, ok := clients[version]
+	if !ok {
+		return client, apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot retrieve sdk-service for version %s", version),
+			http.StatusBadRequest,
+		)
+	}
+
+	return client, nil
+}
+
+func InitializeClients() (SDKServiceClients, error) {
+	clients := SDKServiceClients{}
+	for _, version := range availableVersions {
+		client, err := Client(version)
+		if err != nil {
+			return clients, err
+		}
+		clients[version] = client
+	}
+
+	return clients, nil
 }
 
 // Client returns a sdkutilities.Client for the given SDK version ready to be used.

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	db "github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 
@@ -12,7 +12,7 @@ import (
 )
 
 type ChainsResponse struct {
-	Chains []SupportedChain `json:"chains"`
+	Chains []database.ChainWithStatus `json:"chains"`
 }
 type SupportedChain struct {
 	ChainName   string `json:"chain_name"`
@@ -193,7 +193,7 @@ type ChainsPrimaryChannelResponse struct {
 type DenomInfo struct {
 	Denom      string
 	Supply     uint64
-	DenomTrace db.ChannelConnectionMatchingDenom
+	DenomTrace database.ChannelConnectionMatchingDenom
 }
 
 type DenomInfos []DenomInfo
@@ -206,7 +206,20 @@ type ChainInfo struct {
 	EstimatedPrimaryChannelMap map[string]DenomInfo
 	DenomInfos                 DenomInfos
 	Broken                     bool
-	Client                     sdkutilities.Client
+	Client                     *sdkutilities.Client
 }
 
 type ChainInfos map[string]ChainInfo
+type ChainStatus struct {
+	Online bool `json:"online"`
+}
+
+type ChainsStatusesResponse struct {
+	Chains map[string]ChainStatus `json:"chains"`
+}
+
+func NewChainsStatusesResponse(sz int) ChainsStatusesResponse {
+	return ChainsStatusesResponse{
+		Chains: make(map[string]ChainStatus, sz),
+	}
+}
