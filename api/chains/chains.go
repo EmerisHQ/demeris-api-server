@@ -1372,6 +1372,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 				CurrentPrimaryChannelMap:   chain.PrimaryChannel,
 				ChainChannelMapping:        make(map[string]DenomInfos),
 				EstimatedPrimaryChannelMap: make(map[string]DenomInfo),
+				Broken:                     false,
 			}
 
 			client, err := sdkservice.Client(chain.MajorSDKVersion())
@@ -1398,6 +1399,9 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 
 		for _, channelPair := range matchingChannels {
 			chain := chainInfos[channelPair.ChainName]
+			if chain.Broken {
+				continue
+			}
 			logger.Debugw("got chain", "chain", channelPair.ChainName, "channelPair", channelPair)
 			denom := "ibc/" + strings.ToUpper(channelPair.Hash)
 
@@ -1474,6 +1478,9 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 
 		logger.Debugw("almost done")
 		for chainName, info := range chainInfos {
+			if info.Broken {
+				continue
+			}
 			for counterparty, denomList := range info.ChainChannelMapping {
 				max := denomList[0]
 				for _, d := range denomList {
