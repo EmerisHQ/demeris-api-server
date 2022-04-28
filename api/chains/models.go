@@ -204,6 +204,7 @@ type ChainInfo struct {
 	CurrentPrimaryChannelMap   map[string]string
 	EstimatedPrimaryChannelMap map[string]DenomInfo
 	DenomInfos                 DenomInfos
+	Broken                     bool
 	Client                     sdkutilities.Client
 }
 

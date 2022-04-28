@@ -1410,24 +1410,29 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
 			if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 
-				// don't return
-				cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
-				if sdkRes != nil && len(sdkRes.Coins) != 1 {
-					cause = fmt.Sprintf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
-				}
-				e := apierrors.New(
-					"chains",
-					cause,
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
-					"chain name", chain.ChainName,
-					"denom name", denom,
-				)
-				_ = c.Error(e)
+				// don't return?
+				// todo: find a way to pass skip chains that are broken
+				// cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
+				// if sdkRes != nil && len(sdkRes.Coins) != 1 {
+				// 	cause = fmt.Sprintf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, denom, sdkRes.Coins)
+				// }
+				// e := apierrors.New(
+				// 	"chains",
+				// 	cause,
+				// 	http.StatusBadRequest,
+				// ).WithLogContext(
+				// 	fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
+				// 	"chain name", chain.ChainName,
+				// 	"denom name", denom,
+				// )
+				// _ = c.Error(e)
+
+				logger.Errorw("chain broken lol", "chain", channelPair.ChainName, "err", err)
+				chain.Broken = true
+				continue
 			}
 
-			logger.Debugw("got response!", "channel pair", channelPair)
+			logger.Debugw("got response!", "channel pair", channelPair, "response", sdkRes)
 			supply, err := strconv.Atoi(sdkRes.Coins[0].Amount)
 			if err != nil {
 				cause := fmt.Sprintf("cannot convert supply for chain: %s - denom: %s", chain.ChainName, denom)
