@@ -1369,6 +1369,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 		for _, chain := range chains {
 			ci := ChainInfo{
 				ChainName:                  chain.ChainName,
+				Chain:                      &chain,
 				CurrentPrimaryChannelMap:   chain.PrimaryChannel,
 				ChainChannelMapping:        make(map[string]DenomInfos),
 				EstimatedPrimaryChannelMap: make(map[string]DenomInfo),
@@ -1377,17 +1378,20 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 
 			client, err := sdkservice.Client(chain.MajorSDKVersion())
 			if err != nil {
-				e := apierrors.New(
-					"chains",
-					fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-					"name", chain.ChainName,
-				)
-				_ = c.Error(e)
+				// e := apierrors.New(
+				// 	"chains",
+				// 	fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
+				// 	http.StatusBadRequest,
+				// ).WithLogContext(
+				// 	fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
+				// 	"name", chain.ChainName,
+				// )
+				// _ = c.Error(e)
 
-				return
+				// return
+				logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
+				ci.Broken = true
+				continue
 			}
 			// clients[chain.ChainName] = client
 			// ci.Client = &clients[chain.ChainName]
@@ -1411,7 +1415,15 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store) gin.HandlerF
 			}
 
 			logger.Debugw("going through channel pair", "channel pair", channelPair)
-			sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
+			client, err := sdkservice.Client(chain.Chain.MajorSDKVersion())
+			if err != nil {
+				logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
+				chain.Broken = true
+				continue
+			}
+			sdkRes, err := client.SupplyDenom(context.Background(), payload)
+
+			// sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
 			if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 
 				// don't return?
