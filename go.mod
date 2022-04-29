@@ -16,8 +16,9 @@ require (
 	github.com/cosmos/cosmos-sdk v0.42.8
 	github.com/emerishq/demeris-backend-models v1.5.0
 	github.com/emerishq/emeris-cns-server v0.0.0-20220309095629-a492f8569484
-	github.com/emerishq/emeris-utils v1.4.0
+	github.com/emerishq/emeris-utils v1.5.0
 	github.com/emerishq/sdk-service-meta v0.0.0-20220331063503-f6dcfa168e93
+	github.com/getsentry/sentry-go v0.13.0
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/go-redis/redis/v8 v8.11.4

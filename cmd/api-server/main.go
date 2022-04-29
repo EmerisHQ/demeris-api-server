@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"runtime"
@@ -13,6 +14,7 @@ import (
 	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
+	"github.com/getsentry/sentry-go"
 	_ "github.com/lib/pq"
 	"k8s.io/client-go/rest"
 )
@@ -80,6 +82,16 @@ func main() {
 	informer, err := k8s.GetInformer(k8sCfg, cfg.KubernetesNamespace, "relayers")
 	if err != nil {
 		l.Panicw("k8s server panic", "error", err)
+	}
+
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              cfg.SentryDSN,
+		SampleRate:       cfg.SentrySampleRate,
+		TracesSampleRate: cfg.SentryTracesSampleRate,
+		Environment:      cfg.SentryEnvironment,
+		AttachStacktrace: true,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
 
 	go informer.Informer().Run(make(chan struct{}))
