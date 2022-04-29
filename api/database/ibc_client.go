@@ -1,9 +1,14 @@
 package database
 
-import "github.com/emerishq/demeris-backend-models/cns"
+import (
+	"fmt"
 
-func (d *Database) QueryIBCClientTrace(chain string, channel string) (cns.IbcClientInfo, error) {
-	var client cns.IbcClientInfo
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/lib/pq"
+)
+
+func (d *Database) QueryIBCClientTrace(chain string, channel string) ([]cns.IbcClientInfo, error) {
+	clients := []cns.IbcClientInfo{}
 
 	q := `
 	SELECT 
@@ -20,15 +25,41 @@ func (d *Database) QueryIBCClientTrace(chain string, channel string) (cns.IbcCli
 	INNER JOIN 
 		(SELECT * 
 			FROM tracelistener.channels 
-			WHERE chain_name=?
-			AND channel_id=?
+			WHERE chain_name=:chain_name
+			AND channel_id=:channel_id
 			AND delete_height IS NULL
 		) ch 
 	ON conn.connection_id=ANY(ch.hops)
 	WHERE conn.delete_height IS NULL;
 	`
+	rows, err := d.dbi.DB.NamedQuery(q, map[string]interface{}{
+		"chain_name": chain,
+		"channel_id": channel,
+	})
 
-	q = d.dbi.DB.Rebind(q)
+	if err != nil {
+		return clients, err
+	}
 
-	return client, d.dbi.DB.Select(&client, q, chain, channel)
+	for rows.Next() {
+		var client cns.IbcClientInfo
+		err = rows.Scan(&client.ChainName, &client.ConnectionId, &client.ClientId, &client.ChannelId, &client.CounterConnectionID,
+			&client.CounterClientID, &client.Port, &client.State, pq.Array(&client.Hops))
+		if err != nil {
+			return clients, err
+		}
+
+		clients = append(clients, client)
+	}
+
+	err = rows.Close()
+	if err != nil {
+		return clients, fmt.Errorf("closing rows object: %w", err)
+	}
+
+	if len(clients) == 0 {
+		return []cns.IbcClientInfo{}, fmt.Errorf("query done but returned no result")
+	}
+
+	return clients, nil
 }
