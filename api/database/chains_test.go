@@ -56,7 +56,7 @@ func compareAsBytes(t *testing.T, expected interface{}, actual interface{}) {
 	require.NoError(t, err)
 	expBytes, err := json.Marshal(expected)
 	require.NoError(t, err)
-	require.Equal(t, expBytes, actualBytes)
+	require.JSONEq(t, string(expBytes), string(actualBytes))
 }
 
 func (s *TestSuite) TestChainExists() {
