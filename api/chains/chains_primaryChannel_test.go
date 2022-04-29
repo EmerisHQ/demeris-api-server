@@ -7,12 +7,13 @@ import (
 	"net/http"
 	"testing"
 
+	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetPrimaryChannelWithCounterparty(t *testing.T) {
 
-	require.NoError(t, testingCtx.CnsDB.AddChain(chainWithPublicEndpoints))
+	require.NoError(t, testingCtx.CnsDB.AddChain(utils.ChainWithPublicEndpoints))
 
 	body, status := getRespBodyAndStatus(t, "/chain/chain2/primary_channel/key", testingCtx.Cfg.ListenAddr)
 

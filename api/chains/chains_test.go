@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
-	"github.com/emerishq/demeris-api-server/api/database"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 
 	"github.com/emerishq/demeris-backend-models/cns"
@@ -44,22 +43,22 @@ func TestGetChain(t *testing.T) {
 		},
 		{
 			"Get Chain - Without PublicEndpoint",
-			chainWithoutPublicEndpoints,
-			chainWithoutPublicEndpoints.ChainName,
+			utils.ChainWithoutPublicEndpoints,
+			utils.ChainWithoutPublicEndpoints.ChainName,
 			200,
 			true,
 		},
 		{
 			"Get Chain - With PublicEndpoints",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			200,
 			true,
 		},
 		{
 			"Get Chain - Disabled",
-			disabledChain,
-			disabledChain.ChainName,
+			utils.DisabledChain,
+			utils.DisabledChain.ChainName,
 			400,
 			true,
 		},
@@ -104,7 +103,7 @@ func TestGetChain(t *testing.T) {
 
 func TestGetChains(t *testing.T) {
 	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
 	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -135,7 +134,7 @@ func TestGetChains(t *testing.T) {
 
 				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 				for _, c := range tt.dataStruct {
-					require.Contains(t, respStruct.Chains, toChainWithStatus(c))
+					require.Contains(t, respStruct.Chains, utils.ToChainWithStatus(c.chain, c.online))
 				}
 			}
 		})
@@ -185,31 +184,9 @@ func TestVerifyTrace(t *testing.T) {
 	}
 }
 
-func toChainWithStatus(c testChainWithStatus) database.ChainWithStatus {
-
-	return database.ChainWithStatus{
-		Enabled:             c.chain.Enabled,
-		ChainName:           c.chain.ChainName,
-		Logo:                c.chain.Logo,
-		DisplayName:         c.chain.DisplayName,
-		PrimaryChannel:      c.chain.PrimaryChannel,
-		Denoms:              c.chain.Denoms,
-		DemerisAddresses:    c.chain.DemerisAddresses,
-		GenesisHash:         c.chain.GenesisHash,
-		NodeInfo:            c.chain.NodeInfo,
-		ValidBlockThresh:    c.chain.ValidBlockThresh,
-		DerivationPath:      c.chain.DerivationPath,
-		SupportedWallets:    c.chain.SupportedWallets,
-		BlockExplorer:       c.chain.BlockExplorer,
-		PublicNodeEndpoints: c.chain.PublicNodeEndpoints,
-		CosmosSDKVersion:    c.chain.CosmosSDKVersion,
-		Online:              c.online,
-	}
-}
-
 func TestGetChainStatus(t *testing.T) {
 	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
 	tests := []struct {
 		name             string
@@ -221,24 +198,24 @@ func TestGetChainStatus(t *testing.T) {
 	}{
 		{
 			"Get Chain Status - Without PublicEndpoint",
-			chainWithoutPublicEndpoints,
-			chainWithoutPublicEndpoints.ChainName,
+			utils.ChainWithoutPublicEndpoints,
+			utils.ChainWithoutPublicEndpoints.ChainName,
 			200,
 			chains.StatusResponse{Online: false},
 			true,
 		},
 		{
 			"Get Chain Status - Enabled",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			200,
 			chains.StatusResponse{Online: true},
 			true,
 		},
 		{
 			"Get Chain Status - Disabled",
-			disabledChain,
-			disabledChain.ChainName,
+			utils.DisabledChain,
+			utils.DisabledChain.ChainName,
 			400,
 			chains.StatusResponse{Online: false},
 			true,
@@ -291,8 +268,8 @@ func TestGetChainSupply(t *testing.T) {
 	}{
 		{
 			"Get Chain Supply - Enabled",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			500,
 			chains.SupplyResponse{Supply: []chains.Coin(nil), Pagination: chains.Pagination{}},
 			true,
@@ -336,13 +313,13 @@ func TestGetChainSupply(t *testing.T) {
 
 func TestGetChainsStatuses(t *testing.T) {
 	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
 	// arrange
 	testChains := []cns.Chain{
-		chainWithoutPublicEndpoints,
-		chainWithPublicEndpoints,
-		disabledChain,
+		utils.ChainWithoutPublicEndpoints,
+		utils.ChainWithPublicEndpoints,
+		utils.DisabledChain,
 	}
 	for _, c := range testChains {
 		err := testingCtx.CnsDB.AddChain(c)
@@ -364,10 +341,10 @@ func TestGetChainsStatuses(t *testing.T) {
 
 	expectedResult := chains.ChainsStatusesResponse{
 		Chains: map[string]chains.ChainStatus{
-			chainWithoutPublicEndpoints.ChainName: {
+			utils.ChainWithoutPublicEndpoints.ChainName: {
 				Online: false,
 			},
-			chainWithPublicEndpoints.ChainName: {
+			utils.ChainWithPublicEndpoints.ChainName: {
 				Online: true,
 			},
 		},
