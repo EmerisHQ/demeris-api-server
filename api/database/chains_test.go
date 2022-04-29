@@ -51,6 +51,8 @@ func (s *TestSuite) TestChain() {
 	}
 }
 
+// marshalling to json as we cannot compare ID value getting from DB which is dynamic
+// and it will be ignored when converted to bytes.
 func compareAsBytes(t *testing.T, expected interface{}, actual interface{}) {
 	actualBytes, err := json.Marshal(actual)
 	require.NoError(t, err)
