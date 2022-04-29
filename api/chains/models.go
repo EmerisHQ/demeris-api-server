@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
 type ChainsResponse struct {
-	Chains []SupportedChain `json:"chains"`
+	Chains []database.ChainWithStatus `json:"chains"`
 }
 type SupportedChain struct {
 	ChainName   string `json:"chain_name"`
@@ -169,4 +170,18 @@ type Pagination struct {
 
 type APRResponse struct {
 	APR float64 `json:"apr,omitempty"`
+}
+
+type ChainStatus struct {
+	Online bool `json:"online"`
+}
+
+type ChainsStatusesResponse struct {
+	Chains map[string]ChainStatus `json:"chains"`
+}
+
+func NewChainsStatusesResponse(sz int) ChainsStatusesResponse {
+	return ChainsStatusesResponse{
+		Chains: make(map[string]ChainStatus, sz),
+	}
 }

@@ -1,16 +1,15 @@
-package chains_test
+package test_utils
 
 import (
 	"time"
 
-	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/lib/pq"
 )
 
 var relayerBalance = int64(30000)
 
-var chainWithoutPublicEndpoints = cns.Chain{
+var ChainWithoutPublicEndpoints = cns.Chain{
 	Enabled:        true,
 	ChainName:      "chain1",
 	Logo:           "http://logo.com",
@@ -57,7 +56,7 @@ var chainWithoutPublicEndpoints = cns.Chain{
 	BlockExplorer:    "http://explorer.com",
 }
 
-var chainWithPublicEndpoints = cns.Chain{
+var ChainWithPublicEndpoints = cns.Chain{
 	Enabled:        true,
 	ChainName:      "chain2",
 	Logo:           "http://logo.com",
@@ -108,8 +107,8 @@ var chainWithPublicEndpoints = cns.Chain{
 	},
 }
 
-var verifyTraceData = utils.TracelistenerData{
-	Denoms: []utils.DenomTrace{
+var VerifyTraceData = TracelistenerData{
+	Denoms: []DenomTrace{
 		{
 			Path:      "transfer/ch1",
 			BaseDenom: "denom2",
@@ -118,7 +117,7 @@ var verifyTraceData = utils.TracelistenerData{
 		},
 	},
 
-	Channels: []utils.Channel{
+	Channels: []Channel{
 		{
 			ChannelID:        "ch1",
 			CounterChannelID: "ch2",
@@ -137,7 +136,7 @@ var verifyTraceData = utils.TracelistenerData{
 		},
 	},
 
-	Connections: []utils.Connection{
+	Connections: []Connection{
 		{
 			ChainName:           "chain1",
 			ConnectionID:        "conn1",
@@ -156,7 +155,7 @@ var verifyTraceData = utils.TracelistenerData{
 		},
 	},
 
-	Clients: []utils.Client{
+	Clients: []Client{
 		{
 			SourceChainName: "chain1",
 			DestChainID:     "chain_2",
@@ -173,16 +172,16 @@ var verifyTraceData = utils.TracelistenerData{
 		},
 	},
 
-	BlockTimes: []utils.BlockTime{
+	BlockTimes: []BlockTime{
 		{
 			ChainName: "chain2",
-			Time:      time.Now(),
+			Time:      time.Now().UTC(),
 		},
 	},
 }
 
-var verifyTraceData3Chains = utils.TracelistenerData{
-	Denoms: []utils.DenomTrace{
+var VerifyTraceData3Chains = TracelistenerData{
+	Denoms: []DenomTrace{
 		{
 			Path:      "transfer/channel-11/transfer/channel-184",
 			BaseDenom: "uakt",
@@ -190,7 +189,7 @@ var verifyTraceData3Chains = utils.TracelistenerData{
 			ChainName: "regen",
 		},
 	},
-	Channels: []utils.Channel{
+	Channels: []Channel{
 		{
 			ChannelID:        "channel-11",
 			CounterChannelID: "channel-185",
@@ -224,7 +223,7 @@ var verifyTraceData3Chains = utils.TracelistenerData{
 			ChainName:        "akash",
 		},
 	},
-	Connections: []utils.Connection{
+	Connections: []Connection{
 		{
 			ChainName:           "regen",
 			ConnectionID:        "conn1",
@@ -258,7 +257,7 @@ var verifyTraceData3Chains = utils.TracelistenerData{
 			CounterClientID:     "cl2",
 		},
 	},
-	Clients: []utils.Client{
+	Clients: []Client{
 		{
 			SourceChainName: "regen",
 			DestChainID:     "cosmoshub-4",
@@ -288,15 +287,15 @@ var verifyTraceData3Chains = utils.TracelistenerData{
 			TrustingPeriod:  "10",
 		},
 	},
-	BlockTimes: []utils.BlockTime{
+	BlockTimes: []BlockTime{
 		{
 			ChainName: "akash",
-			Time:      time.Now(),
+			Time:      time.Now().UTC(),
 		},
 	},
 }
 
-var disabledChain = cns.Chain{
+var DisabledChain = cns.Chain{
 	Enabled:        false,
 	ChainName:      "chain3",
 	Logo:           "http://logo.com",

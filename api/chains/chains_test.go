@@ -19,6 +19,7 @@ import (
 const (
 	chainEndpointUrl       = "http://%s/chain/%s"
 	chainsEndpointUrl      = "http://%s/chains"
+	chainsStatusesUrl      = "http://%s/chains/status"
 	chainStatusUrl         = "http://%s/chain/%s/status"
 	chainSupplyUrl         = "http://%s/chain/%s/supply"
 	verifyTraceEndpointUrl = "http://%s/chain/%s/denom/verify_trace/%s"
@@ -42,22 +43,22 @@ func TestGetChain(t *testing.T) {
 		},
 		{
 			"Get Chain - Without PublicEndpoint",
-			chainWithoutPublicEndpoints,
-			chainWithoutPublicEndpoints.ChainName,
+			utils.ChainWithoutPublicEndpoints,
+			utils.ChainWithoutPublicEndpoints.ChainName,
 			200,
 			true,
 		},
 		{
 			"Get Chain - With PublicEndpoints",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			200,
 			true,
 		},
 		{
 			"Get Chain - Disabled",
-			disabledChain,
-			disabledChain.ChainName,
+			utils.DisabledChain,
+			utils.DisabledChain.ChainName,
 			400,
 			true,
 		},
@@ -101,13 +102,16 @@ func TestGetChain(t *testing.T) {
 }
 
 func TestGetChains(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
+
 	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			// if we have a populated Chain store, add it
 			if len(tt.dataStruct) != 0 {
 				for _, c := range tt.dataStruct {
-					err := testingCtx.CnsDB.AddChain(c)
+					err := testingCtx.CnsDB.AddChain(c.chain)
 					require.NoError(t, err)
 				}
 			}
@@ -130,7 +134,7 @@ func TestGetChains(t *testing.T) {
 
 				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 				for _, c := range tt.dataStruct {
-					require.Contains(t, respStruct.Chains, toSupportedChain(c))
+					require.Contains(t, respStruct.Chains, utils.ToChainWithStatus(c.chain, c.online))
 				}
 			}
 		})
@@ -180,18 +184,9 @@ func TestVerifyTrace(t *testing.T) {
 	}
 }
 
-func toSupportedChain(c cns.Chain) chains.SupportedChain {
-
-	return chains.SupportedChain{
-		ChainName:   c.ChainName,
-		DisplayName: c.DisplayName,
-		Logo:        c.Logo,
-	}
-}
-
 func TestGetChainStatus(t *testing.T) {
 	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, verifyTraceData)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
 	tests := []struct {
 		name             string
@@ -203,24 +198,24 @@ func TestGetChainStatus(t *testing.T) {
 	}{
 		{
 			"Get Chain Status - Without PublicEndpoint",
-			chainWithoutPublicEndpoints,
-			chainWithoutPublicEndpoints.ChainName,
+			utils.ChainWithoutPublicEndpoints,
+			utils.ChainWithoutPublicEndpoints.ChainName,
 			200,
 			chains.StatusResponse{Online: false},
 			true,
 		},
 		{
 			"Get Chain Status - Enabled",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			200,
 			chains.StatusResponse{Online: true},
 			true,
 		},
 		{
 			"Get Chain Status - Disabled",
-			disabledChain,
-			disabledChain.ChainName,
+			utils.DisabledChain,
+			utils.DisabledChain.ChainName,
 			400,
 			chains.StatusResponse{Online: false},
 			true,
@@ -273,8 +268,8 @@ func TestGetChainSupply(t *testing.T) {
 	}{
 		{
 			"Get Chain Supply - Enabled",
-			chainWithPublicEndpoints,
-			chainWithPublicEndpoints.ChainName,
+			utils.ChainWithPublicEndpoints,
+			utils.ChainWithPublicEndpoints.ChainName,
 			500,
 			chains.SupplyResponse{Supply: []chains.Coin(nil), Pagination: chains.Pagination{}},
 			true,
@@ -313,5 +308,49 @@ func TestGetChainSupply(t *testing.T) {
 			require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 		})
 	}
+	utils.TruncateCNSDB(testingCtx, t)
+}
+
+func TestGetChainsStatuses(t *testing.T) {
+	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
+
+	// arrange
+	testChains := []cns.Chain{
+		utils.ChainWithoutPublicEndpoints,
+		utils.ChainWithPublicEndpoints,
+		utils.DisabledChain,
+	}
+	for _, c := range testChains {
+		err := testingCtx.CnsDB.AddChain(c)
+		require.NoError(t, err)
+	}
+
+	// act
+	resp, err := http.Get(fmt.Sprintf(chainsStatusesUrl, testingCtx.Cfg.ListenAddr))
+	require.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
+
+	// assert
+	body, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	respStruct := chains.ChainsStatusesResponse{}
+	err = json.Unmarshal(body, &respStruct)
+	require.NoError(t, err)
+
+	expectedResult := chains.ChainsStatusesResponse{
+		Chains: map[string]chains.ChainStatus{
+			utils.ChainWithoutPublicEndpoints.ChainName: {
+				Online: false,
+			},
+			utils.ChainWithPublicEndpoints.ChainName: {
+				Online: true,
+			},
+		},
+	}
+	require.Equal(t, expectedResult, respStruct)
+	require.Equal(t, 200, resp.StatusCode)
+
 	utils.TruncateCNSDB(testingCtx, t)
 }
