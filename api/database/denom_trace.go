@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
