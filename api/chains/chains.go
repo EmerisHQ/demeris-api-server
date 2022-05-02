@@ -1490,7 +1490,7 @@ func tryStoreFetchSupply(s *store.Store, key string, f func() (*sdkutilities.Sup
 
 	if !s.Exists(key) {
 		resp, err := f()
-		if err != nil {
+		if err == nil {
 			bytes, _ := json.Marshal(*resp)
 			status := s.Client.Set(context.Background(), key, bytes, time.Minute)
 			_, err := status.Result()
