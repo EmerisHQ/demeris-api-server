@@ -1330,22 +1330,43 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 				continue
 			}
 
-			sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
-			if sdkRes == nil {
-				logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
-				res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
+			sdkRes, err := tryStoreFetchSupply(s, fmt.Sprintf("%s-%s", chain.ChainName, denom), func() (*sdkutilities.Supply2, error) {
+				sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
+				if sdkRes == nil {
+					logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
+					res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
+				}
+				if err != nil {
+					logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
+					res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
+				}
+				if len(sdkRes.Coins) != 1 { // Expected exactly one response
+					logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
+					res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
+				}
+				return sdkRes, err
+			})
+
+			if err != nil {
 				continue
 			}
-			if err != nil { // Expected exactly one response
-				logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
-				res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
-				continue
-			}
-			if len(sdkRes.Coins) != 1 { // Expected exactly one response
-				logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
-				res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
-				continue
-			}
+
+			// sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
+			// if sdkRes == nil {
+			// 	logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
+			// 	res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
+			// 	continue
+			// }
+			// if err != nil {
+			// 	logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
+			// 	res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
+			// 	continue
+			// }
+			// if len(sdkRes.Coins) != 1 { // Expected exactly one response
+			// 	logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
+			// 	res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
+			// 	continue
+			// }
 
 			logger.Debugw("got response!", "channel pair", channelPair, "response", sdkRes)
 
@@ -1460,6 +1481,35 @@ func getChainTotalSupply(c *gin.Context, chain *cns.Chain) ([]Coin, error) {
 		}
 	}
 	return sup, nil
+}
+
+func tryStoreFetchSupply(s *store.Store, key string, f func() (*sdkutilities.Supply2, error)) (*sdkutilities.Supply2, error) {
+	var resp sdkutilities.Supply2
+
+	if !s.Exists(key) {
+		resp, err := f()
+		if err != nil {
+			bytes, _ := json.Marshal(*resp)
+			status := s.Client.Set(context.Background(), key, bytes, time.Minute)
+			_, err := status.Result()
+			if err != nil {
+				return resp, err
+			}
+		}
+		return resp, err
+	}
+
+	_res := s.Client.Get(context.Background(), key)
+	res, err := _res.Result()
+	if err != nil {
+		return &resp, err
+	}
+	err = json.Unmarshal([]byte(res), &resp)
+	if err != nil {
+		return &resp, err
+	}
+
+	return &resp, nil
 }
 
 // GetChainsStatuses returns the status of all the enabled chains.

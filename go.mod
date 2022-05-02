@@ -17,7 +17,7 @@ require (
 	github.com/cosmos/ibc-go/v3 v3.0.0
 	github.com/emerishq/demeris-backend-models v1.5.0
 	github.com/emerishq/emeris-cns-server v0.0.0-20220414063114-da66288211fc
-	github.com/emerishq/emeris-utils v1.5.0
+	github.com/emerishq/emeris-utils v1.6.1-0.20220429170826-3fd7b1153623
 	github.com/emerishq/sdk-service-meta v0.0.0-20220331063503-f6dcfa168e93
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/gin-gonic/gin v1.7.7
