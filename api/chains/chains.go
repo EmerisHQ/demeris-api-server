@@ -1335,10 +1335,12 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 				if sdkRes == nil {
 					logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
 					res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
+					return sdkRes, errors.New("empty result from sdk-service, skipping")
 				}
 				if err != nil {
 					logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
 					res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
+					return sdkRes, err
 				}
 				if len(sdkRes.Coins) != 1 { // Expected exactly one response
 					logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
