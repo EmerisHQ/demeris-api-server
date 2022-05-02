@@ -457,8 +457,8 @@ github.com/emerishq/demeris-backend-models v1.5.0 h1:PBldMVGK+jswfmKrtHZB7K6HI0S
 github.com/emerishq/demeris-backend-models v1.5.0/go.mod h1:1+h5uREsxHEWUbfdowE10imcluyW/Z0IgCpnihDJTyQ=
 github.com/emerishq/emeris-cns-server v0.0.0-20220414063114-da66288211fc h1:35PqBlns6IgB5X27bXBIrNLRv75PrTJclUryduW9rss=
 github.com/emerishq/emeris-cns-server v0.0.0-20220414063114-da66288211fc/go.mod h1:BYciyChqW2Odw8LHvACNznByJtI3D9xOuKwQyyFz1rA=
-github.com/emerishq/emeris-utils v1.6.1-0.20220429170826-3fd7b1153623 h1:qVhja4FCaGqXEdzlt9wYqccvHUswgv73FZmzrN/E0m8=
-github.com/emerishq/emeris-utils v1.6.1-0.20220429170826-3fd7b1153623/go.mod h1:67Nx/CklZBMGZSVhSmsiHmrRQoSuA/uQiB5rwVsZ90E=
+github.com/emerishq/emeris-utils v1.7.0 h1:K5E0QdJSdjBV6FiHejiBftywA+pPt4anNFeLTfX8OGA=
+github.com/emerishq/emeris-utils v1.7.0/go.mod h1:67Nx/CklZBMGZSVhSmsiHmrRQoSuA/uQiB5rwVsZ90E=
 github.com/emerishq/sdk-service-meta v0.0.0-20220331063503-f6dcfa168e93 h1:MBz2j4fdiRpCGJfH2AKBHEMC9r3RcGCQFT5bGB5azC4=
 github.com/emerishq/sdk-service-meta v0.0.0-20220331063503-f6dcfa168e93/go.mod h1:kDThe+pyl/SNUWnrJlsGO1hmhQR4Ql7RlkXIl0aForM=
 github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
