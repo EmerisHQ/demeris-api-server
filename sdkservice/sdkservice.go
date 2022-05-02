@@ -1,12 +1,14 @@
 package sdkservice
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	sdkserviceclient "github.com/emerishq/sdk-service-meta/gen/grpc/sdk_utilities/client"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
+	"github.com/getsentry/sentry-go"
 	"google.golang.org/grpc"
 )
 
@@ -64,7 +66,11 @@ func InitializeClients() (SDKServiceClients, error) {
 
 // Client returns a sdkutilities.Client for the given SDK version ready to be used.
 func Client(sdkVersion string) (sdkutilities.Client, error) {
-	conn, err := grpc.Dial(SdkServiceURL(sdkVersion), grpc.WithInsecure())
+	conn, err := grpc.Dial(SdkServiceURL(sdkVersion), grpc.WithInsecure(), grpc.WithUnaryInterceptor(
+		func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+			defer sentry.StartSpan(ctx, method).Finish()
+			return invoker(ctx, method, req, reply, cc, opts...)
+		}))
 	if err != nil {
 		return sdkutilities.Client{}, fmt.Errorf("cannot connect to endpoint %s: %w", SdkServiceURL(sdkVersion), err)
 	}

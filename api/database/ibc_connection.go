@@ -1,6 +1,8 @@
 package database
 
-import "github.com/emerishq/demeris-backend-models/tracelistener"
+import (
+	"github.com/emerishq/demeris-backend-models/tracelistener"
+)
 
 func (d *Database) Connection(chain string, connection_id string) (tracelistener.IBCConnectionRow, error) {
 	var connection tracelistener.IBCConnectionRow
@@ -11,9 +13,14 @@ func (d *Database) Connection(chain string, connection_id string) (tracelistener
 	WHERE chain_name=?
 	AND connection_id=?
 	AND delete_height IS NULL
+	limit 1
 	`
 
 	q = d.dbi.DB.Rebind(q)
 
-	return connection, d.dbi.DB.Select(&connection, q, chain, connection_id)
+	if err := d.dbi.DB.Get(&connection, q, chain, connection_id); err != nil {
+		return tracelistener.IBCConnectionRow{}, err
+	}
+
+	return connection, nil
 }

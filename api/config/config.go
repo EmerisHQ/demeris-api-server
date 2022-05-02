@@ -9,12 +9,17 @@ import (
 )
 
 type Config struct {
-	DatabaseConnectionURL string `validate:"required"`
-	ListenAddr            string `validate:"required"`
-	RedisAddr             string `validate:"required"`
-	KubernetesConfigMode  string
-	KubernetesNamespace   string `validate:"required"`
-	Debug                 bool
+	DatabaseConnectionURL  string `validate:"required"`
+	ListenAddr             string `validate:"required"`
+	RedisAddr              string `validate:"required"`
+	KubernetesConfigMode   string
+	KubernetesNamespace    string `validate:"required"`
+	SentryDSN              string
+	SentryEnvironment      string
+	SentrySampleRate       float64
+	SentryTracesSampleRate float64
+
+	Debug bool
 }
 
 func (c Config) Validate() error {
@@ -30,8 +35,11 @@ func Read() (*Config, error) {
 	var c Config
 
 	return &c, configuration.ReadConfig(&c, "demeris-api", map[string]string{
-		"ListenAddr":          ":9090",
-		"RedisAddr":           ":6379",
-		"KubernetesNamespace": "emeris",
+		"ListenAddr":             ":9090",
+		"RedisAddr":              ":6379",
+		"KubernetesNamespace":    "emeris",
+		"SentryEnvironment":      "notset",
+		"SentrySampleRate":       "1.0",
+		"SentryTracesSampleRate": "0.3",
 	})
 }

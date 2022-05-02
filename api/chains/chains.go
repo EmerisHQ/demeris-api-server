@@ -540,7 +540,7 @@ func GetChainSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 			payload.PaginationKey = &paginationKey
 		}
 
-		sdkRes, err := client.Supply(context.Background(), payload)
+		sdkRes, err := client.Supply(c.Request.Context(), payload)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -606,7 +606,7 @@ func GetDenomSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 			Denom:     &denom,
 		}
 
-		sdkRes, err := client.SupplyDenom(context.Background(), payload)
+		sdkRes, err := client.SupplyDenom(c.Request.Context(), payload)
 		if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 			cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
 			if sdkRes != nil && len(sdkRes.Coins) != 1 {
@@ -653,7 +653,7 @@ func GetChainTx(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc 
 			return
 		}
 
-		sdkRes, err := client.QueryTx(context.Background(), &sdkutilities.QueryTxPayload{
+		sdkRes, err := client.QueryTx(c.Request.Context(), &sdkutilities.QueryTxPayload{
 			ChainName: chain.ChainName,
 			Hash:      txHash,
 		})
@@ -692,7 +692,7 @@ func GetNumbersByAddress(sdkServiceClients sdkservice.SDKServiceClients) gin.Han
 		address := c.Param("address")
 		chainInfo := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		resp, err := apiutils.FetchAccountNumbers(chainInfo, address, sdkServiceClients)
+		resp, err := apiutils.FetchAccountNumbers(c.Request.Context(), chainInfo, address, sdkServiceClients)
 		if err != nil {
 			e := apierrors.New(
 				"numbers",
@@ -733,7 +733,7 @@ func GetInflation(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFun
 			return
 		}
 
-		sdkRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
+		sdkRes, err := client.MintInflation(c.Request.Context(), &sdkutilities.MintInflationPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -775,7 +775,7 @@ func GetStakingParams(sdkServiceClients sdkservice.SDKServiceClients) gin.Handle
 			return
 		}
 
-		sdkRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
+		sdkRes, err := client.StakingParams(c.Request.Context(), &sdkutilities.StakingParamsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -817,7 +817,7 @@ func GetStakingPool(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 			return
 		}
 
-		sdkRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
+		sdkRes, err := client.StakingPool(c.Request.Context(), &sdkutilities.StakingPoolPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -858,7 +858,7 @@ func GetMintParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFu
 			return
 		}
 
-		sdkRes, err := client.MintParams(context.Background(), &sdkutilities.MintParamsPayload{
+		sdkRes, err := client.MintParams(c.Request.Context(), &sdkutilities.MintParamsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -899,7 +899,7 @@ func GetAnnualProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Han
 			return
 		}
 
-		sdkRes, err := client.MintAnnualProvision(context.Background(), &sdkutilities.MintAnnualProvisionPayload{
+		sdkRes, err := client.MintAnnualProvision(c.Request.Context(), &sdkutilities.MintAnnualProvisionPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -941,7 +941,7 @@ func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Hand
 			return
 		}
 
-		sdkRes, err := client.MintEpochProvisions(context.Background(), &sdkutilities.MintEpochProvisionsPayload{
+		sdkRes, err := client.MintEpochProvisions(c.Request.Context(), &sdkutilities.MintEpochProvisionsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1034,7 +1034,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 		}
 
 		// get number of bonded tokens from staking/pool data
-		stakingPoolRes, err := client.StakingPool(context.Background(), &sdkutilities.StakingPoolPayload{
+		stakingPoolRes, err := client.StakingPool(c.Request.Context(), &sdkutilities.StakingPoolPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1093,7 +1093,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 		}
 
 		// get staking coin denom from staking params
-		stakingParamsRes, err := client.StakingParams(context.Background(), &sdkutilities.StakingParamsPayload{
+		stakingParamsRes, err := client.StakingParams(c.Request.Context(), &sdkutilities.StakingParamsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1137,7 +1137,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 			Denom:     &bond_denom,
 		}
 
-		denomSupplyRes, err := client.SupplyDenom(context.Background(), payload)
+		denomSupplyRes, err := client.SupplyDenom(c.Request.Context(), payload)
 		if err != nil || len(denomSupplyRes.Coins) != 1 { // Expected exactly one response
 			cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, bond_denom)
 			if denomSupplyRes != nil && len(denomSupplyRes.Coins) != 1 {
@@ -1178,7 +1178,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 		supply := coin.Amount.ToDec()
 
 		// get inflation
-		inflationRes, err := client.MintInflation(context.Background(), &sdkutilities.MintInflationPayload{
+		inflationRes, err := client.MintInflation(c.Request.Context(), &sdkutilities.MintInflationPayload{
 			ChainName: chain.ChainName,
 		})
 

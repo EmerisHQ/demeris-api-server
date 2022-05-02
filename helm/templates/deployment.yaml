@@ -35,6 +35,14 @@ spec:
               value: "{{ .Values.redisUrl }}"
             - name: DEMERIS-API_DEBUG
               value: "{{ .Values.debug }}"
+            - name: DEMERIS-API_SENTRYDSN
+              value: "{{ .Values.sentryDSN }}"
+            - name: DEMERIS-API_SENTRYENVIRONMENT
+              value: "{{ .Values.sentryEnvironment }}"
+            - name: DEMERIS-API_SENTRYSAMPLERATE
+              value: "{{ .Values.sentrySampleRate }}"
+            - name: DEMERIS-API_SENTRYTRACESSAMPLERATE
+              value: "{{ .Values.sentryTracesSampleRate }}"
           resources:
 {{ toYaml .Values.resources | indent 12 }}
       terminationGracePeriodSeconds: 10

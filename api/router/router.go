@@ -14,6 +14,7 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/relayer"
 
+	"github.com/emerishq/emeris-utils/ginsentry"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/validation"
 	"github.com/gin-gonic/gin/binding"
@@ -71,8 +72,10 @@ func New(
 	if debug {
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
+
 	engine.Use(r.catchPanicsFunc)
 	engine.Use(r.handleErrors)
+	engine.Use(ginsentry.Middleware)
 	engine.RedirectTrailingSlash = false
 	engine.RedirectFixedPath = false
 
@@ -91,6 +94,8 @@ func (r *Router) catchPanicsFunc(c *gin.Context) {
 	defer func() {
 		if rval := recover(); rval != nil {
 			// okay we panic-ed, log it through r's logger and write back internal server error
+			ginsentry.Recover(c, rval)
+
 			err := apierrors.New(
 				"fatal_error",
 				fmt.Sprintf("internal server error"),
