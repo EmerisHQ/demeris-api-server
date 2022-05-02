@@ -33,3 +33,4 @@ The list of non-{Cosmos, AiB, Tendermint} dependencies and their licenses are:
 |sigs.k8s.io/controller-runtime |MIT            |
 |sony/sonyflake               |MIT              |
 |lib/pq                       |Open use         |
+|patrickmn/go-cache        |MIT              |
