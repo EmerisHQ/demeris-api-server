@@ -1353,23 +1353,6 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 				continue
 			}
 
-			// sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
-			// if sdkRes == nil {
-			// 	logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
-			// 	res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
-			// 	continue
-			// }
-			// if err != nil {
-			// 	logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
-			// 	res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
-			// 	continue
-			// }
-			// if len(sdkRes.Coins) != 1 { // Expected exactly one response
-			// 	logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
-			// 	res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
-			// 	continue
-			// }
-
 			logger.Debugw("got response!", "channel pair", channelPair, "response", sdkRes)
 
 			var amountString string

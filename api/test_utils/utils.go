@@ -1,6 +1,7 @@
 package test_utils
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -168,16 +169,26 @@ type BlockTime struct {
 	Time      time.Time
 }
 
+type StoreDataSet []StoreData
+
+type StoreData struct {
+	Key   string
+	Value []byte
+}
+
 // TestingCtx A struct to hold context for child tests
 type TestingCtx struct {
 	Router *router.Router
 	Cfg    *config.Config
 	CnsDB  *cnsDb.Instance
+	Store  *store.Store
 }
 
 // Setup Set up HTTP server, CDB and Redis in new ports.
 // K8s clients are mocked.
 func Setup(runServer bool) *TestingCtx {
+
+	var ctx TestingCtx
 
 	c := &config.Config{
 		DatabaseConnectionURL: "FILLME",
@@ -222,6 +233,7 @@ func Setup(runServer bool) *TestingCtx {
 		c.RedisAddr = miniRedis.Addr()
 		s, err := store.NewClient(c.RedisAddr)
 		CheckNoError(err, l)
+		ctx.Store = s
 
 		// --- K8s ---
 		kube := mocks.Client{}
@@ -256,11 +268,11 @@ func Setup(runServer bool) *TestingCtx {
 
 	}
 
-	return &TestingCtx{
-		Cfg:    c,
-		Router: r,
-		CnsDB:  cns,
-	}
+	ctx.Cfg = c
+	ctx.Router = r
+	ctx.CnsDB = cns
+
+	return &ctx
 }
 
 // Creates tracelistner database and required tables only if they dont exist
@@ -367,5 +379,16 @@ func ToChainWithStatus(c cns.Chain, online bool) database.ChainWithStatus {
 		PublicNodeEndpoints: c.PublicNodeEndpoints,
 		CosmosSDKVersion:    c.CosmosSDKVersion,
 		Online:              online,
+	}
+}
+
+func SetStoreData(ctx *TestingCtx, storeData StoreDataSet, logger *zap.SugaredLogger) {
+	for _, item := range storeData {
+		rsp := ctx.Store.Client.Set(context.Background(), item.Key, item.Value, time.Minute)
+		_, err := rsp.Result()
+		if err != nil {
+			logger.Error(fmt.Printf("Failed to update store: %s", err))
+			os.Exit(-1)
+		}
 	}
 }
