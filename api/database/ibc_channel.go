@@ -152,7 +152,6 @@ func (d *Database) GetChannelMatchingDenoms() (ChannelConnectionMatchingDenoms, 
 					where
 						port = 'transfer'
 						and state = 3
-						and height = 0
 				) as src_channel on src.connection_id = src_channel.connection_id
 				and src.chain_name = src_channel.chain_name
 				inner join (
@@ -168,7 +167,6 @@ func (d *Database) GetChannelMatchingDenoms() (ChannelConnectionMatchingDenoms, 
 					where
 						port = 'transfer'
 						and state = 3
-						and height = 0
 				) as dest_channel on src.counter_connection_id = dest_channel.connection_id
 				and src_channel.counter_channel_id = dest_channel.channel_id
 				and src_channel.channel_id = dest_channel.counter_channel_id

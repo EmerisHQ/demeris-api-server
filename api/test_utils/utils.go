@@ -382,12 +382,12 @@ func ToChainWithStatus(c cns.Chain, online bool) database.ChainWithStatus {
 	}
 }
 
-func SetStoreData(ctx *TestingCtx, storeData StoreDataSet, logger *zap.SugaredLogger) {
+func SetStoreData(ctx *TestingCtx, storeData StoreDataSet) {
 	for _, item := range storeData {
 		rsp := ctx.Store.Client.Set(context.Background(), item.Key, item.Value, time.Minute)
 		_, err := rsp.Result()
 		if err != nil {
-			logger.Error(fmt.Printf("Failed to update store: %s", err))
+			// logger.Error(fmt.Printf("Failed to update store: %s", err))
 			os.Exit(-1)
 		}
 	}

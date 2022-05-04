@@ -1281,7 +1281,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 		}
 
 		logger.Debugw("first part is done! yay", "num matching channels", len(matchingChannels), "channels", matchingChannels)
-		chainInfos := make(ChainInfos)
+		chainInfos := make(map[string]ChainInfo)
 		for _, chain := range chains {
 			ci := ChainInfo{
 				ChainName:                  chain.ChainName,
@@ -1291,16 +1291,17 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 				EstimatedPrimaryChannelMap: make(map[string]DenomInfo),
 				Broken:                     false,
 			}
+			logger.Debugw("chain", "chain", chain)
 
-			client, err := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
-			if err != nil {
-				logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
-				ci.Broken = true
-				res.LogFailure(chain.ChainName, "", "failed to get sdk service client")
-				continue
-			}
+			// client, err := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+			// if err != nil {
+			// 	logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
+			// 	ci.Broken = true
+			// 	res.LogFailure(chain.ChainName, "", "failed to get sdk service client")
+			// 	continue
+			// }
 
-			ci.Client = &client
+			// ci.Client = &client
 			chainInfos[chain.ChainName] = ci
 		}
 
@@ -1324,14 +1325,21 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 
 			logger.Debugw("going through channel pair", "channel pair", channelPair)
 
-			if chain.Client == nil {
-				logger.Errorw("chain client not found", "chain", channelPair.ChainName, "err", err)
-				res.LogFailure(chain.ChainName, denom, "chain client not found - skipping getting supply")
-				continue
-			}
+			// if chain.Client == nil {
+			// 	logger.Errorw("chain client not found", "chain", channelPair.ChainName, "err", err)
+			// 	res.LogFailure(chain.ChainName, denom, "chain client not found - skipping getting supply")
+			// 	continue
+			// }
 
-			sdkRes, err := tryStoreFetchSupply(s, fmt.Sprintf("%s-%s", chain.ChainName, denom), func() (*sdkutilities.Supply2, error) {
-				sdkRes, err := chain.Client.SupplyDenom(context.Background(), payload)
+			sdkRes, err := tryStoreFetchSupply(logger, s, fmt.Sprintf("%s-%s", chain.ChainName, denom), func() (*sdkutilities.Supply2, error) {
+				client, err1 := sdkServiceClients.GetSDKServiceClient(chain.Chain.MajorSDKVersion())
+				if err1 != nil {
+					logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err1)
+					chain.Broken = true
+					res.LogFailure(chain.ChainName, denom, "failed to get sdk service client")
+					return &sdkutilities.Supply2{}, err1
+				}
+				sdkRes, err := client.SupplyDenom(context.Background(), payload)
 				if sdkRes == nil {
 					logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
 					res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
@@ -1350,6 +1358,8 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			})
 
 			if err != nil {
+				logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
+				res.LogFailure(chain.ChainName, denom, fmt.Sprintf("fetching failed %v", err))
 				continue
 			}
 
@@ -1468,20 +1478,20 @@ func getChainTotalSupply(c *gin.Context, chain *cns.Chain) ([]Coin, error) {
 	return sup, nil
 }
 
-func tryStoreFetchSupply(s *store.Store, key string, f func() (*sdkutilities.Supply2, error)) (*sdkutilities.Supply2, error) {
-	var resp sdkutilities.Supply2
+func tryStoreFetchSupply(logger *zap.SugaredLogger, s *store.Store, key string, f func() (*sdkutilities.Supply2, error)) (*sdkutilities.Supply2, error) {
+	resp := sdkutilities.Supply2{}
 
 	if !s.Exists(key) {
-		resp, err := f()
+		res, err := f()
 		if err == nil {
-			bytes, _ := json.Marshal(*resp)
+			bytes, _ := json.Marshal(*res)
 			status := s.Client.Set(context.Background(), key, bytes, time.Minute)
 			_, err := status.Result()
 			if err != nil {
-				return resp, err
+				return res, err
 			}
 		}
-		return resp, err
+		return res, err
 	}
 
 	_res := s.Client.Get(context.Background(), key)
@@ -1489,8 +1499,10 @@ func tryStoreFetchSupply(s *store.Store, key string, f func() (*sdkutilities.Sup
 	if err != nil {
 		return &resp, err
 	}
+	logger.Debugw(fmt.Sprintf("found resp %s", res))
 	err = json.Unmarshal([]byte(res), &resp)
 	if err != nil {
+		logger.Error(err)
 		return &resp, err
 	}
 

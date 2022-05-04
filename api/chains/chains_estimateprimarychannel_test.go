@@ -14,20 +14,23 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/emerishq/demeris-backend-models/cns"
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	estimatePrimaryChannelsUrl = "http://%s/chains/primary_channels"
 )
 
 var tracelistenerData = utils.TracelistenerData{
 	Denoms: []utils.DenomTrace{
 		{
-			Path:      "channel-0/transfer",
+			Path:      "transfer/channel-0",
 			BaseDenom: "uatom",
 			Hash:      "27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
 			ChainName: "osmosis",
 		},
 		{
-			Path:      "channel-141/transfer",
+			Path:      "transfer/channel-141",
 			BaseDenom: "uosmo",
 			Hash:      "14F9BC3E44B8A9C1BE1FB08980FAB87034C9905EF17CF2F5008FC085218811CC",
 			ChainName: "cosmos-hub",
@@ -56,13 +59,15 @@ var tracelistenerData = utils.TracelistenerData{
 			ChainName:           "osmosis",
 			ConnectionID:        "connection-0",
 			ClientID:            "00-tendermint-69",
+			State:               "STATE_OPEN",
 			CounterConnectionID: "connection-0",
 			CounterClientID:     "00-tendermint-69",
 		},
 		{
-			ChainName:           "osmosis",
+			ChainName:           "cosmos-hub",
 			ConnectionID:        "connection-0",
 			ClientID:            "00-tendermint-69",
+			State:               "STATE_OPEN",
 			CounterConnectionID: "connection-0",
 			CounterClientID:     "00-tendermint-69",
 		},
@@ -86,11 +91,11 @@ var tracelistenerData = utils.TracelistenerData{
 	BlockTimes: []utils.BlockTime{
 		{
 			ChainName: "osmosis",
-			Time:      time.Now(),
+			Time:      time.Now().UTC(),
 		},
 		{
 			ChainName: "cosmos-hub",
-			Time:      time.Now(),
+			Time:      time.Now().UTC(),
 		},
 	},
 }
@@ -146,7 +151,7 @@ func buildChainsEstimatePrimaryChannelResponse() chains.ChainsPrimaryChannelResp
 func buildStoreDataSet() utils.StoreDataSet {
 	d := make(utils.StoreDataSet, 0)
 
-	bz, err := json.Marshal(supplyDataCosmosHub)
+	bz, err := json.Marshal(supplyDataCosmosHub[0])
 	if err != nil {
 		panic(err)
 	}
@@ -156,7 +161,7 @@ func buildStoreDataSet() utils.StoreDataSet {
 		Value: bz,
 	})
 
-	bz, err = json.Marshal(supplyDataOsmosis)
+	bz, err = json.Marshal(supplyDataOsmosis[0])
 	if err != nil {
 		panic(err)
 	}
@@ -282,8 +287,8 @@ func TestEstimatePrimaryChannels(t *testing.T) {
 		success           bool
 	}{
 		{
-			"Get Chain - Unknown chain",
-			[]cns.Chain{}, // do something
+			"Estimate primary channels - cosmos-hub and osmosis",
+			twochainz(), // do something
 			tracelistenerData,
 			storeData,
 			200,
@@ -294,19 +299,21 @@ func TestEstimatePrimaryChannels(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// arrange
-			// if we have a populated Chain store, add it
-			if !cmp.Equal(tt.dataStruct, cns.Chain{}) {
-				err := testingCtx.CnsDB.AddChain(tt.dataStruct)
+
+			for _, chs := range tt.chains {
+				err := testingCtx.CnsDB.AddChain(chs)
 				require.NoError(t, err)
 			}
 
-			// act
-			resp, err := http.Get(fmt.Sprintf(chainEndpointUrl, testingCtx.Cfg.ListenAddr, tt.chainName))
+			utils.RunTraceListnerMigrations(testingCtx, t)
+			utils.InsertTraceListnerData(testingCtx, t, tt.tracelistenerData)
+
+			utils.SetStoreData(testingCtx, tt.storeData)
+
+			resp, err := http.Get(fmt.Sprintf(estimatePrimaryChannelsUrl, testingCtx.Cfg.ListenAddr))
+
 			require.NoError(t, err)
 			defer func() { _ = resp.Body.Close() }()
-
-			// assert
 			if !tt.success {
 				require.Equal(t, tt.expectedHttpCode, resp.StatusCode)
 				return
@@ -318,11 +325,13 @@ func TestEstimatePrimaryChannels(t *testing.T) {
 				body, err := ioutil.ReadAll(resp.Body)
 				require.NoError(t, err)
 
-				respStruct := chains.ChainResponse{}
+				respStruct := chains.ChainsPrimaryChannelResponse{}
 				err = json.Unmarshal(body, &respStruct)
 				require.NoError(t, err)
+				fmt.Println(respStruct)
 
-				require.Equal(t, tt.dataStruct, respStruct.Chain)
+				require.Equal(t, tt.expectedResponse.Chains["cosmos-hub"]["osmosis"], respStruct.Chains["cosmos-hub"]["osmosis"])
+				require.Equal(t, tt.expectedResponse.Chains["osmosis"]["cosmos-hub"], respStruct.Chains["osmosis"]["cosmos-hub"])
 			}
 		})
 	}
