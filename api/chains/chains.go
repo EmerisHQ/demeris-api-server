@@ -1293,15 +1293,6 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			}
 			logger.Debugw("chain", "chain", chain)
 
-			// client, err := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
-			// if err != nil {
-			// 	logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err)
-			// 	ci.Broken = true
-			// 	res.LogFailure(chain.ChainName, "", "failed to get sdk service client")
-			// 	continue
-			// }
-
-			// ci.Client = &client
 			chainInfos[chain.ChainName] = ci
 		}
 
@@ -1324,12 +1315,6 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			}
 
 			logger.Debugw("going through channel pair", "channel pair", channelPair)
-
-			// if chain.Client == nil {
-			// 	logger.Errorw("chain client not found", "chain", channelPair.ChainName, "err", err)
-			// 	res.LogFailure(chain.ChainName, denom, "chain client not found - skipping getting supply")
-			// 	continue
-			// }
 
 			sdkRes, err := tryStoreFetchSupply(logger, s, fmt.Sprintf("%s-%s", chain.ChainName, denom), func() (*sdkutilities.Supply2, error) {
 				client, err1 := sdkServiceClients.GetSDKServiceClient(chain.Chain.MajorSDKVersion())
@@ -1450,7 +1435,7 @@ func getChainTotalSupply(c *gin.Context, chain *cns.Chain) ([]Coin, error) {
 		if err != nil {
 			e := apierrors.New(
 				"chains",
-				fmt.Sprintf("cannot retrieve supply from sdk-service"),
+				"cannot retrieve supply from sdk-service",
 				http.StatusBadRequest,
 			).WithLogContext(
 				fmt.Errorf("cannot retrieve supply from sdk-service: %w", err),
