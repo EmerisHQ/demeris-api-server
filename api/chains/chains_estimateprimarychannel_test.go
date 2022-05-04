@@ -336,4 +336,5 @@ func TestEstimatePrimaryChannels(t *testing.T) {
 		})
 	}
 	utils.TruncateCNSDB(testingCtx, t)
+	utils.TruncateTracelistener(testingCtx, t)
 }
