@@ -9,7 +9,15 @@ func (d *Database) Numbers(address string) ([]tracelistener.AuthRow, error) {
 	var numbers []tracelistener.AuthRow
 
 	q, args, err := sqlx.In(`
-	SELECT * FROM tracelistener.auth
+	SELECT 
+		id,
+		chain_name,
+		height,
+		delete_height,
+		address,
+		sequence_number,
+		account_number
+	FROM tracelistener.auth
 	WHERE address IN (?)
 	AND chain_name IN (
 		SELECT chain_name FROM cns.chains WHERE enabled=true

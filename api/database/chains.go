@@ -83,7 +83,20 @@ func (d *Database) ChainFromChainID(chainID string) (cns.Chain, error) {
 func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, error) {
 	var c tracelistener.BlockTimeRow
 
-	n, err := d.dbi.DB.PrepareNamed("select * from tracelistener.blocktime where chain_name=:name and chain_name in (select chain_name from cns.chains where enabled=TRUE)")
+	n, err := d.dbi.DB.PrepareNamed(`
+	select
+		id,
+		chain_name,
+		height,
+		delete_height,
+		block_time
+	from tracelistener.blocktime 
+	where 
+		chain_name=:name 
+	and 
+		chain_name in 
+			(select chain_name from cns.chains where enabled=TRUE)
+	`)
 	if err != nil {
 		return tracelistener.BlockTimeRow{}, err
 	}
