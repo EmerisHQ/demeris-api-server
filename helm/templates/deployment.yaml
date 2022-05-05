@@ -36,13 +36,13 @@ spec:
             - name: DEMERIS-API_DEBUG
               value: "{{ .Values.debug }}"
             - name: DEMERIS-API_SENTRYDSN
-              value: "{{ .Values.sentryDSN }}"
+              value: "{{ .Values.apiServerSentryDSN }}"
             - name: DEMERIS-API_SENTRYENVIRONMENT
-              value: "{{ .Values.sentryEnvironment }}"
+              value: "{{ .Values.apiServerSentryEnvironment }}"
             - name: DEMERIS-API_SENTRYSAMPLERATE
-              value: "{{ .Values.sentrySampleRate }}"
+              value: "{{ .Values.apiServerSentrySampleRate }}"
             - name: DEMERIS-API_SENTRYTRACESSAMPLERATE
-              value: "{{ .Values.sentryTracesSampleRate }}"
+              value: "{{ .Values.apiServerSentryTracesSampleRate }}"
           resources:
 {{ toYaml .Values.resources | indent 12 }}
       terminationGracePeriodSeconds: 10
