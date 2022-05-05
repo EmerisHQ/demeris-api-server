@@ -186,6 +186,41 @@ type ChainsStatusesResponse struct {
 	Chains map[string]ChainStatus `json:"chains"`
 }
 
+type BudgetParamsResponse struct {
+	Params struct {
+		EpochBlocks int64 `json:"epoch_blocks"`
+		Budgets     []struct {
+			Name               string `json:"name"`
+			Rate               string `json:"rate"`
+			SourceAddress      string `json:"source_address"`
+			DestinationAddress string `json:"destination_address"`
+			StartTime          string `json:"start_time"`
+			EndTime            string `json:"end_time"`
+		} `json:"budgets"`
+	} `json:"params"`
+}
+
+type DistributionParamsResponse struct {
+	Params struct {
+		CommunityTax        string `json:"community_tax"`
+		BaseProposerReward  string `json:"base_proposer_reward"`
+		BonusProposerReward string `json:"bonus_proposer_reward"`
+		WithdrawAddrEnabled bool   `json:"withdraw_addr_enabled"`
+	} `json:"params"`
+}
+
+type CrecentMintParamsResponse struct {
+	Params struct {
+		MintDenom          string `json:"mint_denom"`
+		BlockTimeThreshold string `json:"block_time_threshold"`
+		InflationSchedules []struct {
+			StartTime string `json:"block_time_threshold"`
+			EndTime   string `json:"end_time"`
+			Amount    string `json:"amount"`
+		}
+	} `json:"params"`
+}
+
 func NewChainsStatusesResponse(sz int) ChainsStatusesResponse {
 	return ChainsStatusesResponse{
 		Chains: make(map[string]ChainStatus, sz),
