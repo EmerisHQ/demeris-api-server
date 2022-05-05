@@ -36,8 +36,10 @@ const (
 
 	ecosystemIncentiveBudget = "budget-ecosystem-incentive"
 	devTeamBudget            = "budget-dev-team"
-  
-  NewChainsFlag = "newchains"
+)
+
+const (
+	NewChainsFlag = "newchains"
 )
 
 // GetChains returns the list of all the chains supported by demeris.
