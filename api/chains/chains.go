@@ -32,6 +32,8 @@ const (
 	aprCacheDuration = 24 * time.Hour
 	aprCachePrefix   = "api-server/chain-aprs"
 	osmosisChainName = "osmosis"
+
+	NewChainsFlag = "newchains"
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -45,7 +47,7 @@ const (
 // @Router /chains [get]
 func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if fflag.Enabled(c, "newchains") {
+		if fflag.Enabled(c, NewChainsFlag) {
 			var res ChainsResponse
 
 			chains, err := db.ChainsWithStatus()

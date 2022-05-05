@@ -10,6 +10,7 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/chains"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
+	"github.com/emerishq/demeris-api-server/lib/fflag"
 
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/google/go-cmp/cmp"
@@ -102,6 +103,8 @@ func TestGetChain(t *testing.T) {
 }
 
 func TestGetChains(t *testing.T) {
+	fflag.EnableGlobal(chains.NewChainsFlag)
+
 	utils.RunTraceListnerMigrations(testingCtx, t)
 	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
 
