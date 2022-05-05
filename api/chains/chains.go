@@ -1547,3 +1547,87 @@ func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
 		c.JSON(http.StatusOK, res)
 	}
 }
+
+// GetDistributionParams returns the distribution params of a specific chain
+// @Summary Gets the ditribution params of a chain
+// @Description Gets distribution params https://docs.cosmos.network/main/modules/distribution/
+// @Tags Chain
+// @ID get-distribution-params
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 500,403 {object} apierrors.UserFacingError
+// @Router /chain/{chainName}/distribution/params [get]
+func GetDistributionParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
+
+		sdkRes, err := client.DistributionParams(c.Request.Context(), &sdkutilities.DistributionParamsPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve distribution params from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve distribution params from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.DistributionParams)
+	}
+}
+
+// GetBudgetParams returns the budget params of a specific chain
+// @Summary Gets the budget params of a chain
+// @Description Gets budget params https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md
+// @Tags Chain
+// @ID get-budget-params
+// @Produce json
+// @Success 200 {object} json.RawMessage
+// @Failure 500,403 {object} apierrors.UserFacingError
+// @Router /chain/{chainName}/budget/params [get]
+func GetBudgetParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+
+		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+		if e != nil {
+			_ = c.Error(e)
+			return
+		}
+
+		sdkRes, err := client.BudgetParams(c.Request.Context(), &sdkutilities.BudgetParamsPayload{
+			ChainName: chain.ChainName,
+		})
+
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot retrieve budget params from sdk-service"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve budget params from sdk-service: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		c.Data(http.StatusOK, gin.MIMEJSON, sdkRes.BudgetParams)
+	}
+}
