@@ -1302,7 +1302,7 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
 	var budgetRate sdktypes.Dec
 
-	budgetParamsResp, err := client.BudgetParams(context.Background(), &sdkutilities.BudgetParamsPayload{
+	budgetParamsResp, err := client.BudgetParams(c.Request.Context(), &sdkutilities.BudgetParamsPayload{
 		ChainName: chain.ChainName,
 	})
 
@@ -1365,7 +1365,7 @@ func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) 
 func getTax(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
 	var tax sdktypes.Dec
 
-	distributionParamsResp, err := client.DistributionParams(context.Background(), &sdkutilities.DistributionParamsPayload{
+	distributionParamsResp, err := client.DistributionParams(c.Request.Context(), &sdkutilities.DistributionParamsPayload{
 		ChainName: chain.ChainName,
 	})
 
@@ -1422,7 +1422,7 @@ func getTax(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktyp
 func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
 	currentInflationAmount := sdktypes.NewDec(0)
 
-	mintParamsResp, err := client.MintParams(context.Background(), &sdkutilities.MintParamsPayload{
+	mintParamsResp, err := client.MintParams(c.Request.Context(), &sdkutilities.MintParamsPayload{
 		ChainName: chain.ChainName,
 	})
 
