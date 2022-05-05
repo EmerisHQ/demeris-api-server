@@ -39,7 +39,7 @@ const (
 )
 
 const (
-	NewChainsFlag = "newchains"
+	RetroCompatStagingDB = "retrocompatstagingdb"
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -53,7 +53,7 @@ const (
 // @Router /chains [get]
 func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if fflag.Enabled(c, NewChainsFlag) {
+		if !fflag.Enabled(c, RetroCompatStagingDB) {
 			var res ChainsResponse
 
 			chains, err := db.ChainsWithStatus()
