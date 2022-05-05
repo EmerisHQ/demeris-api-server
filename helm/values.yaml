@@ -30,8 +30,9 @@ hpaMinReplicas: 3
 hpaMaxReplicas: 5
 hpaAverageMemoryUtilization: 90
 
-# no value means sentry is disabled
-sentryDSN:
-sentryEnvironment: local
-sentrySampleRate: 1.0
-sentryTracesSampleRate: 0.3
+apiServer:
+  # no value means sentry is disabled
+  sentryDSN:
+  sentryEnvironment: local
+  sentrySampleRate: 1.0
+  sentryTracesSampleRate: 0.3
