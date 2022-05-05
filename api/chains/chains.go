@@ -1272,7 +1272,7 @@ func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
 
 // GetDistributionParams returns the distribution params of a specific chain
 // @Summary Gets the ditribution params of a chain
-// @Description Gets distribution params
+// @Description Gets distribution params https://docs.cosmos.network/main/modules/distribution/
 // @Tags Chain
 // @ID get-distribution-params
 // @Produce json
@@ -1314,7 +1314,7 @@ func GetDistributionParams(sdkServiceClients sdkservice.SDKServiceClients) gin.H
 
 // GetBudgetParams returns the budget params of a specific chain
 // @Summary Gets the budget params of a chain
-// @Description Gets budget params
+// @Description Gets budget params https://github.com/tendermint/budget/blob/main/x/budget/spec/01_concepts.md
 // @Tags Chain
 // @ID get-budget-params
 // @Produce json
