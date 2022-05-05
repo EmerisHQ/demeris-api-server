@@ -32,6 +32,9 @@ const (
 	aprCachePrefix    = "api-server/chain-aprs"
 	osmosisChainName  = "osmosis"
 	crescentChainName = "crescent"
+
+	ecosystemIncentiveBudget = "budget-ecosystem-incentive"
+	devTeamBudget            = "budget-dev-team"
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -1243,6 +1246,62 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 
 // apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
 func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, client sdkutilities.Client) (string, error) {
+	budgetRate, err := getBudgetRate(c, chain, client)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot get budget rate"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot get budget rate: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return "", err
+	}
+
+	tax, err := getTax(c, chain, client)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot get tax"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot get tax: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return "", err
+	}
+
+	currentInflationAmount, err := getCurrentInflationAmount(c, chain, client)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot get current inflation amount"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot get current inflation amount: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return "", err
+	}
+
+	OneDec := sdktypes.NewDec(1)
+	apr := OneDec.Sub(tax).Mul(OneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens)
+	return apr.String(), nil
+}
+
+func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
+	var budgetRate sdktypes.Dec
+
 	budgetParamsResp, err := client.BudgetParams(context.Background(), &sdkutilities.BudgetParamsPayload{
 		ChainName: chain.ChainName,
 	})
@@ -1259,7 +1318,7 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 		)
 		_ = c.Error(e)
 
-		return "", err
+		return budgetRate, err
 	}
 
 	var budgetParamsData BudgetParamsResponse
@@ -1276,12 +1335,11 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 		)
 		_ = c.Error(e)
 
-		return "", err
+		return budgetRate, err
 	}
 
-	var budgetRate sdktypes.Dec
 	for _, budget := range budgetParamsData.Params.Budgets {
-		if budget.Name == "budget-ecosystem-incentive" || budget.Name == "budget-dev-team" {
+		if budget.Name == ecosystemIncentiveBudget || budget.Name == devTeamBudget {
 			rate, err := sdktypes.NewDecFromStr(budget.Rate)
 			if err != nil {
 				e := apierrors.New(
@@ -1295,11 +1353,17 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 				)
 				_ = c.Error(e)
 
-				return "", err
+				return budgetRate, err
 			}
 			budgetRate.Add(rate)
 		}
 	}
+
+	return budgetRate, nil
+}
+
+func getTax(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
+	var tax sdktypes.Dec
 
 	distributionParamsResp, err := client.DistributionParams(context.Background(), &sdkutilities.DistributionParamsPayload{
 		ChainName: chain.ChainName,
@@ -1317,7 +1381,7 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 		)
 		_ = c.Error(e)
 
-		return "", err
+		return tax, err
 	}
 
 	var distributionParamsData DistributionParamsResponse
@@ -1334,10 +1398,10 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 		)
 		_ = c.Error(e)
 
-		return "", err
+		return tax, err
 	}
 
-	tax, err := sdktypes.NewDecFromStr(distributionParamsData.Params.CommunityTax)
+	tax, err = sdktypes.NewDecFromStr(distributionParamsData.Params.CommunityTax)
 	if err != nil {
 		e := apierrors.New(
 			"chains",
@@ -1350,8 +1414,13 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 		)
 		_ = c.Error(e)
 
-		return "", err
+		return tax, err
 	}
+	return tax, nil
+}
+
+func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
+	currentInflationAmount := sdktypes.NewDec(0)
 
 	mintParamsResp, err := client.MintParams(context.Background(), &sdkutilities.MintParamsPayload{
 		ChainName: chain.ChainName,
@@ -1369,7 +1438,7 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 		)
 		_ = c.Error(e)
 
-		return "", err
+		return currentInflationAmount, err
 	}
 
 	var mintParamsData CrecentMintParamsResponse
@@ -1386,11 +1455,10 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 		)
 		_ = c.Error(e)
 
-		return "", err
+		return currentInflationAmount, err
 	}
 
 	now := time.Now()
-	var CurrentInflationAmount sdktypes.Dec
 	for _, schedule := range mintParamsData.Params.InflationSchedules {
 		StartTime, err := time.Parse(now.String(), schedule.StartTime)
 		if err != nil {
@@ -1405,7 +1473,7 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 			)
 			_ = c.Error(e)
 
-			return "", err
+			return currentInflationAmount, err
 		}
 		EndTime, err := time.Parse(now.String(), schedule.EndTime)
 		if err != nil {
@@ -1420,10 +1488,10 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 			)
 			_ = c.Error(e)
 
-			return "", err
+			return currentInflationAmount, err
 		}
 		if StartTime.After(now) && EndTime.Before(now) {
-			CurrentInflationAmount, err = sdktypes.NewDecFromStr(schedule.Amount)
+			currentInflationAmount, err = sdktypes.NewDecFromStr(schedule.Amount)
 			if err != nil {
 				e := apierrors.New(
 					"chains",
@@ -1436,14 +1504,12 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 				)
 				_ = c.Error(e)
 
-				return "", err
+				return currentInflationAmount, err
 			}
 			break
 		}
 	}
-	OneDec := sdktypes.NewDec(1)
-	apr := OneDec.Sub(tax).Mul(OneDec.Sub(budgetRate)).Mul(CurrentInflationAmount).Quo(bondedTokens)
-	return apr.String(), nil
+	return currentInflationAmount, nil
 }
 
 // GetChainsStatuses returns the status of all the enabled chains.
