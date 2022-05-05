@@ -27,25 +27,21 @@ type PricesResponse struct {
 	Message interface{}              `json:"message"`
 }
 
-type POClient interface {
-	GetPrice(symbol string) (Price, error)
-}
-
-type client struct {
+type POClient struct {
 	PriceOracleBaseURL string
 	cache              *gocache.Cache
 }
 
 func NewPOClient(priceOracleBaseURL string) POClient {
 	cache := gocache.New(DefaultCacheExpiration, DefaultPurgeTime)
-	return client{
+	return POClient{
 		PriceOracleBaseURL: priceOracleBaseURL,
 		cache:              cache,
 	}
 }
 
 // GetPrice returns price of token or fiat based on symbol
-func (c client) GetPrice(symbol string) (Price, error) {
+func (c POClient) GetPrice(symbol string) (Price, error) {
 	// converting symbol to uppercase
 	symbol = strings.ToUpper(symbol)
 
