@@ -28,9 +28,13 @@ import (
 )
 
 const (
-	aprCacheDuration = 24 * time.Hour
-	aprCachePrefix   = "api-server/chain-aprs"
-	osmosisChainName = "osmosis"
+	aprCacheDuration  = 24 * time.Hour
+	aprCachePrefix    = "api-server/chain-aprs"
+	osmosisChainName  = "osmosis"
+	crescentChainName = "crescent"
+
+	ecosystemIncentiveBudget = "budget-ecosystem-incentive"
+	devTeamBudget            = "budget-dev-team"
 )
 
 // GetChains returns the list of all the chains supported by demeris.
@@ -1085,6 +1089,12 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 			return "", err
 		}
 
+		// apr for crescent is calculated differently as it follows custom inflation schedules
+		// apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
+		if strings.ToLower(chain.ChainName) == crescentChainName {
+			return getCrescentAPR(c, chain, bondedTokens, client)
+		}
+
 		// get staking coin denom from staking params
 		stakingParamsRes, err := client.StakingParams(c.Request.Context(), &sdkutilities.StakingParamsPayload{
 			ChainName: chain.ChainName,
@@ -1232,6 +1242,274 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 		apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
 		return apr.String(), nil
 	}
+}
+
+// apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
+func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, client sdkutilities.Client) (string, error) {
+	budgetRate, err := getBudgetRate(c, chain, client)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot get budget rate"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot get budget rate: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return "", err
+	}
+
+	tax, err := getTax(c, chain, client)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot get tax"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot get tax: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return "", err
+	}
+
+	currentInflationAmount, err := getCurrentInflationAmount(c, chain, client)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot get current inflation amount"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot get current inflation amount: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return "", err
+	}
+
+	OneDec := sdktypes.NewDec(1)
+	apr := OneDec.Sub(tax).Mul(OneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens)
+	return apr.String(), nil
+}
+
+func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
+	var budgetRate sdktypes.Dec
+
+	budgetParamsResp, err := client.BudgetParams(c.Request.Context(), &sdkutilities.BudgetParamsPayload{
+		ChainName: chain.ChainName,
+	})
+
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot retrieve budget params from sdk-service"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve budget params from sdk-service: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return budgetRate, err
+	}
+
+	var budgetParamsData BudgetParamsResponse
+	err = json.Unmarshal(budgetParamsResp.BudgetParams, &budgetParamsData)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot unmarshal budget params"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot unmarshal budget params: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return budgetRate, err
+	}
+
+	for _, budget := range budgetParamsData.Params.Budgets {
+		if budget.Name == ecosystemIncentiveBudget || budget.Name == devTeamBudget {
+			rate, err := sdktypes.NewDecFromStr(budget.Rate)
+			if err != nil {
+				e := apierrors.New(
+					"chains",
+					fmt.Sprintf("cannot convert budget rate to Dec"),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot convert budget rate to Dec: %w", err),
+					"name",
+					chain.ChainName,
+				)
+				_ = c.Error(e)
+
+				return budgetRate, err
+			}
+			budgetRate.Add(rate)
+		}
+	}
+
+	return budgetRate, nil
+}
+
+func getTax(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
+	var tax sdktypes.Dec
+
+	distributionParamsResp, err := client.DistributionParams(c.Request.Context(), &sdkutilities.DistributionParamsPayload{
+		ChainName: chain.ChainName,
+	})
+
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot retrieve distribution params from sdk-service"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve distribution params from sdk-service: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return tax, err
+	}
+
+	var distributionParamsData DistributionParamsResponse
+	err = json.Unmarshal(distributionParamsResp.DistributionParams, &distributionParamsData)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot unmarshal distribution params"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot unmarshal distribution params: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return tax, err
+	}
+
+	tax, err = sdktypes.NewDecFromStr(distributionParamsData.Params.CommunityTax)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot convert tax to Dec"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot convert tax to Dec: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return tax, err
+	}
+	return tax, nil
+}
+
+func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
+	currentInflationAmount := sdktypes.NewDec(0)
+
+	mintParamsResp, err := client.MintParams(c.Request.Context(), &sdkutilities.MintParamsPayload{
+		ChainName: chain.ChainName,
+	})
+
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot retrieve mint params from sdk-service"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot retrieve mint params from sdk-service: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return currentInflationAmount, err
+	}
+
+	var mintParamsData CrecentMintParamsResponse
+	err = json.Unmarshal(mintParamsResp.MintParams, &mintParamsData)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot unmarshal distribution params"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot unmarshal distribution params: %w", err),
+			"name",
+			chain.ChainName,
+		)
+		_ = c.Error(e)
+
+		return currentInflationAmount, err
+	}
+
+	now := time.Now()
+	for _, schedule := range mintParamsData.Params.InflationSchedules {
+		StartTime, err := time.Parse(now.String(), schedule.StartTime)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot convert start time to time"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot convert start time to time: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return currentInflationAmount, err
+		}
+		EndTime, err := time.Parse(now.String(), schedule.EndTime)
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				fmt.Sprintf("cannot convert end time to time"),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot convert end time to time: %w", err),
+				"name",
+				chain.ChainName,
+			)
+			_ = c.Error(e)
+
+			return currentInflationAmount, err
+		}
+		if StartTime.After(now) && EndTime.Before(now) {
+			currentInflationAmount, err = sdktypes.NewDecFromStr(schedule.Amount)
+			if err != nil {
+				e := apierrors.New(
+					"chains",
+					fmt.Sprintf("cannot convert amount to dec"),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot convert amount to dec: %w", err),
+					"name",
+					chain.ChainName,
+				)
+				_ = c.Error(e)
+
+				return currentInflationAmount, err
+			}
+			break
+		}
+	}
+	return currentInflationAmount, nil
 }
 
 // GetChainsStatuses returns the status of all the enabled chains.
