@@ -18,6 +18,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/lib/fflag"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
@@ -44,25 +45,53 @@ const (
 // @Router /chains [get]
 func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var res ChainsResponse
+		if fflag.Enabled(c, "newchains") {
+			var res ChainsResponse
 
-		chains, err := db.ChainsWithStatus()
+			chains, err := db.ChainsWithStatus()
 
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve chains"),
-				http.StatusInternalServerError,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve chains: %w", err),
-			)
-			_ = c.Error(e)
+			if err != nil {
+				e := apierrors.New(
+					"chains",
+					fmt.Sprintf("cannot retrieve chains"),
+					http.StatusInternalServerError,
+				).WithLogContext(
+					fmt.Errorf("cannot retrieve chains: %w", err),
+				)
+				_ = c.Error(e)
 
-			return
+				return
+			}
+
+			res.Chains = chains
+			c.JSON(http.StatusOK, res)
+		} else {
+			var res OldChainsResponse
+
+			chains, err := db.SimpleChains()
+
+			if err != nil {
+				e := apierrors.New(
+					"chains",
+					fmt.Sprintf("cannot retrieve chains"),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot retrieve chains: %w", err),
+				)
+				_ = c.Error(e)
+				return
+			}
+
+			for _, cc := range chains {
+				res.Chains = append(res.Chains, SupportedChain{
+					ChainName:   cc.ChainName,
+					DisplayName: cc.DisplayName,
+					Logo:        cc.Logo,
+				})
+			}
+
+			c.JSON(http.StatusOK, res)
 		}
-
-		res.Chains = chains
-		c.JSON(http.StatusOK, res)
 	}
 }
 
