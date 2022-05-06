@@ -96,6 +96,8 @@ func Client(sdkVersion string) (sdkutilities.Client, error) {
 		StakingParamsEndpoint:       client.StakingParams(),
 		StakingPoolEndpoint:         client.StakingPool(),
 		EmoneyInflationEndpoint:     client.EmoneyInflation(),
+		BudgetParamsEndpoint:        client.BudgetParams(),
+		DistributionParamsEndpoint:  client.DistributionParams(),
 	}
 
 	return cc, nil
