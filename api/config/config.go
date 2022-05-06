@@ -18,6 +18,7 @@ type Config struct {
 	SentryEnvironment      string
 	SentrySampleRate       float64
 	SentryTracesSampleRate float64
+	FeatureFlags           []string
 
 	Debug bool
 }

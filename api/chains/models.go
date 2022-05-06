@@ -9,14 +9,20 @@ import (
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
+type OldChainsResponse struct {
+	Chains []SupportedChain `json:"chains"`
+}
+
 type ChainsResponse struct {
 	Chains []database.ChainWithStatus `json:"chains"`
 }
+
 type SupportedChain struct {
 	ChainName   string `json:"chain_name"`
 	DisplayName string `json:"display_name"`
 	Logo        string `json:"logo"`
 }
+
 type ChainResponse struct {
 	Chain cns.Chain `json:"chain"`
 }

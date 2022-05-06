@@ -10,6 +10,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/config"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router"
+	"github.com/emerishq/demeris-api-server/lib/fflag"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/emerishq/emeris-utils/logging"
@@ -26,6 +27,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	fflag.EnableGlobal(cfg.FeatureFlags...)
 
 	l := logging.New(logging.LoggingConfig{
 		Debug: cfg.Debug,
