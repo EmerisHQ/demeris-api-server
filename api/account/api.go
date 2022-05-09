@@ -15,8 +15,10 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/emerishq/demeris-api-server/api/apiutils"
+	"github.com/emerishq/demeris-api-server/api/chains"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/lib/fflag"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
@@ -173,82 +175,111 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 
 		address := c.Param("address")
 
-		dl, err := db.Delegations(address)
+		if !fflag.Enabled(c, chains.RetroCompatStagingDB) {
+			dl, err := db.Delegations(address)
 
-		if err != nil {
-			e := apierrors.New(
-				"delegations",
-				fmt.Sprintf("cannot retrieve delegations for address %v", address),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot query database delegations for addresses: %w", err),
-				"address",
-				address,
-			)
-			_ = c.Error(e)
+			if err != nil {
+				e := apierrors.New(
+					"delegations",
+					fmt.Sprintf("cannot retrieve delegations for address %v", address),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot query database delegations for addresses: %w", err),
+					"address",
+					address,
+				)
+				_ = c.Error(e)
 
-			return
+				return
+			}
+
+			for _, del := range dl {
+				delegationAmount, err := strconv.ParseFloat(del.Amount, 64)
+				if err != nil {
+					e := apierrors.New(
+						"delegations",
+						fmt.Sprintf("cannot convert delegation amount to float"),
+						http.StatusInternalServerError,
+					).WithLogContext(
+						fmt.Errorf("cannot convert delegation amount to float: %w", err),
+						"address",
+						address,
+					)
+					_ = c.Error(e)
+
+					return
+				}
+
+				validatorShares, err := strconv.ParseFloat(del.ValidatorShares, 64)
+				if err != nil {
+					e := apierrors.New(
+						"delegations",
+						fmt.Sprintf("cannot convert validator total shares to float"),
+						http.StatusInternalServerError,
+					).WithLogContext(
+						fmt.Errorf("cannot convert validator total shares to float: %w", err),
+						"address",
+						address,
+					)
+					_ = c.Error(e)
+
+					return
+				}
+
+				validatorTokens, err := strconv.ParseFloat(del.ValidatorTokens, 64)
+				if err != nil {
+					e := apierrors.New(
+						"delegations",
+						fmt.Sprintf("cannot convert validator total tokens to float"),
+						http.StatusInternalServerError,
+					).WithLogContext(
+						fmt.Errorf("cannot convert validator total tokens to float: %w", err),
+						"address",
+						address,
+					)
+					_ = c.Error(e)
+
+					return
+				}
+
+				// apply shares / total_validator_shares * total_validator_balance
+				balance := (delegationAmount * validatorTokens) / validatorShares
+				res.StakingBalances = append(res.StakingBalances, StakingBalance{
+					ValidatorAddress: del.Validator,
+					Amount:           fmt.Sprintf("%f", balance),
+					ChainName:        del.ChainName,
+				})
+			}
+
+			c.JSON(http.StatusOK, res)
+		} else {
+			dl, err := db.DelegationsOldResponse(address)
+
+			if err != nil {
+				e := apierrors.New(
+					"delegations",
+					fmt.Sprintf("cannot retrieve delegations for address %v", address),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot query database delegations for addresses: %w", err),
+					"address",
+					address,
+				)
+				_ = c.Error(e)
+
+				return
+			}
+
+			for _, del := range dl {
+				res.StakingBalances = append(res.StakingBalances, StakingBalance{
+					ValidatorAddress: del.Validator,
+					Amount:           del.Amount,
+					ChainName:        del.ChainName,
+				})
+			}
+
+			c.JSON(http.StatusOK, res)
 		}
-
-		for _, del := range dl {
-			delegationAmount, err := strconv.ParseFloat(del.Amount, 64)
-			if err != nil {
-				e := apierrors.New(
-					"delegations",
-					fmt.Sprintf("cannot convert delegation amount to float"),
-					http.StatusInternalServerError,
-				).WithLogContext(
-					fmt.Errorf("cannot convert delegation amount to float: %w", err),
-					"address",
-					address,
-				)
-				_ = c.Error(e)
-
-				return
-			}
-
-			validatorShares, err := strconv.ParseFloat(del.ValidatorShares, 64)
-			if err != nil {
-				e := apierrors.New(
-					"delegations",
-					fmt.Sprintf("cannot convert validator total shares to float"),
-					http.StatusInternalServerError,
-				).WithLogContext(
-					fmt.Errorf("cannot convert validator total shares to float: %w", err),
-					"address",
-					address,
-				)
-				_ = c.Error(e)
-
-				return
-			}
-
-			validatorTokens, err := strconv.ParseFloat(del.ValidatorTokens, 64)
-			if err != nil {
-				e := apierrors.New(
-					"delegations",
-					fmt.Sprintf("cannot convert validator total tokens to float"),
-					http.StatusInternalServerError,
-				).WithLogContext(
-					fmt.Errorf("cannot convert validator total tokens to float: %w", err),
-					"address",
-					address,
-				)
-				_ = c.Error(e)
-
-				return
-			}
-
-			// apply shares / total_validator_shares * total_validator_balance
-			balance := (delegationAmount * validatorTokens) / validatorShares
-			res.StakingBalances = append(res.StakingBalances, StakingBalance{
-				ValidatorAddress: del.Validator,
-				Amount:           fmt.Sprintf("%f", balance),
-				ChainName:        del.ChainName,
-			})
-		}
-
-		c.JSON(http.StatusOK, res)
 	}
 }
 
