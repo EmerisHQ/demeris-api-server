@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/emerishq/emeris-utils/logging"
@@ -190,9 +191,59 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 		}
 
 		for _, del := range dl {
+			delegationAmount, err := strconv.ParseFloat(del.Amount, 64)
+			if err != nil {
+				e := apierrors.New(
+					"delegations",
+					fmt.Sprintf("cannot convert delegation amount to float"),
+					http.StatusInternalServerError,
+				).WithLogContext(
+					fmt.Errorf("cannot convert delegation amount to float: %w", err),
+					"address",
+					address,
+				)
+				_ = c.Error(e)
+
+				return
+			}
+
+			validatorShares, err := strconv.ParseFloat(del.ValidatorShares, 64)
+			if err != nil {
+				e := apierrors.New(
+					"delegations",
+					fmt.Sprintf("cannot convert validator total shares to float"),
+					http.StatusInternalServerError,
+				).WithLogContext(
+					fmt.Errorf("cannot convert validator total shares to float: %w", err),
+					"address",
+					address,
+				)
+				_ = c.Error(e)
+
+				return
+			}
+
+			validatorTokens, err := strconv.ParseFloat(del.ValidatorTokens, 64)
+			if err != nil {
+				e := apierrors.New(
+					"delegations",
+					fmt.Sprintf("cannot convert validator total tokens to float"),
+					http.StatusInternalServerError,
+				).WithLogContext(
+					fmt.Errorf("cannot convert validator total tokens to float: %w", err),
+					"address",
+					address,
+				)
+				_ = c.Error(e)
+
+				return
+			}
+
+			// apply shares / total_validator_shares * total_validator_balance
+			balance := (delegationAmount * validatorTokens) / validatorShares
 			res.StakingBalances = append(res.StakingBalances, StakingBalance{
 				ValidatorAddress: del.Validator,
-				Amount:           del.Amount,
+				Amount:           fmt.Sprintf("%f", balance),
 				ChainName:        del.ChainName,
 			})
 		}
