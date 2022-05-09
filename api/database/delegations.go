@@ -14,8 +14,8 @@ func (d *Database) Delegations(address string) ([]tracelistener.DelegationRow, e
 	chain_name,
 	height,
 	delete_height,
-	delegator,
-	validator,
+	delegator_address,
+	validator_address,
 	amount
 	FROM tracelistener.delegations
 	WHERE delegator_address IN (?)
