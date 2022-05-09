@@ -15,7 +15,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/emerishq/demeris-api-server/api/apiutils"
-	"github.com/emerishq/demeris-api-server/api/chains"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/fflag"
@@ -24,6 +23,10 @@ import (
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
+)
+
+const (
+	FixSlashedDelegations = "fixslasheddelegations"
 )
 
 func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
@@ -175,7 +178,7 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 
 		address := c.Param("address")
 
-		if !fflag.Enabled(c, chains.RetroCompatStagingDB) {
+		if fflag.Enabled(c, FixSlashedDelegations) {
 			dl, err := db.Delegations(address)
 
 			if err != nil {

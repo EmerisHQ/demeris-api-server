@@ -26,6 +26,7 @@ func (d *Database) Delegations(address string) ([]DelegationResponse, error) {
 		SELECT chain_name FROM cns.chains WHERE enabled=true
 	)
 	AND v.delete_height IS NULL
+	AND d.delete_height IS NULL
 	`, []string{address})
 	if err != nil {
 		return nil, err
