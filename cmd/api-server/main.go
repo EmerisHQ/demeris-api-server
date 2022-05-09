@@ -6,10 +6,12 @@ import (
 	_ "net/http/pprof"
 	"runtime"
 	"runtime/debug"
+	"time"
 
 	"github.com/emerishq/demeris-api-server/api/config"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router"
+	"github.com/emerishq/demeris-api-server/lib/fflag"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/emerishq/emeris-utils/logging"
@@ -26,6 +28,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	fflag.EnableGlobal(cfg.FeatureFlags...)
 
 	l := logging.New(logging.LoggingConfig{
 		Debug: cfg.Debug,
@@ -86,6 +90,7 @@ func main() {
 
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              cfg.SentryDSN,
+		Release:          Version,
 		SampleRate:       cfg.SentrySampleRate,
 		TracesSampleRate: cfg.SentryTracesSampleRate,
 		Environment:      cfg.SentryEnvironment,
@@ -93,6 +98,7 @@ func main() {
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
+	defer sentry.Flush(2 * time.Second)
 
 	go informer.Informer().Run(make(chan struct{}))
 

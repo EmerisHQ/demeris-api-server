@@ -120,6 +120,11 @@ func (d *Database) VerifiedDenoms() (map[string]cns.DenomList, error) {
 	return ret, nil
 }
 
+func (d *Database) SimpleChains() ([]cns.Chain, error) {
+	var c []cns.Chain
+	return c, d.dbi.Exec("select chain_name, display_name, logo from cns.chains where enabled=TRUE", nil, &c)
+}
+
 func (d *Database) ChainsWithStatus() ([]ChainWithStatus, error) {
 	q := `
 	SELECT

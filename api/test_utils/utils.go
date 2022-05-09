@@ -254,7 +254,7 @@ func Setup(runServer bool) *TestingCtx {
 		)
 
 		// --- HTTP server ---
-		port, err := getFreePort()
+		port, err := GetFreePort()
 		CheckNoError(err, l)
 		c.ListenAddr = "127.0.0.1:" + port
 
@@ -333,7 +333,7 @@ func TruncateCNSDB(ctx *TestingCtx, t *testing.T) {
 	require.NoError(t, err)
 }
 
-func getFreePort() (port string, err error) {
+func GetFreePort() (port string, err error) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 
 	if err != nil {
