@@ -8,7 +8,16 @@ func (d *Database) Connection(chain string, connection_id string) (tracelistener
 	var connection tracelistener.IBCConnectionRow
 
 	q := `
-	SELECT *
+	SELECT
+	id,
+	chain_name,
+	height,
+	delete_height,
+	connection_id,
+	client_id,
+	state,
+	counter_connection_id,
+	counter_client_id
 	FROM tracelistener.connections 
 	WHERE chain_name=?
 	AND connection_id=?
