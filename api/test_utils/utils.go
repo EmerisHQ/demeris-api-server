@@ -87,6 +87,8 @@ const (
 	`
 	createBlockTimeTable = `CREATE TABLE IF NOT EXISTS tracelistener.blocktime (
 		id serial unique primary key,
+		height int not null default 0,
+		delete_height int,
 		chain_name text not null,
 		block_time timestamp not null,
 		unique(chain_name)
