@@ -1284,7 +1284,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 // @ID estimate-primary-channels
 // @Produce json
 // @Success 200 {object} ChainsPrimaryChannelResponse
-// @Failure 500,400 {object} apierrors.UserFacingError
+// @Failure 500 {object} apierrors.UserFacingError
 // @Router /chains/primary_channels [get]
 func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -1329,7 +1329,6 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			ci := ChainInfo{
 				ChainName:                  chain.ChainName,
 				Chain:                      chain,
-				CurrentPrimaryChannelMap:   chain.PrimaryChannel,
 				ChainChannelMapping:        make(map[string]DenomInfos),
 				EstimatedPrimaryChannelMap: make(map[string]DenomInfo),
 				Broken:                     false,
@@ -1342,6 +1341,9 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 		logger.Debugw("second part is done! yay")
 
 		for _, channelPair := range matchingChannels {
+			if _, ok := chainInfos[channelPair.ChainName]; !ok {
+				continue
+			}
 			chain := chainInfos[channelPair.ChainName]
 			denom := "ibc/" + strings.ToUpper(channelPair.Hash)
 
@@ -1369,25 +1371,25 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 				}
 				sdkRes, err := client.SupplyDenom(context.Background(), payload)
 				if err != nil {
-					logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
-					res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
-					return sdkRes, err
+					logger.Errorw("error when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
+					res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error: %v", err))
+					return nil, err
 				}
 				if sdkRes == nil {
 					logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
 					res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
-					return sdkRes, errors.New("empty result from sdk-service, skipping")
+					return nil, errors.New("empty result from sdk-service, skipping")
 				}
 				if len(sdkRes.Coins) != 1 { // Expected exactly one response
-					logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
+					logger.Errorw("no coins returned in response, skipping", "chain", channelPair.ChainName, "denom", denom)
 					res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
-					return sdkRes, err
+					return nil, err
 				}
 				return sdkRes, err
 			})
 
 			if err != nil {
-				logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
+				logger.Errorw("error", "chain", channelPair.ChainName, "denom", denom)
 				res.LogFailure(chain.ChainName, denom, fmt.Sprintf("fetching failed %v", err))
 				continue
 			}
@@ -1422,6 +1424,9 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 		logger.Debugw("almost done")
 		for chainName, info := range chainInfos {
 			for counterparty, denomList := range info.ChainChannelMapping {
+				if len(denomList) == 0 {
+					continue
+				}
 				max := denomList[0]
 				for _, d := range denomList {
 					if d.Supply > max.Supply {
@@ -1434,7 +1439,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 			for counterpartyName, denom := range chainInfos[chainName].EstimatedPrimaryChannelMap {
 				res.Chains[chainName] = make(map[string]PrimaryChannelEstimation)
 				res.Chains[chainName][counterpartyName] = PrimaryChannelEstimation{
-					CurrentPrimaryChannel:         chainInfos[chainName].CurrentPrimaryChannelMap[counterpartyName],
+					CurrentPrimaryChannel:         chainInfos[chainName].Chain.PrimaryChannel[counterpartyName],
 					EstimatedPrimaryChannel:       denom.DenomTrace.ChannelId,
 					EstimatedPrimaryChannelDenom:  denom.Denom,
 					EstimatedPrimaryChannelSupply: denom.Supply,
@@ -1451,27 +1456,30 @@ func tryStoreFetchSupply(logger *zap.SugaredLogger, s *store.Store, key string, 
 
 	if !s.Exists(key) {
 		res, err := f()
-		if err == nil {
-			bytes, _ := json.Marshal(*res)
-			status := s.Client.Set(context.Background(), key, bytes, time.Minute)
-			_, err := status.Result()
-			if err != nil {
-				return res, err
-			}
+		if err != nil {
+			return nil, err
 		}
-		return res, err
+
+		bytes, _ := json.Marshal(*res)
+		status := s.Client.Set(context.Background(), key, bytes, time.Minute)
+		_, err = status.Result()
+		if err != nil {
+			return nil, err
+		}
+
+		return res, nil
 	}
 
 	_res := s.Client.Get(context.Background(), key)
 	res, err := _res.Result()
 	if err != nil {
-		return &resp, err
+		return nil, err
 	}
 	logger.Debugw(fmt.Sprintf("found resp %s", res))
 	err = json.Unmarshal([]byte(res), &resp)
 	if err != nil {
 		logger.Error(err)
-		return &resp, err
+		return nil, err
 	}
 
 	return &resp, nil
