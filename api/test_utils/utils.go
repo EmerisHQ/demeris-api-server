@@ -387,8 +387,7 @@ func SetStoreData(ctx *TestingCtx, storeData StoreDataSet) {
 		rsp := ctx.Store.Client.Set(context.Background(), item.Key, item.Value, time.Minute)
 		_, err := rsp.Result()
 		if err != nil {
-			// logger.Error(fmt.Printf("Failed to update store: %s", err))
-			os.Exit(-1)
+			panic(fmt.Sprintf("Failed to update store: %s", err))
 		}
 	}
 }

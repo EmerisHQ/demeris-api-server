@@ -1285,7 +1285,7 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 		for _, chain := range chains {
 			ci := ChainInfo{
 				ChainName:                  chain.ChainName,
-				Chain:                      &chain,
+				Chain:                      chain,
 				CurrentPrimaryChannelMap:   chain.PrimaryChannel,
 				ChainChannelMapping:        make(map[string]DenomInfos),
 				EstimatedPrimaryChannelMap: make(map[string]DenomInfo),
@@ -1325,19 +1325,20 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 					return &sdkutilities.Supply2{}, err1
 				}
 				sdkRes, err := client.SupplyDenom(context.Background(), payload)
-				if sdkRes == nil {
-					logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
-					res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
-					return sdkRes, errors.New("empty result from sdk-service, skipping")
-				}
 				if err != nil {
 					logger.Errorw("error encountered when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
 					res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error encountered: %v", err))
 					return sdkRes, err
 				}
+				if sdkRes == nil {
+					logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
+					res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
+					return sdkRes, errors.New("empty result from sdk-service, skipping")
+				}
 				if len(sdkRes.Coins) != 1 { // Expected exactly one response
 					logger.Errorw("error encountered", "chain", channelPair.ChainName, "denom", denom)
 					res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
+					return sdkRes, err
 				}
 				return sdkRes, err
 			})
@@ -1400,67 +1401,6 @@ func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceCl
 
 		c.JSON(http.StatusOK, res)
 	}
-}
-
-// gets total chain supply for coins
-func getChainTotalSupply(c *gin.Context, chain *cns.Chain) ([]Coin, error) {
-	var paginationKey *string
-	sup := make([]Coin, 0)
-
-	client, err := sdkservice.Client(chain.MajorSDKVersion())
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve sdk-service for version %s with chain name %v", chain.CosmosSDKVersion, chain.ChainName),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve chain's sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return sup, err
-	}
-
-	for {
-		payload := &sdkutilities.SupplyPayload{
-			ChainName: chain.ChainName,
-		}
-		if paginationKey != nil {
-			payload.PaginationKey = paginationKey
-		}
-
-		sdkRes, err := client.Supply(context.Background(), payload)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				"cannot retrieve supply from sdk-service",
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve supply from sdk-service: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return sup, err
-		}
-
-		for _, s := range sdkRes.Coins {
-			sup = append(sup, Coin{
-				Denom:  s.Denom,
-				Amount: s.Amount,
-			})
-		}
-
-		if sdkRes.Pagination.NextKey != nil {
-			paginationKey = sdkRes.Pagination.NextKey
-		} else {
-			break
-		}
-	}
-	return sup, nil
 }
 
 func tryStoreFetchSupply(logger *zap.SugaredLogger, s *store.Store, key string, f func() (*sdkutilities.Supply2, error)) (*sdkutilities.Supply2, error) {

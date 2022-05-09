@@ -209,7 +209,7 @@ type DenomInfos []DenomInfo
 
 type ChainInfo struct {
 	ChainName                  string
-	Chain                      *cns.Chain
+	Chain                      cns.Chain
 	ChainChannelMapping        map[string]DenomInfos
 	CurrentPrimaryChannelMap   map[string]string
 	EstimatedPrimaryChannelMap map[string]DenomInfo
