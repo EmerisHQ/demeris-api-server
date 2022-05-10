@@ -146,8 +146,6 @@ func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, erro
 	SELECT
 		id,
 		chain_name,
-		height,
-		delete_height,
 		block_time
 	FROM tracelistener.blocktime 
 	WHERE 
