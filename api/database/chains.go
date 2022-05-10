@@ -154,10 +154,6 @@ func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, erro
 		chain_name IN 
 			(SELECT chain_name FROM cns.chains WHERE enabled=TRUE)
 	`)
-	if err.Error() == "sql: no rows in result set" {
-		// not really an error, we don't have a blocktime for this chain (yet)
-		return tracelistener.BlockTimeRow{}, nil
-	}
 	if err != nil {
 		return tracelistener.BlockTimeRow{}, err
 	}
@@ -169,9 +165,15 @@ func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, erro
 		}
 	}()
 
-	return c, n.Get(&c, map[string]interface{}{
+	err = n.Get(&c, map[string]interface{}{
 		"name": name,
 	})
+	if err.Error() == "sql: no rows in result set" {
+		// not really an error, we don't have a blocktime for this chain (yet)
+		return tracelistener.BlockTimeRow{}, nil
+	}
+
+	return c, err
 }
 
 func (d *Database) Chains() ([]cns.Chain, error) {
