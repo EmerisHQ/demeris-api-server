@@ -23,8 +23,8 @@ import (
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
-	"github.com/emerishq/emeris-utils/ginsentry"
 	"github.com/emerishq/emeris-utils/logging"
+	"github.com/emerishq/emeris-utils/sentryx"
 	"github.com/emerishq/emeris-utils/store"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
@@ -246,7 +246,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 
 		res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
 
-		span := ginsentry.StartSpan(c, "db.DenomTrace")
+		span, _ := sentryx.StartSpan(c, "db.DenomTrace")
 		denomTrace, err := db.DenomTrace(chainName, hash)
 		span.Finish()
 
@@ -290,7 +290,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		span = ginsentry.StartSpan(c, "db.ChainIDs")
+		span, _ = sentryx.StartSpan(c, "db.ChainIDs")
 		chainIDsMap, err := db.ChainIDs()
 		span.Finish()
 
@@ -356,7 +356,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 				return
 			}
 
-			span := ginsentry.StartSpan(c, fmt.Sprintf("GetIbcChannelToChain(%s, %s)", nextChain, chainID))
+			span, _ := sentryx.StartSpan(c, fmt.Sprintf("GetIbcChannelToChain(%s, %s)", nextChain, chainID))
 			channelInfo, err = db.GetIbcChannelToChain(nextChain, channel, chainID)
 			span.Finish()
 
@@ -399,7 +399,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 			nextChain = trace.CounterpartyName
 		}
 
-		span = ginsentry.StartSpan(c, "db.Chain")
+		span, _ = sentryx.StartSpan(c, "db.Chain")
 		nextChainData, err := db.Chain(nextChain)
 		span.Finish()
 		if err != nil {
@@ -440,7 +440,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		span = ginsentry.StartSpan(c, "db.ChainLastBlock")
+		span, _ = sentryx.StartSpan(c, "db.ChainLastBlock")
 		cbt, err := db.ChainLastBlock(nextChain)
 		span.Finish()
 		if err != nil {

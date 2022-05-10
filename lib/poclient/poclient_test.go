@@ -1,20 +1,21 @@
 package poclient_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/allinbits/emeris-price-oracle/price-oracle/config"
-	"github.com/allinbits/emeris-price-oracle/price-oracle/rest"
-	"github.com/allinbits/emeris-price-oracle/price-oracle/sql"
-	"github.com/allinbits/emeris-price-oracle/price-oracle/store"
-	potypes "github.com/allinbits/emeris-price-oracle/price-oracle/types"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 	"github.com/emerishq/demeris-api-server/lib/poclient"
 	cnsDb "github.com/emerishq/emeris-cns-server/cns/database"
+	"github.com/emerishq/emeris-price-oracle/price-oracle/config"
+	"github.com/emerishq/emeris-price-oracle/price-oracle/rest"
+	"github.com/emerishq/emeris-price-oracle/price-oracle/sql"
+	"github.com/emerishq/emeris-price-oracle/price-oracle/store"
+	potypes "github.com/emerishq/emeris-price-oracle/price-oracle/types"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/stretchr/testify/require"
 )
@@ -114,8 +115,9 @@ func setup(t *testing.T) (testserver.TestServer, string) {
 	db, err := sql.NewDB(c.DatabaseConnectionURL)
 	require.NoError(t, err)
 
+	ctx := context.Background()
 	storeHandler, err := store.NewStoreHandler(
-		store.WithDB(db),
+		store.WithDB(ctx, db),
 		store.WithConfig(c),
 		store.WithLogger(l),
 		store.WithSpotPriceCache(nil),
@@ -123,16 +125,16 @@ func setup(t *testing.T) (testserver.TestServer, string) {
 	)
 	require.NoError(t, err)
 
-	err = db.Init()
+	err = db.Init(ctx)
 	require.NoError(t, err)
 
-	err = db.UpsertPrice(store.TokensStore, testToken.Price, testToken.Symbol)
+	err = db.UpsertPrice(ctx, store.TokensStore, testToken.Price, testToken.Symbol)
 	require.NoError(t, err)
 
-	err = db.UpsertTokenSupply(store.CoingeckoSupplyStore, testToken.Symbol, testToken.Supply)
+	err = db.UpsertTokenSupply(ctx, store.CoingeckoSupplyStore, testToken.Symbol, testToken.Supply)
 	require.NoError(t, err)
 
-	err = db.UpsertPrice(store.FiatsStore, testFiat.Price, testFiat.Symbol)
+	err = db.UpsertPrice(ctx, store.FiatsStore, testFiat.Price, testFiat.Symbol)
 	require.NoError(t, err)
 
 	port, err := utils.GetFreePort()

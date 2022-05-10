@@ -3,7 +3,6 @@ package router
 import (
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/emerishq/demeris-api-server/api/block"
 	"github.com/emerishq/demeris-api-server/api/cached"
@@ -14,8 +13,8 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/relayer"
 
-	"github.com/emerishq/emeris-utils/ginsentry"
 	"github.com/emerishq/emeris-utils/logging"
+	"github.com/emerishq/emeris-utils/sentryx"
 	"github.com/emerishq/emeris-utils/validation"
 	"github.com/gin-gonic/gin/binding"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/account"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/emeris-utils/store"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -73,9 +73,9 @@ func New(
 		engine.Use(logging.LogRequest(l.Desugar()))
 	}
 
-	engine.Use(r.catchPanicsFunc)
+	engine.Use(ginzap.RecoveryWithZap(l.Desugar(), true))
 	engine.Use(r.handleErrors)
-	engine.Use(ginsentry.Middleware)
+	engine.Use(sentryx.GinMiddleware)
 	engine.RedirectTrailingSlash = false
 	engine.RedirectFixedPath = false
 
@@ -88,36 +88,6 @@ func New(
 
 func (r *Router) Serve(address string) error {
 	return r.g.Run(address)
-}
-
-func (r *Router) catchPanicsFunc(c *gin.Context) {
-	defer func() {
-		if rval := recover(); rval != nil {
-			// okay we panic-ed, log it through r's logger and write back internal server error
-			ginsentry.Recover(c, rval)
-
-			err := apierrors.New(
-				"fatal_error",
-				fmt.Sprintf("internal server error"),
-				http.StatusInternalServerError)
-
-			logger := logging.AddCorrelationIDToLogger(c, r.l)
-			logger.Errorw(
-				"panic handler triggered while handling call",
-				"endpoint", c.Request.RequestURI,
-				"error", fmt.Sprint(rval),
-			)
-
-			userError := apierrors.NewUserFacingError(tryGetIntCorrelationID(c), err)
-			c.AbortWithStatusJSON(
-				http.StatusInternalServerError,
-				userError,
-			)
-
-			return
-		}
-	}()
-	c.Next()
 }
 
 func (r *Router) handleErrors(c *gin.Context) {
