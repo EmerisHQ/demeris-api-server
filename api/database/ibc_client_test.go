@@ -1,6 +1,8 @@
 package database_test
 
 import (
+	"context"
+
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 )
 
@@ -37,7 +39,7 @@ func (s *TestSuite) TestQueryIBCClientTrace() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.QueryIBCClientTrace(tt.chainName, tt.channel)
+			res, err := s.ctx.Router.DB.QueryIBCClientTrace(context.Background(), tt.chainName, tt.channel)
 			if tt.success {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res)

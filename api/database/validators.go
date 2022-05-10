@@ -1,8 +1,12 @@
 package database
 
-import "github.com/emerishq/demeris-backend-models/tracelistener"
+import (
+	"context"
 
-func (d *Database) GetValidators(chain string) ([]tracelistener.ValidatorRow, error) {
+	"github.com/emerishq/demeris-backend-models/tracelistener"
+)
+
+func (d *Database) GetValidators(ctx context.Context, chain string) ([]tracelistener.ValidatorRow, error) {
 	var validators []tracelistener.ValidatorRow
 
 	q := `
@@ -37,5 +41,5 @@ func (d *Database) GetValidators(chain string) ([]tracelistener.ValidatorRow, er
 
 	q = d.dbi.DB.Rebind(q)
 
-	return validators, d.dbi.DB.Select(&validators, q, chain)
+	return validators, d.dbi.DB.SelectContext(ctx, &validators, q, chain)
 }

@@ -54,10 +54,11 @@ const (
 // @Router /chains [get]
 func GetChains(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		if !fflag.Enabled(c, RetroCompatStagingDB) {
 			var res ChainsResponse
 
-			chains, err := db.ChainsWithStatus()
+			chains, err := db.ChainsWithStatus(ctx)
 
 			if err != nil {
 				e := apierrors.New(
@@ -77,7 +78,7 @@ func GetChains(db *database.Database) gin.HandlerFunc {
 		} else {
 			var res OldChainsResponse
 
-			chains, err := db.SimpleChains()
+			chains, err := db.SimpleChains(ctx)
 
 			if err != nil {
 				e := apierrors.New(
@@ -151,11 +152,12 @@ func GetChainBech32Config(c *gin.Context) {
 // @Router /chain/{chainName}/primary_channel/{counterparty} [get]
 func GetPrimaryChannelWithCounterparty(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res PrimaryChannelResponse
 
 		chainName := c.Param("chain")
 		counterparty := c.Param("counterparty")
-		chain, err := db.PrimaryChannelCounterparty(chainName, counterparty)
+		chain, err := db.PrimaryChannelCounterparty(ctx, chainName, counterparty)
 		if err != nil {
 			e := apierrors.New(
 				"primarychannel",
@@ -194,10 +196,11 @@ func GetPrimaryChannelWithCounterparty(db *database.Database) gin.HandlerFunc {
 // @Router /chain/{chainName}/primary_channel [get]
 func GetPrimaryChannels(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res PrimaryChannelsResponse
 
 		chainName := c.Param("chain")
-		chain, err := db.PrimaryChannels(chainName)
+		chain, err := db.PrimaryChannels(ctx, chainName)
 		if err != nil {
 			e := apierrors.New(
 				"primarychannel",
@@ -237,6 +240,7 @@ func GetPrimaryChannels(db *database.Database) gin.HandlerFunc {
 // @Router /chain/{chainName}/denom/verify_trace/{hash} [get]
 func VerifyTrace(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res VerifiedTraceResponse
 
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
@@ -247,7 +251,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 		res.VerifiedTrace.IbcDenom = IBCDenomHash(hash)
 
 		span, _ := sentryx.StartSpan(c, "db.DenomTrace")
-		denomTrace, err := db.DenomTrace(chainName, hash)
+		denomTrace, err := db.DenomTrace(ctx, chainName, hash)
 		span.Finish()
 
 		if err != nil {
@@ -291,7 +295,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 		}
 
 		span, _ = sentryx.StartSpan(c, "db.ChainIDs")
-		chainIDsMap, err := db.ChainIDs()
+		chainIDsMap, err := db.ChainIDs(ctx)
 		span.Finish()
 
 		if err != nil {
@@ -357,7 +361,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 			}
 
 			span, _ := sentryx.StartSpan(c, fmt.Sprintf("GetIbcChannelToChain(%s, %s)", nextChain, chainID))
-			channelInfo, err = db.GetIbcChannelToChain(nextChain, channel, chainID)
+			channelInfo, err = db.GetIbcChannelToChain(ctx, nextChain, channel, chainID)
 			span.Finish()
 
 			if err != nil {
@@ -400,7 +404,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 		}
 
 		span, _ = sentryx.StartSpan(c, "db.Chain")
-		nextChainData, err := db.Chain(nextChain)
+		nextChainData, err := db.Chain(ctx, nextChain)
 		span.Finish()
 		if err != nil {
 			logger.Errorw(
@@ -441,7 +445,7 @@ func VerifyTrace(db *database.Database) gin.HandlerFunc {
 		}
 
 		span, _ = sentryx.StartSpan(c, "db.ChainLastBlock")
-		cbt, err := db.ChainLastBlock(nextChain)
+		cbt, err := db.ChainLastBlock(ctx, nextChain)
 		span.Finish()
 		if err != nil {
 			e := apierrors.New(
@@ -528,12 +532,13 @@ func paths(path string) ([]string, error) {
 // @Router /chain/{chainName}/status [get]
 func GetChainStatus(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res StatusResponse
 
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		cbt, err := db.ChainLastBlock(chain.ChainName)
+		cbt, err := db.ChainLastBlock(ctx, chain.ChainName)
 		if err != nil {
 			e := apierrors.New(
 				"chain/status",
@@ -576,6 +581,7 @@ func GetChainStatus(db *database.Database) gin.HandlerFunc {
 // @Router /chain/{chainName}/supply [get]
 func GetChainSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		paginationKey, exists := c.GetQuery("key")
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
@@ -593,7 +599,7 @@ func GetChainSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 			payload.PaginationKey = &paginationKey
 		}
 
-		sdkRes, err := client.Supply(c.Request.Context(), payload)
+		sdkRes, err := client.Supply(ctx, payload)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -645,6 +651,7 @@ func GetChainSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 // @Router /chain/{chainName}/supply/:denom [get]
 func GetDenomSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		denom := c.Param("denom")
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
@@ -659,7 +666,7 @@ func GetDenomSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 			Denom:     &denom,
 		}
 
-		sdkRes, err := client.SupplyDenom(c.Request.Context(), payload)
+		sdkRes, err := client.SupplyDenom(ctx, payload)
 		if err != nil || len(sdkRes.Coins) != 1 { // Expected exactly one response
 			cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, denom)
 			if sdkRes != nil && len(sdkRes.Coins) != 1 {
@@ -697,6 +704,7 @@ func GetDenomSupply(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 // @Router /chain/{chainName}/txs/{txhash} [get]
 func GetChainTx(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		txHash := c.Param("tx")
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
@@ -706,7 +714,7 @@ func GetChainTx(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc 
 			return
 		}
 
-		sdkRes, err := client.QueryTx(c.Request.Context(), &sdkutilities.QueryTxPayload{
+		sdkRes, err := client.QueryTx(ctx, &sdkutilities.QueryTxPayload{
 			ChainName: chain.ChainName,
 			Hash:      txHash,
 		})
@@ -742,10 +750,11 @@ func GetChainTx(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc 
 // @Router /chain/{chainName}/numbers/{address} [get]
 func GetNumbersByAddress(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		address := c.Param("address")
 		chainInfo := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-		resp, err := apiutils.FetchAccountNumbers(c.Request.Context(), chainInfo, address, sdkServiceClients)
+		resp, err := apiutils.FetchAccountNumbers(ctx, chainInfo, address, sdkServiceClients)
 		if err != nil {
 			e := apierrors.New(
 				"numbers",
@@ -778,6 +787,7 @@ func GetNumbersByAddress(sdkServiceClients sdkservice.SDKServiceClients) gin.Han
 // @Router /chain/{chainName}/mint/inflation [get]
 func GetInflation(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
@@ -786,7 +796,7 @@ func GetInflation(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFun
 			return
 		}
 
-		sdkRes, err := client.MintInflation(c.Request.Context(), &sdkutilities.MintInflationPayload{
+		sdkRes, err := client.MintInflation(ctx, &sdkutilities.MintInflationPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -820,6 +830,7 @@ func GetInflation(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFun
 // @Router /chain/{chainName}/staking/params [get]
 func GetStakingParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
@@ -828,7 +839,7 @@ func GetStakingParams(sdkServiceClients sdkservice.SDKServiceClients) gin.Handle
 			return
 		}
 
-		sdkRes, err := client.StakingParams(c.Request.Context(), &sdkutilities.StakingParamsPayload{
+		sdkRes, err := client.StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -862,6 +873,7 @@ func GetStakingParams(sdkServiceClients sdkservice.SDKServiceClients) gin.Handle
 // @Router /chain/{chainName}/staking/pool [get]
 func GetStakingPool(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
@@ -870,7 +882,7 @@ func GetStakingPool(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 			return
 		}
 
-		sdkRes, err := client.StakingPool(c.Request.Context(), &sdkutilities.StakingPoolPayload{
+		sdkRes, err := client.StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -904,6 +916,7 @@ func GetStakingPool(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerF
 // @Router /chain/{chainName}/mint/params [get]
 func GetMintParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
@@ -911,7 +924,7 @@ func GetMintParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFu
 			return
 		}
 
-		sdkRes, err := client.MintParams(c.Request.Context(), &sdkutilities.MintParamsPayload{
+		sdkRes, err := client.MintParams(ctx, &sdkutilities.MintParamsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -945,6 +958,7 @@ func GetMintParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFu
 // @Router /chain/{chainName}/mint/annual_provisions [get]
 func GetAnnualProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
 		if e != nil {
@@ -952,7 +966,7 @@ func GetAnnualProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Han
 			return
 		}
 
-		sdkRes, err := client.MintAnnualProvision(c.Request.Context(), &sdkutilities.MintAnnualProvisionPayload{
+		sdkRes, err := client.MintAnnualProvision(ctx, &sdkutilities.MintAnnualProvisionPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -986,6 +1000,7 @@ func GetAnnualProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Han
 // @Router /chain/{chainName}/mint/epoch_provisions [get]
 func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
@@ -994,7 +1009,7 @@ func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Hand
 			return
 		}
 
-		sdkRes, err := client.MintEpochProvisions(c.Request.Context(), &sdkutilities.MintEpochProvisionsPayload{
+		sdkRes, err := client.MintEpochProvisions(ctx, &sdkutilities.MintEpochProvisionsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1028,6 +1043,7 @@ func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Hand
 // @Router /chain/{chainName}/APR [get]
 func GetStakingAPR(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
 		chainName := c.Param("chain")
@@ -1039,7 +1055,7 @@ func GetStakingAPR(db *database.Database, s *store.Store, sdkServiceClients sdks
 			aprCachePrefix,
 			getAPR(c, sdkServiceClients),
 		)
-		aprString, err := aprCache.Get(c.Request.Context(), chainName, false)
+		aprString, err := aprCache.Get(ctx, chainName, false)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -1087,7 +1103,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 		}
 
 		// get number of bonded tokens from staking/pool data
-		stakingPoolRes, err := client.StakingPool(c.Request.Context(), &sdkutilities.StakingPoolPayload{
+		stakingPoolRes, err := client.StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1146,7 +1162,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 		}
 
 		// get staking coin denom from staking params
-		stakingParamsRes, err := client.StakingParams(c.Request.Context(), &sdkutilities.StakingParamsPayload{
+		stakingParamsRes, err := client.StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1190,7 +1206,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 			Denom:     &bond_denom,
 		}
 
-		denomSupplyRes, err := client.SupplyDenom(c.Request.Context(), payload)
+		denomSupplyRes, err := client.SupplyDenom(ctx, payload)
 		if err != nil || len(denomSupplyRes.Coins) != 1 { // Expected exactly one response
 			cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, bond_denom)
 			if denomSupplyRes != nil && len(denomSupplyRes.Coins) != 1 {
@@ -1231,7 +1247,7 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 		supply := coin.Amount.ToDec()
 
 		// get inflation
-		inflationRes, err := client.MintInflation(c.Request.Context(), &sdkutilities.MintInflationPayload{
+		inflationRes, err := client.MintInflation(ctx, &sdkutilities.MintInflationPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1573,7 +1589,8 @@ func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilit
 // @Router /chains/status [get]
 func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		statuses, err := db.ChainsOnlineStatuses()
+		ctx := c.Request.Context()
+		statuses, err := db.ChainsOnlineStatuses(ctx)
 		if err != nil {
 			e := apierrors.New(
 				"chain",
@@ -1609,6 +1626,7 @@ func GetChainsStatuses(db *database.Database) gin.HandlerFunc {
 // @Router /chain/{chainName}/distribution/params [get]
 func GetDistributionParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
@@ -1617,7 +1635,7 @@ func GetDistributionParams(sdkServiceClients sdkservice.SDKServiceClients) gin.H
 			return
 		}
 
-		sdkRes, err := client.DistributionParams(c.Request.Context(), &sdkutilities.DistributionParamsPayload{
+		sdkRes, err := client.DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
 			ChainName: chain.ChainName,
 		})
 
@@ -1651,6 +1669,7 @@ func GetDistributionParams(sdkServiceClients sdkservice.SDKServiceClients) gin.H
 // @Router /chain/{chainName}/budget/params [get]
 func GetBudgetParams(sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
 		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
@@ -1659,7 +1678,7 @@ func GetBudgetParams(sdkServiceClients sdkservice.SDKServiceClients) gin.Handler
 			return
 		}
 
-		sdkRes, err := client.BudgetParams(c.Request.Context(), &sdkutilities.BudgetParamsPayload{
+		sdkRes, err := client.BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 			ChainName: chain.ChainName,
 		})
 

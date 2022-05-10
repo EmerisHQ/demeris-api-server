@@ -1,11 +1,13 @@
 package database
 
 import (
+	"context"
+
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/jmoiron/sqlx"
 )
 
-func (d *Database) Numbers(address string) ([]tracelistener.AuthRow, error) {
+func (d *Database) Numbers(ctx context.Context, address string) ([]tracelistener.AuthRow, error) {
 	var numbers []tracelistener.AuthRow
 
 	q, args, err := sqlx.In(`
@@ -30,7 +32,7 @@ func (d *Database) Numbers(address string) ([]tracelistener.AuthRow, error) {
 
 	q = d.dbi.DB.Rebind(q)
 
-	return numbers, d.dbi.DB.Select(&numbers, q, args...)
+	return numbers, d.dbi.DB.SelectContext(ctx, &numbers, q, args...)
 }
 
 type ChainName struct {
@@ -38,12 +40,12 @@ type ChainName struct {
 	AccountPrefix string `db:"account_prefix"`
 }
 
-func (d *Database) ChainNames() ([]ChainName, error) {
+func (d *Database) ChainNames(ctx context.Context) ([]ChainName, error) {
 	var cn []ChainName
 
 	q := `select chain_name,node_info->'bech32_config'->>'prefix_account' as account_prefix from cns.chains where enabled=true`
 
 	q = d.dbi.DB.Rebind(q)
 
-	return cn, d.dbi.DB.Select(&cn, q)
+	return cn, d.dbi.DB.SelectContext(ctx, &cn, q)
 }

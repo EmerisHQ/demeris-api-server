@@ -50,11 +50,12 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 // @Router /account/{address}/balance [get]
 func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res BalancesResponse
 
 		address := c.Param("address")
 
-		balances, err := db.Balances(address)
+		balances, err := db.Balances(ctx, address)
 
 		if err != nil {
 			e := apierrors.New(
@@ -70,7 +71,7 @@ func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 			return
 		}
 
-		vd, err := verifiedDenomsMap(db)
+		vd, err := verifiedDenomsMap(ctx, db)
 		if err != nil {
 			e := apierrors.New(
 				"account",
@@ -90,6 +91,7 @@ func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 
 		for _, b := range balances {
 			res.Balances = append(res.Balances, balanceRespForBalance(
+				ctx,
 				b,
 				vd,
 				db.DenomTrace,
@@ -107,9 +109,9 @@ func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 // This way we can easily implement table testing for this sensible component, and provide
 // fixes to it in a time-sensitive manner.
 // This will most probably go away as soon as we have proper testing in place.
-type denomTraceFunc func(string, string) (tracelistener.IBCDenomTraceRow, error)
+type denomTraceFunc func(context.Context, string, string) (tracelistener.IBCDenomTraceRow, error)
 
-func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) Balance {
+func balanceRespForBalance(ctx context.Context, rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) Balance {
 	balance := Balance{
 		Address: rawBalance.Address,
 		Amount:  rawBalance.Amount,
@@ -131,7 +133,7 @@ func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bo
 
 		// otherwise, since we don't touch `verified` and `baseDenom` variables, we stick to the
 		// original `ibc/...` denom, which will be unverified by default
-		denomTrace, err := dt(rawBalance.ChainName, rawBalance.Denom[4:])
+		denomTrace, err := dt(ctx, rawBalance.ChainName, rawBalance.Denom[4:])
 		if err == nil {
 			balance.Ibc.Path = denomTrace.Path
 			baseDenom = denomTrace.BaseDenom
@@ -145,8 +147,8 @@ func balanceRespForBalance(rawBalance tracelistener.BalanceRow, vd map[string]bo
 	return balance
 }
 
-func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
-	chains, err := d.VerifiedDenoms()
+func verifiedDenomsMap(ctx context.Context, d *database.Database) (map[string]bool, error) {
+	chains, err := d.VerifiedDenoms(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -173,12 +175,13 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @Router /account/{address}/stakingbalances [get]
 func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res StakingBalancesResponse
 
 		address := c.Param("address")
 
 		if fflag.Enabled(c, FixSlashedDelegations) {
-			dl, err := db.Delegations(address)
+			dl, err := db.Delegations(ctx, address)
 
 			if err != nil {
 				e := apierrors.New(
@@ -255,7 +258,7 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 
 			c.JSON(http.StatusOK, res)
 		} else {
-			dl, err := db.DelegationsOldResponse(address)
+			dl, err := db.DelegationsOldResponse(ctx, address)
 
 			if err != nil {
 				e := apierrors.New(
@@ -297,11 +300,12 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 // @Router /account/{address}/unbondingdelegations [get]
 func GetUnbondingDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res UnbondingDelegationsResponse
 
 		address := c.Param("address")
 
-		unbondings, err := db.UnbondingDelegations(address)
+		unbondings, err := db.UnbondingDelegations(ctx, address)
 
 		if err != nil {
 			e := apierrors.New(
@@ -343,6 +347,7 @@ func GetUnbondingDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 // @Router /account/{address}/delegatorrewards/{chain} [get]
 func GetDelegatorRewards(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res DelegatorRewardsResponse
 
 		// TODO: add to tracelistener
@@ -350,7 +355,7 @@ func GetDelegatorRewards(db *database.Database, sdkServiceClients sdkservice.SDK
 		address := c.Param("address")
 		chainName := c.Param("chain")
 
-		chain, err := db.Chain(chainName)
+		chain, err := db.Chain(ctx, chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -436,13 +441,14 @@ func GetDelegatorRewards(db *database.Database, sdkServiceClients sdkservice.SDK
 // @Router /account/{address}/numbers [get]
 func GetNumbersByAddress(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res NumbersResponse
 
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
 		address := c.Param("address")
 
-		dd, err := db.Chains()
+		dd, err := db.Chains(ctx)
 		logger.Debugw("chain names", "chain names", dd, "error", err)
 
 		/*

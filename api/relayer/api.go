@@ -1,6 +1,7 @@
 package relayer
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
 	"errors"
@@ -95,6 +96,7 @@ func getRelayerStatus(ri *Informer) gin.HandlerFunc {
 // @Router /relayer/balance [get]
 func getRelayerBalance(db *database.Database, ri *Informer) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res RelayerBalances
 
 		obj, err := ri.Informer.Lister().Get(k8stypes.NamespacedName{
@@ -138,7 +140,7 @@ func getRelayerBalance(db *database.Database, ri *Informer) gin.HandlerFunc {
 			addresses = append(addresses, cs.AccountAddress)
 		}
 
-		thresh, err := relayerThresh(chains, db)
+		thresh, err := relayerThresh(ctx, chains, db)
 		if err != nil {
 			e := apierrors.New(
 				"status",
@@ -158,7 +160,7 @@ func getRelayerBalance(db *database.Database, ri *Informer) gin.HandlerFunc {
 				continue
 			}
 
-			enough, err := enoughBalance(addresses[i], t, db)
+			enough, err := enoughBalance(ctx, addresses[i], t, db)
 			if err != nil {
 				e := apierrors.New(
 					"status",
@@ -184,11 +186,11 @@ func getRelayerBalance(db *database.Database, ri *Informer) gin.HandlerFunc {
 	}
 }
 
-func relayerThresh(chains []string, db *database.Database) (map[string]cnsmodels.Denom, error) {
+func relayerThresh(ctx context.Context, chains []string, db *database.Database) (map[string]cnsmodels.Denom, error) {
 	res := map[string]cnsmodels.Denom{}
 
 	for _, cn := range chains {
-		chain, err := db.ChainFromChainID(cn)
+		chain, err := db.ChainFromChainID(ctx, cn)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				continue // probably the chain isn't enabled yet
@@ -202,7 +204,7 @@ func relayerThresh(chains []string, db *database.Database) (map[string]cnsmodels
 	return res, nil
 }
 
-func enoughBalance(address string, denom cnsmodels.Denom, db *database.Database) (bool, error) {
+func enoughBalance(ctx context.Context, address string, denom cnsmodels.Denom, db *database.Database) (bool, error) {
 	_, hb, err := bech32.DecodeAndConvert(address)
 	if err != nil {
 		return false, err
@@ -210,7 +212,7 @@ func enoughBalance(address string, denom cnsmodels.Denom, db *database.Database)
 
 	addrHex := hex.EncodeToString(hb)
 
-	balance, err := db.Balances(addrHex)
+	balance, err := db.Balances(ctx, addrHex)
 	if err != nil {
 		return false, err
 	}

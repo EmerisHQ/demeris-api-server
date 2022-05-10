@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -40,7 +41,7 @@ func (s *TestSuite) TestChain() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.Chain(tt.chainName)
+			res, err := s.ctx.Router.DB.Chain(context.Background(), tt.chainName)
 			if tt.success {
 				s.Require().NoError(err)
 				compareAsBytes(s.T(), tt.expRes, res)
@@ -86,7 +87,7 @@ func (s *TestSuite) TestChainExists() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.ChainExists(tt.chainName)
+			res, err := s.ctx.Router.DB.ChainExists(context.Background(), tt.chainName)
 			s.Require().NoError(err)
 			s.Require().Equal(tt.expRes, res)
 		})
@@ -122,7 +123,7 @@ func (s *TestSuite) TestChainFromChainID() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.ChainFromChainID(tt.chainID)
+			res, err := s.ctx.Router.DB.ChainFromChainID(context.Background(), tt.chainID)
 			if tt.success {
 				s.Require().NoError(err)
 				compareAsBytes(s.T(), tt.expRes, res)
@@ -163,7 +164,7 @@ func (s *TestSuite) TestChainLastBlock() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.ChainLastBlock(tt.chainName)
+			res, err := s.ctx.Router.DB.ChainLastBlock(context.Background(), tt.chainName)
 			s.Require().NoError(err)
 			s.Require().Equal(tt.expRes.Unix(), res.BlockTime.Unix())
 		})
@@ -183,7 +184,7 @@ func (s *TestSuite) TestChains() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.Chains()
+			res, err := s.ctx.Router.DB.Chains(context.Background())
 			s.Require().NoError(err)
 			s.Require().NotEmpty(res)
 			compareAsBytes(s.T(), tt.expRes, res)
@@ -207,7 +208,7 @@ func (s *TestSuite) TestVerifiedDenoms() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.VerifiedDenoms()
+			res, err := s.ctx.Router.DB.VerifiedDenoms(context.Background())
 			s.Require().NoError(err)
 			s.Require().NotEmpty(res)
 			s.Require().Equal(tt.expRes, res)
@@ -231,7 +232,7 @@ func (s *TestSuite) TestChainsWithStatus() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.ChainsWithStatus()
+			res, err := s.ctx.Router.DB.ChainsWithStatus(context.Background())
 			s.Require().NoError(err)
 			s.Require().NotEmpty(res)
 			s.Require().Equal(tt.expRes, res)
@@ -255,7 +256,7 @@ func (s *TestSuite) TestChainIDs() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.ChainIDs()
+			res, err := s.ctx.Router.DB.ChainIDs(context.Background())
 			s.Require().NoError(err)
 			s.Require().NotEmpty(res)
 			s.Require().Equal(tt.expRes, res)
@@ -300,7 +301,7 @@ func (s *TestSuite) TestPrimaryChannelCounterparty() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.PrimaryChannelCounterparty(tt.chainName, tt.counterparty)
+			res, err := s.ctx.Router.DB.PrimaryChannelCounterparty(context.Background(), tt.chainName, tt.counterparty)
 			if tt.success {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res)
@@ -339,7 +340,7 @@ func (s *TestSuite) TestPrimaryChannels() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.PrimaryChannels(tt.chainName)
+			res, err := s.ctx.Router.DB.PrimaryChannels(context.Background(), tt.chainName)
 			s.Require().NoError(err)
 			s.Require().Len(res, tt.expLen)
 			if tt.expLen != 0 {
@@ -372,7 +373,7 @@ func (s *TestSuite) TestChainsOnlineStatuses() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.ChainsOnlineStatuses()
+			res, err := s.ctx.Router.DB.ChainsOnlineStatuses(context.Background())
 			s.Require().NoError(err)
 			s.Require().NotEmpty(res)
 			s.Require().Equal(tt.expRes, res)

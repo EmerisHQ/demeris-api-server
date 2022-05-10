@@ -1,6 +1,7 @@
 package account
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -26,7 +27,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			map[string]bool{
 				"uatom": true,
 			},
-			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
+			func(_ context.Context, _, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{
 					Path:      "path",
 					BaseDenom: "uatom",
@@ -55,7 +56,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			map[string]bool{
 				"uatom": false,
 			},
-			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
+			func(_ context.Context, _, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{
 					Path:      "path",
 					BaseDenom: "uatom",
@@ -84,7 +85,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			map[string]bool{
 				"uatom": true,
 			},
-			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
+			func(_ context.Context, _, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, fmt.Errorf("error")
 			},
 			Balance{
@@ -108,7 +109,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			map[string]bool{
 				"denom": true,
 			},
-			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
+			func(_ context.Context, _, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, nil
 			},
 			Balance{
@@ -128,7 +129,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 			map[string]bool{
 				"denom": false,
 			},
-			func(_, hash string) (tracelistener.IBCDenomTraceRow, error) {
+			func(_ context.Context, _, hash string) (tracelistener.IBCDenomTraceRow, error) {
 				return tracelistener.IBCDenomTraceRow{}, nil
 			},
 			Balance{
@@ -143,7 +144,7 @@ func Test_balanceRespForBalance(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t,
 				tt.want,
-				balanceRespForBalance(tt.rawBalance, tt.vd, tt.dt),
+				balanceRespForBalance(context.Background(), tt.rawBalance, tt.vd, tt.dt),
 			)
 		})
 	}

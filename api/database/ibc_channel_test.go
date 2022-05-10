@@ -1,6 +1,8 @@
 package database_test
 
 import (
+	"context"
+
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 	"github.com/emerishq/demeris-backend-models/cns"
 )
@@ -53,7 +55,7 @@ func (s *TestSuite) TestGetIbcChannelToChain() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.GetIbcChannelToChain(tt.chainName, tt.channel, tt.chainID)
+			res, err := s.ctx.Router.DB.GetIbcChannelToChain(context.Background(), tt.chainName, tt.channel, tt.chainID)
 			if tt.success {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res)

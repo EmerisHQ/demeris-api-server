@@ -1,11 +1,13 @@
 package database
 
 import (
+	"context"
+
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
 // DenomTrace returns the denom trace for a given chain by its hash. Hash param is case-insensitive.
-func (d *Database) DenomTrace(chain string, hash string) (tracelistener.IBCDenomTraceRow, error) {
+func (d *Database) DenomTrace(ctx context.Context, chain string, hash string) (tracelistener.IBCDenomTraceRow, error) {
 	var denomTrace tracelistener.IBCDenomTraceRow
 
 	// note: lower() since Tracelistener stores hashes in lowercase
@@ -28,7 +30,7 @@ func (d *Database) DenomTrace(chain string, hash string) (tracelistener.IBCDenom
 
 	q = d.dbi.DB.Rebind(q)
 
-	if err := d.dbi.DB.Get(&denomTrace, q, chain, hash); err != nil {
+	if err := d.dbi.DB.GetContext(ctx, &denomTrace, q, chain, hash); err != nil {
 		return tracelistener.IBCDenomTraceRow{}, err
 	}
 

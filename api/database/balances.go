@@ -1,8 +1,12 @@
 package database
 
-import "github.com/emerishq/demeris-backend-models/tracelistener"
+import (
+	"context"
 
-func (d *Database) Balances(address string) ([]tracelistener.BalanceRow, error) {
+	"github.com/emerishq/demeris-backend-models/tracelistener"
+)
+
+func (d *Database) Balances(ctx context.Context, address string) ([]tracelistener.BalanceRow, error) {
 	var balances []tracelistener.BalanceRow
 
 	q := `
@@ -24,5 +28,5 @@ func (d *Database) Balances(address string) ([]tracelistener.BalanceRow, error) 
 
 	q = d.dbi.DB.Rebind(q)
 
-	return balances, d.dbi.DB.Select(&balances, q, address)
+	return balances, d.dbi.DB.SelectContext(ctx, &balances, q, address)
 }

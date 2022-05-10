@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 
@@ -29,10 +30,10 @@ type ChainWithStatus struct {
 	Online              bool                    `db:"online" json:"online" `
 }
 
-func (d *Database) Chain(name string) (cns.Chain, error) {
+func (d *Database) Chain(ctx context.Context, name string) (cns.Chain, error) {
 	var c cns.Chain
 
-	n, err := d.dbi.DB.PrepareNamed(`
+	n, err := d.dbi.DB.PrepareNamedContext(ctx, `
 	SELECT
 		id,
 		enabled,
@@ -64,12 +65,12 @@ func (d *Database) Chain(name string) (cns.Chain, error) {
 		}
 	}()
 
-	return c, n.Get(&c, map[string]interface{}{
+	return c, n.GetContext(ctx, &c, map[string]interface{}{
 		"name": name,
 	})
 }
 
-func (d *Database) ChainExists(name string) (bool, error) {
+func (d *Database) ChainExists(ctx context.Context, name string) (bool, error) {
 	var exists bool
 	query := `SELECT exists (
 			SELECT
@@ -92,7 +93,7 @@ func (d *Database) ChainExists(name string) (bool, error) {
 		FROM cns.chains
 		WHERE chain_name=($1) AND enabled=TRUE LIMIT 1)`
 
-	err := d.dbi.DB.QueryRow(query, name).Scan(&exists)
+	err := d.dbi.DB.QueryRowContext(ctx, query, name).Scan(&exists)
 	if err == sql.ErrNoRows {
 		return false, nil
 	}
@@ -100,10 +101,10 @@ func (d *Database) ChainExists(name string) (bool, error) {
 	return exists, err
 }
 
-func (d *Database) ChainFromChainID(chainID string) (cns.Chain, error) {
+func (d *Database) ChainFromChainID(ctx context.Context, chainID string) (cns.Chain, error) {
 	var c cns.Chain
 
-	n, err := d.dbi.DB.PrepareNamed(`
+	n, err := d.dbi.DB.PrepareNamedContext(ctx, `
 	SELECT
 		id,
 		enabled,
@@ -135,15 +136,15 @@ func (d *Database) ChainFromChainID(chainID string) (cns.Chain, error) {
 		}
 	}()
 
-	return c, n.Get(&c, map[string]interface{}{
+	return c, n.GetContext(ctx, &c, map[string]interface{}{
 		"chainID": chainID,
 	})
 }
 
-func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, error) {
+func (d *Database) ChainLastBlock(ctx context.Context, name string) (tracelistener.BlockTimeRow, error) {
 	var c tracelistener.BlockTimeRow
 
-	n, err := d.dbi.DB.PrepareNamed(`
+	n, err := d.dbi.DB.PrepareNamedContext(ctx, `
 	SELECT
 		id,
 		chain_name,
@@ -166,7 +167,7 @@ func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, erro
 		}
 	}()
 
-	err = n.Get(&c, map[string]interface{}{
+	err = n.GetContext(ctx, &c, map[string]interface{}{
 		"name": name,
 	})
 	if errors.Is(err, sql.ErrNoRows) {
@@ -177,7 +178,7 @@ func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, erro
 	return c, err
 }
 
-func (d *Database) Chains() ([]cns.Chain, error) {
+func (d *Database) Chains(ctx context.Context) ([]cns.Chain, error) {
 	var c []cns.Chain
 	return c, d.dbi.Exec(`
 	SELECT
@@ -201,7 +202,7 @@ func (d *Database) Chains() ([]cns.Chain, error) {
 	`, nil, &c)
 }
 
-func (d *Database) VerifiedDenoms() (map[string]cns.DenomList, error) {
+func (d *Database) VerifiedDenoms(ctx context.Context) (map[string]cns.DenomList, error) {
 	var c []cns.Chain
 	if err := d.dbi.Exec("select chain_name, denoms from cns.chains where enabled=TRUE", nil, &c); err != nil {
 		return nil, err
@@ -216,12 +217,12 @@ func (d *Database) VerifiedDenoms() (map[string]cns.DenomList, error) {
 	return ret, nil
 }
 
-func (d *Database) SimpleChains() ([]cns.Chain, error) {
+func (d *Database) SimpleChains(ctx context.Context) ([]cns.Chain, error) {
 	var c []cns.Chain
 	return c, d.dbi.Exec("select chain_name, display_name, logo from cns.chains where enabled=TRUE", nil, &c)
 }
 
-func (d *Database) ChainsWithStatus() ([]ChainWithStatus, error) {
+func (d *Database) ChainsWithStatus(ctx context.Context) ([]ChainWithStatus, error) {
 	q := `
 	SELECT
 		c.enabled,c.chain_name,c.logo,c.display_name,c.primary_channel,c.denoms,c.demeris_addresses,
@@ -244,7 +245,7 @@ func (d *Database) ChainsWithStatus() ([]ChainWithStatus, error) {
 	return rows, nil
 }
 
-func (d *Database) ChainIDs() (map[string]string, error) {
+func (d *Database) ChainIDs(ctx context.Context) (map[string]string, error) {
 	type it struct {
 		ChainName string `db:"chain_name"`
 		ChainID   string `db:"chain_id"`
@@ -264,10 +265,10 @@ func (d *Database) ChainIDs() (map[string]string, error) {
 	return c, nil
 }
 
-func (d *Database) PrimaryChannelCounterparty(chainName, counterparty string) (cns.ChannelQuery, error) {
+func (d *Database) PrimaryChannelCounterparty(ctx context.Context, chainName, counterparty string) (cns.ChannelQuery, error) {
 	var c cns.ChannelQuery
 
-	n, err := d.dbi.DB.PrepareNamed("select chain_name, mapping.* from cns.chains c, jsonb_each_text(primary_channel) mapping where key=:counterparty AND chain_name=:chain_name")
+	n, err := d.dbi.DB.PrepareNamedContext(ctx, "select chain_name, mapping.* from cns.chains c, jsonb_each_text(primary_channel) mapping where key=:counterparty AND chain_name=:chain_name")
 	if err != nil {
 		return cns.ChannelQuery{}, err
 	}
@@ -279,16 +280,16 @@ func (d *Database) PrimaryChannelCounterparty(chainName, counterparty string) (c
 		}
 	}()
 
-	return c, n.Get(&c, map[string]interface{}{
+	return c, n.GetContext(ctx, &c, map[string]interface{}{
 		"chain_name":   chainName,
 		"counterparty": counterparty,
 	})
 }
 
-func (d *Database) PrimaryChannels(chainName string) ([]cns.ChannelQuery, error) {
+func (d *Database) PrimaryChannels(ctx context.Context, chainName string) ([]cns.ChannelQuery, error) {
 	var c []cns.ChannelQuery
 
-	n, err := d.dbi.DB.PrepareNamed("select chain_name, mapping.* from cns.chains c, jsonb_each_text(primary_channel) mapping where chain_name=:chain_name")
+	n, err := d.dbi.DB.PrepareNamedContext(ctx, "select chain_name, mapping.* from cns.chains c, jsonb_each_text(primary_channel) mapping where chain_name=:chain_name")
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +301,7 @@ func (d *Database) PrimaryChannels(chainName string) ([]cns.ChannelQuery, error)
 		}
 	}()
 
-	return c, n.Select(&c, map[string]interface{}{
+	return c, n.SelectContext(ctx, &c, map[string]interface{}{
 		"chain_name": chainName,
 	})
 }
@@ -310,7 +311,7 @@ type ChainOnlineStatusRow struct {
 	Online    bool   `db:"online"`
 }
 
-func (d *Database) ChainsOnlineStatuses() ([]ChainOnlineStatusRow, error) {
+func (d *Database) ChainsOnlineStatuses(ctx context.Context) ([]ChainOnlineStatusRow, error) {
 	q := `
 	SELECT
 		c.chain_name,
@@ -325,7 +326,7 @@ func (d *Database) ChainsOnlineStatuses() ([]ChainOnlineStatusRow, error) {
 	`
 
 	var rows []ChainOnlineStatusRow
-	if err := d.dbi.DB.Select(&rows, q); err != nil {
+	if err := d.dbi.DB.SelectContext(ctx, &rows, q); err != nil {
 		return nil, err
 	}
 

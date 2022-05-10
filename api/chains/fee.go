@@ -21,11 +21,12 @@ import (
 // @Router /chain/{chainName}/fee [get]
 func GetFee(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res FeeResponse
 
 		chainName := c.Param("chain")
 
-		chain, err := db.Chain(chainName)
+		chain, err := db.Chain(ctx, chainName)
 
 		if err != nil {
 			e := apierrors.New(
@@ -62,11 +63,12 @@ func GetFee(db *database.Database) gin.HandlerFunc {
 // @Router /chain/{chainName}/address [get]
 func GetFeeAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res FeeAddressResponse
 
 		chainName := c.Param("chain")
 
-		chain, err := db.Chain(chainName)
+		chain, err := db.Chain(ctx, chainName)
 
 		if err != nil {
 			e := apierrors.New(
@@ -102,9 +104,10 @@ func GetFeeAddress(db *database.Database) gin.HandlerFunc {
 // @Router /chains/fee/addresses [get]
 func GetFeeAddresses(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res FeeAddressesResponse
 
-		chains, err := db.Chains()
+		chains, err := db.Chains(ctx)
 
 		if err != nil {
 			e := apierrors.New(
@@ -145,11 +148,12 @@ func GetFeeAddresses(db *database.Database) gin.HandlerFunc {
 // @Router /chain/{chainName}/token [get]
 func GetFeeToken(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res FeeTokenResponse
 
 		chainName := c.Param("chain")
 
-		chain, err := db.Chain(chainName)
+		chain, err := db.Chain(ctx, chainName)
 
 		if err != nil {
 			e := apierrors.New(

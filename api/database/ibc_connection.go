@@ -1,10 +1,12 @@
 package database
 
 import (
+	"context"
+
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
-func (d *Database) Connection(chain string, connection_id string) (tracelistener.IBCConnectionRow, error) {
+func (d *Database) Connection(ctx context.Context, chain string, connection_id string) (tracelistener.IBCConnectionRow, error) {
 	var connection tracelistener.IBCConnectionRow
 
 	q := `
@@ -27,7 +29,7 @@ func (d *Database) Connection(chain string, connection_id string) (tracelistener
 
 	q = d.dbi.DB.Rebind(q)
 
-	if err := d.dbi.DB.Get(&connection, q, chain, connection_id); err != nil {
+	if err := d.dbi.DB.GetContext(ctx, &connection, q, chain, connection_id); err != nil {
 		return tracelistener.IBCConnectionRow{}, err
 	}
 

@@ -1,11 +1,13 @@
 package database
 
 import (
+	"context"
+
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/jmoiron/sqlx"
 )
 
-func (d *Database) UnbondingDelegations(address string) ([]tracelistener.UnbondingDelegationRow, error) {
+func (d *Database) UnbondingDelegations(ctx context.Context, address string) ([]tracelistener.UnbondingDelegationRow, error) {
 	var unbondingDelegations []tracelistener.UnbondingDelegationRow
 
 	q, args, err := sqlx.In(`
@@ -30,5 +32,5 @@ func (d *Database) UnbondingDelegations(address string) ([]tracelistener.Unbondi
 
 	q = d.dbi.DB.Rebind(q)
 
-	return unbondingDelegations, d.dbi.DB.Select(&unbondingDelegations, q, args...)
+	return unbondingDelegations, d.dbi.DB.SelectContext(ctx, &unbondingDelegations, q, args...)
 }
