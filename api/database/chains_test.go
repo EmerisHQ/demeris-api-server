@@ -138,44 +138,34 @@ func (s *TestSuite) TestChainLastBlock() {
 		name      string
 		chainName string
 		expRes    time.Time
-		success   bool
 	}{
 		{
 			"chain not found",
 			"invalidChain",
 			time.Time{},
-			false,
 		},
 		{
 			"disabled chain",
 			utils.DisabledChain.ChainName,
 			time.Time{},
-			false,
 		},
 		{
 			"inserted chain but tracelistener blocktime data not found",
 			utils.ChainWithoutPublicEndpoints.ChainName,
 			time.Time{},
-			false,
 		},
 		{
 			"inserted chain and racelistener blocktime data found",
 			utils.ChainWithPublicEndpoints.ChainName,
 			utils.VerifyTraceData.BlockTimes[0].Time,
-			true,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			res, err := s.ctx.Router.DB.ChainLastBlock(tt.chainName)
-			if tt.success {
-				s.Require().NoError(err)
-				s.Require().NotEmpty(res)
-				s.Require().Equal(tt.expRes.Unix(), res.BlockTime.Unix())
-			} else {
-				s.Require().Error(err)
-			}
+			s.Require().NoError(err)
+			s.Require().Equal(tt.expRes.Unix(), res.BlockTime.Unix())
 		})
 	}
 }
