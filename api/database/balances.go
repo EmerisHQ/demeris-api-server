@@ -6,7 +6,15 @@ func (d *Database) Balances(address string) ([]tracelistener.BalanceRow, error) 
 	var balances []tracelistener.BalanceRow
 
 	q := `
-		SELECT * FROM tracelistener.balances
+		SELECT
+		id,
+		chain_name,
+		height,
+		delete_height,
+		address,
+		amount,
+		denom
+		FROM tracelistener.balances
 		WHERE address=?
 		AND chain_name IN (
 			SELECT chain_name FROM cns.chains WHERE enabled=true

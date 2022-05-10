@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
@@ -31,7 +32,27 @@ type ChainWithStatus struct {
 func (d *Database) Chain(name string) (cns.Chain, error) {
 	var c cns.Chain
 
-	n, err := d.dbi.DB.PrepareNamed("select * from cns.chains where chain_name=:name and enabled=TRUE limit 1")
+	n, err := d.dbi.DB.PrepareNamed(`
+	SELECT
+		id,
+		enabled,
+		chain_name,
+		logo,
+		display_name,
+		primary_channel,
+		denoms,
+		demeris_addresses,
+		genesis_hash,
+		node_info,
+		valid_block_thresh,
+		derivation_path,
+		supported_wallets,
+		block_explorer,
+		public_node_endpoints,
+		cosmos_sdk_version
+	FROM cns.chains
+	WHERE chain_name=:name AND enabled=TRUE LIMIT 1
+`)
 	if err != nil {
 		return cns.Chain{}, err
 	}
@@ -50,7 +71,26 @@ func (d *Database) Chain(name string) (cns.Chain, error) {
 
 func (d *Database) ChainExists(name string) (bool, error) {
 	var exists bool
-	query := "select exists (select * from cns.chains where chain_name=($1) and enabled=TRUE limit 1)"
+	query := `SELECT exists (
+			SELECT
+			id,
+			enabled,
+			chain_name,
+			logo,
+			display_name,
+			primary_channel,
+			denoms,
+			demeris_addresses,
+			genesis_hash,
+			node_info,
+			valid_block_thresh,
+			derivation_path,
+			supported_wallets,
+			block_explorer,
+			public_node_endpoints,
+			cosmos_sdk_version
+		FROM cns.chains
+		WHERE chain_name=($1) AND enabled=TRUE LIMIT 1)`
 
 	err := d.dbi.DB.QueryRow(query, name).Scan(&exists)
 	if err == sql.ErrNoRows {
@@ -63,7 +103,27 @@ func (d *Database) ChainExists(name string) (bool, error) {
 func (d *Database) ChainFromChainID(chainID string) (cns.Chain, error) {
 	var c cns.Chain
 
-	n, err := d.dbi.DB.PrepareNamed("select * from cns.chains where node_info->>'chain_id'=:chainID and enabled=TRUE limit 1;")
+	n, err := d.dbi.DB.PrepareNamed(`
+	SELECT
+		id,
+		enabled,
+		chain_name,
+		logo,
+		display_name,
+		primary_channel,
+		denoms,
+		demeris_addresses,
+		genesis_hash,
+		node_info,
+		valid_block_thresh,
+		derivation_path,
+		supported_wallets,
+		block_explorer,
+		public_node_endpoints,
+		cosmos_sdk_version
+	FROM cns.chains
+	WHERE node_info->>'chain_id'=:chainID AND enabled=TRUE LIMIT 1;
+`)
 	if err != nil {
 		return cns.Chain{}, err
 	}
@@ -83,7 +143,18 @@ func (d *Database) ChainFromChainID(chainID string) (cns.Chain, error) {
 func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, error) {
 	var c tracelistener.BlockTimeRow
 
-	n, err := d.dbi.DB.PrepareNamed("select * from tracelistener.blocktime where chain_name=:name and chain_name in (select chain_name from cns.chains where enabled=TRUE)")
+	n, err := d.dbi.DB.PrepareNamed(`
+	SELECT
+		id,
+		chain_name,
+		block_time
+	FROM tracelistener.blocktime 
+	WHERE 
+		chain_name=:name 
+	AND 
+		chain_name IN 
+			(SELECT chain_name FROM cns.chains WHERE enabled=TRUE)
+	`)
 	if err != nil {
 		return tracelistener.BlockTimeRow{}, err
 	}
@@ -95,14 +166,39 @@ func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, erro
 		}
 	}()
 
-	return c, n.Get(&c, map[string]interface{}{
+	err = n.Get(&c, map[string]interface{}{
 		"name": name,
 	})
+	if errors.Is(err, sql.ErrNoRows) {
+		// not really an error, we don't have a blocktime for this chain (yet)
+		return tracelistener.BlockTimeRow{}, nil
+	}
+
+	return c, err
 }
 
 func (d *Database) Chains() ([]cns.Chain, error) {
 	var c []cns.Chain
-	return c, d.dbi.Exec("select * from cns.chains where enabled=TRUE", nil, &c)
+	return c, d.dbi.Exec(`
+	SELECT
+		id,
+		enabled,
+		chain_name,
+		logo,
+		display_name,
+		primary_channel,
+		denoms,
+		demeris_addresses,
+		genesis_hash,
+		node_info,
+		valid_block_thresh,
+		derivation_path,
+		supported_wallets,
+		block_explorer,
+		public_node_endpoints,
+		cosmos_sdk_version
+	FROM cns.chains where enabled=TRUE
+	`, nil, &c)
 }
 
 func (d *Database) VerifiedDenoms() (map[string]cns.DenomList, error) {

@@ -10,7 +10,15 @@ func (d *Database) DenomTrace(chain string, hash string) (tracelistener.IBCDenom
 
 	// note: lower() since Tracelistener stores hashes in lowercase
 	q := `
-	SELECT * FROM tracelistener.denom_traces
+	SELECT
+	id,
+	chain_name,
+	height,
+	delete_height,
+	path,
+	base_denom,
+	hash
+	FROM tracelistener.denom_traces
 	WHERE chain_name=?
 	AND hash=lower(?)
 	AND base_denom != ''
