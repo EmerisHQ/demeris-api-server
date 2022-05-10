@@ -524,8 +524,14 @@ func GetChainStatus(db *database.Database) gin.HandlerFunc {
 
 		cbt, err := db.ChainLastBlock(chain.ChainName)
 		if err != nil {
-			res.Online = false
-			c.JSON(http.StatusOK, res)
+			e := apierrors.New(
+				"chain/status",
+				fmt.Sprintf("cannot retrieve chain status for %v", chain.ChainName),
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chain last block time: %w", err),
+			)
+			_ = c.Error(e)
 			return
 		}
 
