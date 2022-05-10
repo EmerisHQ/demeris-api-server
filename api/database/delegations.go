@@ -21,7 +21,7 @@ func (d *Database) Delegations(address string) ([]DelegationResponse, error) {
 	FROM tracelistener.delegations as d
 	INNER JOIN tracelistener.validators as v ON 
 		d.validator_address=v.validator_address
-	WHERE d.delegator_address IN (?)
+	WHERE d.delegator_address=(?)
 	AND d.chain_name IN (
 		SELECT chain_name FROM cns.chains WHERE enabled=true
 	)
@@ -42,7 +42,7 @@ func (d *Database) DelegationsOldResponse(address string) ([]tracelistener.Deleg
 
 	q, args, err := sqlx.In(`
 	SELECT * FROM tracelistener.delegations
-	WHERE delegator_address IN (?)
+	WHERE delegator_address=(?)
 	AND chain_name IN (
 		SELECT chain_name FROM cns.chains WHERE enabled=true
 	)

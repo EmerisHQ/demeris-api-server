@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/emerishq/emeris-utils/logging"
@@ -170,8 +169,8 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @Produce json
 // @Param address path string true "address to query staking for"
 // @Success 200 {object} StakingBalancesResponse
-// @Failure 500,403 {object} apierrors.UserFacingError
-// @Router /account/{address}/stakingbalance [get]
+// @Failure 500,400 {object} apierrors.UserFacingError
+// @Router /account/{address}/stakingbalances [get]
 func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res StakingBalancesResponse
@@ -197,14 +196,14 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 			}
 
 			for _, del := range dl {
-				delegationAmount, err := strconv.ParseFloat(del.Amount, 64)
+				delegationAmount, err := sdktypes.NewDecFromStr(del.Amount)
 				if err != nil {
 					e := apierrors.New(
 						"delegations",
-						fmt.Sprintf("cannot convert delegation amount to float"),
+						fmt.Sprintf("cannot convert delegation amount to Dec"),
 						http.StatusInternalServerError,
 					).WithLogContext(
-						fmt.Errorf("cannot convert delegation amount to float: %w", err),
+						fmt.Errorf("cannot convert delegation amount to Dec: %w", err),
 						"address",
 						address,
 					)
@@ -213,14 +212,14 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 					return
 				}
 
-				validatorShares, err := strconv.ParseFloat(del.ValidatorShares, 64)
+				validatorShares, err := sdktypes.NewDecFromStr(del.ValidatorShares)
 				if err != nil {
 					e := apierrors.New(
 						"delegations",
-						fmt.Sprintf("cannot convert validator total shares to float"),
+						fmt.Sprintf("cannot convert validator total shares to Dec"),
 						http.StatusInternalServerError,
 					).WithLogContext(
-						fmt.Errorf("cannot convert validator total shares to float: %w", err),
+						fmt.Errorf("cannot convert validator total shares to Dec: %w", err),
 						"address",
 						address,
 					)
@@ -229,14 +228,14 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 					return
 				}
 
-				validatorTokens, err := strconv.ParseFloat(del.ValidatorTokens, 64)
+				validatorTokens, err := sdktypes.NewDecFromStr(del.ValidatorTokens)
 				if err != nil {
 					e := apierrors.New(
 						"delegations",
-						fmt.Sprintf("cannot convert validator total tokens to float"),
+						fmt.Sprintf("cannot convert validator total tokens to Dec"),
 						http.StatusInternalServerError,
 					).WithLogContext(
-						fmt.Errorf("cannot convert validator total tokens to float: %w", err),
+						fmt.Errorf("cannot convert validator total tokens to Dec: %w", err),
 						"address",
 						address,
 					)
@@ -245,11 +244,11 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 					return
 				}
 
-				// apply shares / total_validator_shares * total_validator_balance
-				balance := (delegationAmount * validatorTokens) / validatorShares
+				// apply shares * total_validator_balance / total_validator_shares
+				balance := delegationAmount.Mul(validatorTokens).Quo(validatorShares)
 				res.StakingBalances = append(res.StakingBalances, StakingBalance{
 					ValidatorAddress: del.Validator,
-					Amount:           fmt.Sprintf("%f", balance),
+					Amount:           balance.String(),
 					ChainName:        del.ChainName,
 				})
 			}
