@@ -41,7 +41,15 @@ func (d *Database) DelegationsOldResponse(address string) ([]tracelistener.Deleg
 	var delegations []tracelistener.DelegationRow
 
 	q, args, err := sqlx.In(`
-	SELECT * FROM tracelistener.delegations
+	SELECT
+	id,
+	chain_name,
+	height,
+	delete_height,
+	delegator_address,
+	validator_address,
+	amount
+	FROM tracelistener.delegations
 	WHERE delegator_address=(?)
 	AND chain_name IN (
 		SELECT chain_name FROM cns.chains WHERE enabled=true

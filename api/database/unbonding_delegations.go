@@ -9,7 +9,15 @@ func (d *Database) UnbondingDelegations(address string) ([]tracelistener.Unbondi
 	var unbondingDelegations []tracelistener.UnbondingDelegationRow
 
 	q, args, err := sqlx.In(`
-	SELECT * FROM tracelistener.unbonding_delegations
+	SELECT
+	id,
+	chain_name,
+	height,
+	delete_height,
+	delegator_address,
+	validator_address,
+	entries
+	FROM tracelistener.unbonding_delegations
 	WHERE delegator_address IN (?)
 	AND chain_name IN (
 		SELECT chain_name FROM cns.chains WHERE enabled=true

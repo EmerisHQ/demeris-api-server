@@ -23,7 +23,16 @@ func (d *Database) QueryIBCClientTrace(chain string, channel string) ([]cns.IbcC
 		ch.hops as hops 
 	FROM tracelistener.connections conn 
 	INNER JOIN 
-		(SELECT * 
+		(SELECT
+			id,
+			chain_name,
+			height,
+			delete_height,
+			channel_id,
+			counter_channel_id,
+			hops,
+			port,
+			state
 			FROM tracelistener.channels 
 			WHERE chain_name=:chain_name
 			AND channel_id=:channel_id
