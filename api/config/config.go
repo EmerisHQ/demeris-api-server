@@ -41,6 +41,6 @@ func Read() (*Config, error) {
 		"KubernetesNamespace":    "emeris",
 		"SentryEnvironment":      "notset",
 		"SentrySampleRate":       "1.0",
-		"SentryTracesSampleRate": "0.3",
+		"SentryTracesSampleRate": "0.01",
 	})
 }
