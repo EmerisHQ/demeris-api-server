@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
@@ -168,7 +169,7 @@ func (d *Database) ChainLastBlock(name string) (tracelistener.BlockTimeRow, erro
 	err = n.Get(&c, map[string]interface{}{
 		"name": name,
 	})
-	if err.Error() == "sql: no rows in result set" {
+	if errors.Is(err, sql.ErrNoRows) {
 		// not really an error, we don't have a blocktime for this chain (yet)
 		return tracelistener.BlockTimeRow{}, nil
 	}
