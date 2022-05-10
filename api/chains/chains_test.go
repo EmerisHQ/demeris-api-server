@@ -272,7 +272,7 @@ func TestGetChainSupply(t *testing.T) {
 			utils.ChainWithPublicEndpoints.ChainName,
 			500,
 			chains.SupplyResponse{Supply: []chains.Coin(nil), Pagination: chains.Pagination{}},
-			true,
+			false,
 		},
 	}
 
