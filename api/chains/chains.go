@@ -1283,6 +1283,214 @@ func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stri
 	}
 }
 
+// EstimatePrimaryChannels estimates the primary channels of all chains
+// @Summary Gets the primary channels of all chains
+// @Description Gets primary channels
+// @Tags Chain
+// @ID estimate-primary-channels
+// @Produce json
+// @Success 200 {object} ChainsPrimaryChannelResponse
+// @Failure 500 {object} apierrors.UserFacingError
+// @Router /chains/primary_channels [get]
+func EstimatePrimaryChannels(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+
+		res := ChainsPrimaryChannelResponse{
+			Chains:      make(map[string]map[string]PrimaryChannelEstimation),
+			FailureLogs: make(FailLogs, 0),
+		}
+
+		chains, err := db.Chains()
+		if err != nil {
+			e := apierrors.New(
+				"primarychannels",
+				"cannot reteieve chains",
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot retrieve chains"),
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		matchingChannels, err := db.GetChannelMatchingDenoms()
+		if err != nil {
+			e := apierrors.New(
+				"chains",
+				"failed to get matching channels",
+				http.StatusInternalServerError,
+			).WithLogContext(
+				fmt.Errorf("cannot get matching channels %w", err),
+			)
+			_ = c.Error(e)
+
+			return
+		}
+
+		logger.Debugw("first part is done! yay", "num matching channels", len(matchingChannels), "channels", matchingChannels)
+		chainInfos := make(map[string]ChainInfo)
+		for _, chain := range chains {
+			ci := ChainInfo{
+				ChainName:                  chain.ChainName,
+				Chain:                      chain,
+				ChainChannelMapping:        make(map[string]DenomInfos),
+				EstimatedPrimaryChannelMap: make(map[string]DenomInfo),
+				Broken:                     false,
+			}
+			logger.Debugw("chain", "chain", chain)
+
+			chainInfos[chain.ChainName] = ci
+		}
+
+		logger.Debugw("second part is done! yay")
+
+		for _, channelPair := range matchingChannels {
+			if _, ok := chainInfos[channelPair.ChainName]; !ok {
+				continue
+			}
+			chain := chainInfos[channelPair.ChainName]
+			denom := "ibc/" + strings.ToUpper(channelPair.Hash)
+
+			if chain.Broken {
+				res.LogFailure(chain.ChainName, denom, "chain status is broken - skipping getting supply")
+				continue
+			}
+
+			logger.Debugw("got chain", "chain", channelPair.ChainName, "channelPair", channelPair)
+
+			payload := &sdkutilities.SupplyDenomPayload{
+				ChainName: chain.ChainName,
+				Denom:     &denom,
+			}
+
+			logger.Debugw("going through channel pair", "channel pair", channelPair)
+
+			sdkRes, err := tryStoreFetchSupply(logger, s, fmt.Sprintf("%s-%s", chain.ChainName, denom), func() (*sdkutilities.Supply2, error) {
+				client, err1 := sdkServiceClients.GetSDKServiceClient(chain.Chain.MajorSDKVersion())
+				if err1 != nil {
+					logger.Errorw("chain broken lol", "chain", chain.ChainName, "err", err1)
+					chain.Broken = true
+					res.LogFailure(chain.ChainName, denom, "failed to get sdk service client")
+					return &sdkutilities.Supply2{}, err1
+				}
+				sdkRes, err := client.SupplyDenom(context.Background(), payload)
+				if err != nil {
+					logger.Errorw("error when querying denom", "chain", channelPair.ChainName, "denom", denom, "err", err)
+					res.LogFailure(chain.ChainName, denom, fmt.Sprintf("error: %v", err))
+					return nil, err
+				}
+				if sdkRes == nil {
+					logger.Errorw("empty result", "chain", channelPair.ChainName, "denom", denom)
+					res.LogFailure(chain.ChainName, denom, "empty result from sdk-service, skipping")
+					return nil, errors.New("empty result from sdk-service, skipping")
+				}
+				if len(sdkRes.Coins) != 1 { // Expected exactly one response
+					logger.Errorw("no coins returned in response, skipping", "chain", channelPair.ChainName, "denom", denom)
+					res.LogFailure(chain.ChainName, denom, "no coins returned in response, skipping")
+					return nil, err
+				}
+				return sdkRes, err
+			})
+
+			if err != nil {
+				logger.Errorw("error", "chain", channelPair.ChainName, "denom", denom)
+				res.LogFailure(chain.ChainName, denom, fmt.Sprintf("fetching failed %v", err))
+				continue
+			}
+
+			logger.Debugw("got response!", "channel pair", channelPair, "response", sdkRes)
+
+			var amountString string
+			if strings.Contains(sdkRes.Coins[0].Amount, "ibc/") {
+				amountString = strings.Split(sdkRes.Coins[0].Amount, "ibc/")[0]
+			} else {
+				amountString = sdkRes.Coins[0].Amount
+			}
+			supply, err := strconv.ParseUint(amountString, 10, 64)
+			if err != nil {
+				logger.Errorw("cannot parse supply", "chain", channelPair.ChainName, "err", err)
+				res.LogFailure(chain.ChainName, denom, fmt.Sprintf("cannot parse supply, actual: %v normalized: %v", sdkRes.Coins[0].Amount, amountString))
+				continue
+			}
+			logger.Debugw("converted!", "channel pair", channelPair)
+
+			di := DenomInfo{
+				Denom:      denom,
+				Supply:     supply,
+				DenomTrace: channelPair,
+			}
+
+			chain.ChainChannelMapping[channelPair.CounterpartyChain] = append(chain.ChainChannelMapping[channelPair.CounterpartyChain], di)
+		}
+
+		logger.Debugw("third part is done! yay")
+
+		logger.Debugw("almost done")
+		for chainName, info := range chainInfos {
+			for counterparty, denomList := range info.ChainChannelMapping {
+				if len(denomList) == 0 {
+					continue
+				}
+				max := denomList[0]
+				for _, d := range denomList {
+					if d.Supply > max.Supply {
+						max = d
+					}
+				}
+				chainInfos[chainName].EstimatedPrimaryChannelMap[counterparty] = max
+			}
+
+			for counterpartyName, denom := range chainInfos[chainName].EstimatedPrimaryChannelMap {
+				res.Chains[chainName] = make(map[string]PrimaryChannelEstimation)
+				res.Chains[chainName][counterpartyName] = PrimaryChannelEstimation{
+					CurrentPrimaryChannel:         chainInfos[chainName].Chain.PrimaryChannel[counterpartyName],
+					EstimatedPrimaryChannel:       denom.DenomTrace.ChannelId,
+					EstimatedPrimaryChannelDenom:  denom.Denom,
+					EstimatedPrimaryChannelSupply: denom.Supply,
+				}
+			}
+		}
+
+		c.JSON(http.StatusOK, res)
+	}
+}
+
+func tryStoreFetchSupply(logger *zap.SugaredLogger, s *store.Store, key string, f func() (*sdkutilities.Supply2, error)) (*sdkutilities.Supply2, error) {
+	resp := sdkutilities.Supply2{}
+
+	if !s.Exists(key) {
+		res, err := f()
+		if err != nil {
+			return nil, err
+		}
+
+		bytes, _ := json.Marshal(*res)
+		status := s.Client.Set(context.Background(), key, bytes, time.Minute)
+		_, err = status.Result()
+		if err != nil {
+			return nil, err
+		}
+
+		return res, nil
+	}
+
+	_res := s.Client.Get(context.Background(), key)
+	res, err := _res.Result()
+	if err != nil {
+		return nil, err
+	}
+	logger.Debugw(fmt.Sprintf("found resp %s", res))
+	err = json.Unmarshal([]byte(res), &resp)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
 // apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
 func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, client sdkutilities.Client) (string, error) {
 	budgetRate, err := getBudgetRate(c, chain, client)

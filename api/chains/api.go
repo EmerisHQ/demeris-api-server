@@ -15,7 +15,8 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 	router.Group("/chains").
 		GET("", GetChains(db)).
 		GET("/status", GetChainsStatuses(db)).
-		GET("/fee/addresses", GetFeeAddresses(db))
+		GET("/fee/addresses", GetFeeAddresses(db)).
+		GET("/primary_channels", EstimatePrimaryChannels(db, s, sdkServiceClients))
 
 	chain := router.Group("/chain/:chain")
 

@@ -7,6 +7,8 @@ import (
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+
+	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
 type OldChainsResponse struct {
@@ -177,6 +179,60 @@ type Pagination struct {
 type APRResponse struct {
 	APR float64 `json:"apr,omitempty"`
 }
+
+type PrimaryChannelEstimation struct {
+	CurrentPrimaryChannel         string
+	EstimatedPrimaryChannel       string
+	EstimatedPrimaryChannelDenom  string
+	EstimatedPrimaryChannelSupply uint64
+}
+
+type ChainPrimaryChannels struct {
+	CounterpartyChain map[string]PrimaryChannelEstimation `json:"channels"`
+}
+
+// /chains/primary_channels
+type ChainsPrimaryChannelResponse struct {
+	Chains      map[string]map[string]PrimaryChannelEstimation `json:"chains"`
+	FailureLogs FailLogs                                       `json:"failed"`
+}
+
+func (c *ChainsPrimaryChannelResponse) LogFailure(chainName, denom, message string) {
+	c.FailureLogs = append(c.FailureLogs, FailLog{
+		ChainName: chainName,
+		Denom:     denom,
+		Message:   message,
+	})
+}
+
+type DenomInfo struct {
+	Denom      string
+	Supply     uint64
+	DenomTrace database.ChannelConnectionMatchingDenom
+}
+
+type DenomInfos []DenomInfo
+
+type ChainInfo struct {
+	ChainName                  string
+	Chain                      cns.Chain
+	ChainChannelMapping        map[string]DenomInfos
+	CurrentPrimaryChannelMap   map[string]string
+	EstimatedPrimaryChannelMap map[string]DenomInfo
+	DenomInfos                 DenomInfos
+	Broken                     bool
+	Client                     *sdkutilities.Client
+}
+
+type ChainInfos map[string]ChainInfo
+
+type FailLog struct {
+	ChainName string
+	Denom     string
+	Message   string
+}
+
+type FailLogs []FailLog
 
 type ChainStatus struct {
 	Online bool `json:"online"`
