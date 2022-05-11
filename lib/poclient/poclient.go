@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	potypes "github.com/allinbits/emeris-price-oracle/price-oracle/types"
+	potypes "github.com/emerishq/emeris-price-oracle/price-oracle/types"
 	gocache "github.com/patrickmn/go-cache"
 )
 

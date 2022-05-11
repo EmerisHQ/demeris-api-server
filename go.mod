@@ -11,15 +11,16 @@ replace (
 
 require (
 	github.com/alicebob/miniredis/v2 v2.18.0
-	github.com/allinbits/emeris-price-oracle v0.0.0-20220414095124-dc278244d4dd
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cockroachdb/cockroach-go/v2 v2.2.8
 	github.com/cosmos/cosmos-sdk v0.45.3
 	github.com/emerishq/demeris-backend-models v1.5.0
-	github.com/emerishq/emeris-cns-server v0.0.0-20220309095629-a492f8569484
-	github.com/emerishq/emeris-utils v1.8.0
+	github.com/emerishq/emeris-cns-server v0.0.0-20220422070001-a18e063b6374
+	github.com/emerishq/emeris-price-oracle v1.0.0
+	github.com/emerishq/emeris-utils v1.9.0
 	github.com/emerishq/sdk-service-meta v0.0.0-20220429062533-d6be380e1538
 	github.com/getsentry/sentry-go v0.13.0
+	github.com/gin-contrib/zap v0.0.2
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/go-redis/redis/v8 v8.11.4
@@ -51,7 +52,6 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
-	github.com/allinbits/emeris-utils v0.0.0-20220104112240-0cadfeac11ca // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -81,7 +81,6 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-contrib/zap v0.0.2 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
