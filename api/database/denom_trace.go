@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 )
 
 // DenomTrace returns the denom trace for a given chain by its hash. Hash param is case-insensitive.
 func (d *Database) DenomTrace(ctx context.Context, chain string, hash string) (tracelistener.IBCDenomTraceRow, error) {
+	defer sentry.StartSpan(ctx, "db.DenomTrace").Finish()
+
 	var denomTrace tracelistener.IBCDenomTraceRow
 
 	// note: lower() since Tracelistener stores hashes in lowercase

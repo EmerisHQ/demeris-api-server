@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 )
 
 func (d *Database) GetValidators(ctx context.Context, chain string) ([]tracelistener.ValidatorRow, error) {
+	defer sentry.StartSpan(ctx, "db.GetValidators").Finish()
+
 	var validators []tracelistener.ValidatorRow
 
 	q := `

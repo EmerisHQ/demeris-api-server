@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 )
 
 func (d *Database) Balances(ctx context.Context, address string) ([]tracelistener.BalanceRow, error) {
+	defer sentry.StartSpan(ctx, "db.Balances").Finish()
+
 	var balances []tracelistener.BalanceRow
 
 	q := `

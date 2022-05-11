@@ -32,7 +32,7 @@ hpaAverageMemoryUtilization: 90
 
 apiServer:
   # no value means sentry is disabled
-  sentryDSN:
+  sentryDSN: https://05d022f3145d43b49fd1aab423ed4ed4@o1152630.ingest.sentry.io/6355661
   sentryEnvironment: local
   sentrySampleRate: 1.0
-  sentryTracesSampleRate: 0.3
+  sentryTracesSampleRate: 1.0

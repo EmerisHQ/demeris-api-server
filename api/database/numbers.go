@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 	"github.com/jmoiron/sqlx"
 )
 
 func (d *Database) Numbers(ctx context.Context, address string) ([]tracelistener.AuthRow, error) {
+	defer sentry.StartSpan(ctx, "db.Numbers").Finish()
+
 	var numbers []tracelistener.AuthRow
 
 	q, args, err := sqlx.In(`
@@ -41,6 +44,8 @@ type ChainName struct {
 }
 
 func (d *Database) ChainNames(ctx context.Context) ([]ChainName, error) {
+	defer sentry.StartSpan(ctx, "db.ChainNames").Finish()
+
 	var cn []ChainName
 
 	q := `select chain_name,node_info->'bech32_config'->>'prefix_account' as account_prefix from cns.chains where enabled=true`

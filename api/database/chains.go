@@ -7,6 +7,7 @@ import (
 
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 	"github.com/lib/pq"
 )
 
@@ -31,8 +32,9 @@ type ChainWithStatus struct {
 }
 
 func (d *Database) Chain(ctx context.Context, name string) (cns.Chain, error) {
-	var c cns.Chain
+	defer sentry.StartSpan(ctx, "db.Chain").Finish()
 
+	var c cns.Chain
 	n, err := d.dbi.DB.PrepareNamedContext(ctx, `
 	SELECT
 		id,
@@ -71,6 +73,8 @@ func (d *Database) Chain(ctx context.Context, name string) (cns.Chain, error) {
 }
 
 func (d *Database) ChainExists(ctx context.Context, name string) (bool, error) {
+	defer sentry.StartSpan(ctx, "db.ChainExists").Finish()
+
 	var exists bool
 	query := `SELECT exists (
 			SELECT
@@ -102,6 +106,8 @@ func (d *Database) ChainExists(ctx context.Context, name string) (bool, error) {
 }
 
 func (d *Database) ChainFromChainID(ctx context.Context, chainID string) (cns.Chain, error) {
+	defer sentry.StartSpan(ctx, "db.ChainFromChainID").Finish()
+
 	var c cns.Chain
 
 	n, err := d.dbi.DB.PrepareNamedContext(ctx, `
@@ -142,6 +148,8 @@ func (d *Database) ChainFromChainID(ctx context.Context, chainID string) (cns.Ch
 }
 
 func (d *Database) ChainLastBlock(ctx context.Context, name string) (tracelistener.BlockTimeRow, error) {
+	defer sentry.StartSpan(ctx, "db.ChainLastBlock").Finish()
+
 	var c tracelistener.BlockTimeRow
 
 	n, err := d.dbi.DB.PrepareNamedContext(ctx, `
@@ -179,6 +187,8 @@ func (d *Database) ChainLastBlock(ctx context.Context, name string) (tracelisten
 }
 
 func (d *Database) Chains(ctx context.Context) ([]cns.Chain, error) {
+	defer sentry.StartSpan(ctx, "db.Chains").Finish()
+
 	var c []cns.Chain
 	return c, d.dbi.Exec(`
 	SELECT
@@ -203,6 +213,8 @@ func (d *Database) Chains(ctx context.Context) ([]cns.Chain, error) {
 }
 
 func (d *Database) VerifiedDenoms(ctx context.Context) (map[string]cns.DenomList, error) {
+	defer sentry.StartSpan(ctx, "db.VerifiedDenoms").Finish()
+
 	var c []cns.Chain
 	if err := d.dbi.Exec("select chain_name, denoms from cns.chains where enabled=TRUE", nil, &c); err != nil {
 		return nil, err
@@ -218,11 +230,15 @@ func (d *Database) VerifiedDenoms(ctx context.Context) (map[string]cns.DenomList
 }
 
 func (d *Database) SimpleChains(ctx context.Context) ([]cns.Chain, error) {
+	defer sentry.StartSpan(ctx, "db.SimpleChains").Finish()
+
 	var c []cns.Chain
 	return c, d.dbi.Exec("select chain_name, display_name, logo from cns.chains where enabled=TRUE", nil, &c)
 }
 
 func (d *Database) ChainsWithStatus(ctx context.Context) ([]ChainWithStatus, error) {
+	defer sentry.StartSpan(ctx, "db.ChainsWithStatus").Finish()
+
 	q := `
 	SELECT
 		c.enabled,c.chain_name,c.logo,c.display_name,c.primary_channel,c.denoms,c.demeris_addresses,
@@ -246,6 +262,8 @@ func (d *Database) ChainsWithStatus(ctx context.Context) ([]ChainWithStatus, err
 }
 
 func (d *Database) ChainIDs(ctx context.Context) (map[string]string, error) {
+	defer sentry.StartSpan(ctx, "db.ChainIDs").Finish()
+
 	type it struct {
 		ChainName string `db:"chain_name"`
 		ChainID   string `db:"chain_id"`
@@ -266,6 +284,8 @@ func (d *Database) ChainIDs(ctx context.Context) (map[string]string, error) {
 }
 
 func (d *Database) PrimaryChannelCounterparty(ctx context.Context, chainName, counterparty string) (cns.ChannelQuery, error) {
+	defer sentry.StartSpan(ctx, "db.PrimaryChannelCounterparty").Finish()
+
 	var c cns.ChannelQuery
 
 	n, err := d.dbi.DB.PrepareNamedContext(ctx, "select chain_name, mapping.* from cns.chains c, jsonb_each_text(primary_channel) mapping where key=:counterparty AND chain_name=:chain_name")
@@ -287,6 +307,8 @@ func (d *Database) PrimaryChannelCounterparty(ctx context.Context, chainName, co
 }
 
 func (d *Database) PrimaryChannels(ctx context.Context, chainName string) ([]cns.ChannelQuery, error) {
+	defer sentry.StartSpan(ctx, "db.PrimaryChannels").Finish()
+
 	var c []cns.ChannelQuery
 
 	n, err := d.dbi.DB.PrepareNamedContext(ctx, "select chain_name, mapping.* from cns.chains c, jsonb_each_text(primary_channel) mapping where chain_name=:chain_name")
@@ -312,6 +334,8 @@ type ChainOnlineStatusRow struct {
 }
 
 func (d *Database) ChainsOnlineStatuses(ctx context.Context) ([]ChainOnlineStatusRow, error) {
+	defer sentry.StartSpan(ctx, "db.ChainsOnlineStatuses").Finish()
+
 	q := `
 	SELECT
 		c.chain_name,

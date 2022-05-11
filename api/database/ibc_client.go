@@ -5,10 +5,13 @@ import (
 	"fmt"
 
 	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/getsentry/sentry-go"
 	"github.com/lib/pq"
 )
 
 func (d *Database) QueryIBCClientTrace(ctx context.Context, chain string, channel string) ([]cns.IbcClientInfo, error) {
+	defer sentry.StartSpan(ctx, "db.QueryIBCClientTrace").Finish()
+
 	clients := []cns.IbcClientInfo{}
 
 	q := `

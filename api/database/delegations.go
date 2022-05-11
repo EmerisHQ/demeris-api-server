@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,6 +17,8 @@ type DelegationResponse struct {
 }
 
 func (d *Database) Delegations(ctx context.Context, address string) ([]DelegationResponse, error) {
+	defer sentry.StartSpan(ctx, "db.Delegations").Finish()
+
 	var delegations []DelegationResponse
 
 	q, args, err := sqlx.In(`
@@ -40,6 +43,8 @@ func (d *Database) Delegations(ctx context.Context, address string) ([]Delegatio
 }
 
 func (d *Database) DelegationsOldResponse(ctx context.Context, address string) ([]tracelistener.DelegationRow, error) {
+	defer sentry.StartSpan(ctx, "db.DelegationsOldResponse").Finish()
+
 	var delegations []tracelistener.DelegationRow
 
 	q, args, err := sqlx.In(`

@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/getsentry/sentry-go"
 )
 
 func (d *Database) GetIbcChannelToChain(ctx context.Context, chain, channel, chainID string) (cns.IbcChannelsInfo, error) {
+	defer sentry.StartSpan(ctx, "db.GetIbcChannelToChain").Finish()
+
 	var c cns.IbcChannelsInfo
 
 	subQ := `SELECT

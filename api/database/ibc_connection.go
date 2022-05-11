@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 )
 
 func (d *Database) Connection(ctx context.Context, chain string, connection_id string) (tracelistener.IBCConnectionRow, error) {
+	defer sentry.StartSpan(ctx, "db.Connection").Finish()
+
 	var connection tracelistener.IBCConnectionRow
 
 	q := `

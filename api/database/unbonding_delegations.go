@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 	"github.com/jmoiron/sqlx"
 )
 
 func (d *Database) UnbondingDelegations(ctx context.Context, address string) ([]tracelistener.UnbondingDelegationRow, error) {
+	defer sentry.StartSpan(ctx, "db.UnbondingDelegations").Finish()
+
 	var unbondingDelegations []tracelistener.UnbondingDelegationRow
 
 	q, args, err := sqlx.In(`
