@@ -16,11 +16,16 @@ import (
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/lib/fflag"
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
+)
+
+const (
+	FixSlashedDelegations = "fixslasheddelegations"
 )
 
 func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
@@ -164,40 +169,119 @@ func verifiedDenomsMap(d *database.Database) (map[string]bool, error) {
 // @Produce json
 // @Param address path string true "address to query staking for"
 // @Success 200 {object} StakingBalancesResponse
-// @Failure 500,403 {object} apierrors.UserFacingError
-// @Router /account/{address}/stakingbalance [get]
+// @Failure 500,400 {object} apierrors.UserFacingError
+// @Router /account/{address}/stakingbalances [get]
 func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var res StakingBalancesResponse
 
 		address := c.Param("address")
 
-		dl, err := db.Delegations(address)
+		if fflag.Enabled(c, FixSlashedDelegations) {
+			dl, err := db.Delegations(address)
 
-		if err != nil {
-			e := apierrors.New(
-				"delegations",
-				fmt.Sprintf("cannot retrieve delegations for address %v", address),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot query database delegations for addresses: %w", err),
-				"address",
-				address,
-			)
-			_ = c.Error(e)
+			if err != nil {
+				e := apierrors.New(
+					"delegations",
+					fmt.Sprintf("cannot retrieve delegations for address %v", address),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot query database delegations for addresses: %w", err),
+					"address",
+					address,
+				)
+				_ = c.Error(e)
 
-			return
+				return
+			}
+
+			for _, del := range dl {
+				delegationAmount, err := sdktypes.NewDecFromStr(del.Amount)
+				if err != nil {
+					e := apierrors.New(
+						"delegations",
+						fmt.Sprintf("cannot convert delegation amount to Dec"),
+						http.StatusInternalServerError,
+					).WithLogContext(
+						fmt.Errorf("cannot convert delegation amount to Dec: %w", err),
+						"address",
+						address,
+					)
+					_ = c.Error(e)
+
+					return
+				}
+
+				validatorShares, err := sdktypes.NewDecFromStr(del.ValidatorShares)
+				if err != nil {
+					e := apierrors.New(
+						"delegations",
+						fmt.Sprintf("cannot convert validator total shares to Dec"),
+						http.StatusInternalServerError,
+					).WithLogContext(
+						fmt.Errorf("cannot convert validator total shares to Dec: %w", err),
+						"address",
+						address,
+					)
+					_ = c.Error(e)
+
+					return
+				}
+
+				validatorTokens, err := sdktypes.NewDecFromStr(del.ValidatorTokens)
+				if err != nil {
+					e := apierrors.New(
+						"delegations",
+						fmt.Sprintf("cannot convert validator total tokens to Dec"),
+						http.StatusInternalServerError,
+					).WithLogContext(
+						fmt.Errorf("cannot convert validator total tokens to Dec: %w", err),
+						"address",
+						address,
+					)
+					_ = c.Error(e)
+
+					return
+				}
+
+				// apply shares * total_validator_balance / total_validator_shares
+				balance := delegationAmount.Mul(validatorTokens).Quo(validatorShares)
+				res.StakingBalances = append(res.StakingBalances, StakingBalance{
+					ValidatorAddress: del.Validator,
+					Amount:           balance.String(),
+					ChainName:        del.ChainName,
+				})
+			}
+
+			c.JSON(http.StatusOK, res)
+		} else {
+			dl, err := db.DelegationsOldResponse(address)
+
+			if err != nil {
+				e := apierrors.New(
+					"delegations",
+					fmt.Sprintf("cannot retrieve delegations for address %v", address),
+					http.StatusBadRequest,
+				).WithLogContext(
+					fmt.Errorf("cannot query database delegations for addresses: %w", err),
+					"address",
+					address,
+				)
+				_ = c.Error(e)
+
+				return
+			}
+
+			for _, del := range dl {
+				res.StakingBalances = append(res.StakingBalances, StakingBalance{
+					ValidatorAddress: del.Validator,
+					Amount:           del.Amount,
+					ChainName:        del.ChainName,
+				})
+			}
+
+			c.JSON(http.StatusOK, res)
 		}
-
-		for _, del := range dl {
-			res.StakingBalances = append(res.StakingBalances, StakingBalance{
-				ValidatorAddress: del.Validator,
-				Amount:           del.Amount,
-				ChainName:        del.ChainName,
-			})
-		}
-
-		c.JSON(http.StatusOK, res)
 	}
 }
 
