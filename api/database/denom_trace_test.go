@@ -1,6 +1,8 @@
 package database_test
 
 import (
+	"context"
+
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 )
 
@@ -44,7 +46,7 @@ func (s *TestSuite) TestDenomTrace() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.DenomTrace(tt.chainName, tt.hash)
+			res, err := s.ctx.Router.DB.DenomTrace(context.Background(), tt.chainName, tt.hash)
 			if tt.success {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res)

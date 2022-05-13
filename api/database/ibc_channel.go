@@ -1,10 +1,15 @@
 package database
 
 import (
+	"context"
+
 	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/getsentry/sentry-go"
 )
 
-func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (cns.IbcChannelsInfo, error) {
+func (d *Database) GetIbcChannelToChain(ctx context.Context, chain, channel, chainID string) (cns.IbcChannelsInfo, error) {
+	defer sentry.StartSpan(ctx, "db.GetIbcChannelToChain").Finish()
+
 	var c cns.IbcChannelsInfo
 
 	subQ := `SELECT
@@ -58,7 +63,7 @@ func (d *Database) GetIbcChannelToChain(chain, channel, chainID string) (cns.Ibc
 
 	q = d.dbi.DB.Rebind(q)
 
-	err := d.dbi.DB.Select(&c, q, chain, channel, chainID)
+	err := d.dbi.DB.SelectContext(ctx, &c, q, chain, channel, chainID)
 	if err != nil {
 		return nil, err
 	}

@@ -40,11 +40,12 @@ const (
 // @Router /validators [get]
 func GetValidators(db *database.Database, s *store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 		var res ValidatorsResponse
 
 		chainName := c.Param("chain")
-		validators, err := db.GetValidators(chainName)
+		validators, err := db.GetValidators(ctx, chainName)
 		if err != nil {
 			e := apierrors.New(
 				"validators",

@@ -61,9 +61,10 @@ const (
 func GetChainMiddleware(chainNameParamKey string, db *database.Database) gin.HandlerFunc {
 	// TODO: pass deps to GetChainMiddleware instead of taking them from context
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chainName := c.Param(chainNameParamKey)
 
-		chain, err := db.Chain(chainName)
+		chain, err := db.Chain(ctx, chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -88,9 +89,10 @@ func GetChainMiddleware(chainNameParamKey string, db *database.Database) gin.Han
 // if it's not it returns an error to the user.
 func RequireChainEnabled(chainNameParamKey string, db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		chainName := c.Param(chainNameParamKey)
 
-		if exists, err := db.ChainExists(chainName); err != nil || !exists {
+		if exists, err := db.ChainExists(ctx, chainName); err != nil || !exists {
 			if err == nil {
 				err = fmt.Errorf("%s chain doesnt exists", chainName)
 			}

@@ -1,13 +1,17 @@
 package database
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/getsentry/sentry-go"
 	"github.com/lib/pq"
 )
 
-func (d *Database) QueryIBCClientTrace(chain string, channel string) ([]cns.IbcClientInfo, error) {
+func (d *Database) QueryIBCClientTrace(ctx context.Context, chain string, channel string) ([]cns.IbcClientInfo, error) {
+	defer sentry.StartSpan(ctx, "db.QueryIBCClientTrace").Finish()
+
 	clients := []cns.IbcClientInfo{}
 
 	q := `
@@ -41,7 +45,7 @@ func (d *Database) QueryIBCClientTrace(chain string, channel string) ([]cns.IbcC
 	ON conn.connection_id=ANY(ch.hops)
 	WHERE conn.delete_height IS NULL;
 	`
-	rows, err := d.dbi.DB.NamedQuery(q, map[string]interface{}{
+	rows, err := d.dbi.DB.NamedQueryContext(ctx, q, map[string]interface{}{
 		"chain_name": chain,
 		"channel_id": channel,
 	})

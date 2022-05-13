@@ -33,6 +33,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 // @Router /tx/{chainName} [post]
 func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		// var tx typestx.Tx
 		var txRequest TxRequest
 
@@ -49,7 +50,7 @@ func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKS
 			return
 		}
 
-		chain, err := db.Chain(chainName)
+		chain, err := db.Chain(ctx, chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -160,6 +161,7 @@ func GetTicket(db *database.Database, s *store.Store) gin.HandlerFunc {
 // @Router /tx/fees/{chainName} [post]
 func GetTxFeeEstimate(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var txRequest TxFeeEstimateReq
 
 		chainName := c.Param("chain")
@@ -174,7 +176,7 @@ func GetTxFeeEstimate(db *database.Database, sdkServiceClients sdkservice.SDKSer
 			return
 		}
 
-		chain, err := db.Chain(chainName)
+		chain, err := db.Chain(ctx, chainName)
 		if err != nil {
 			e := apierrors.New(
 				"chains",

@@ -1,6 +1,8 @@
 package database_test
 
 import (
+	"context"
+
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 )
 
@@ -37,7 +39,7 @@ func (s *TestSuite) TestConnection() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			res, err := s.ctx.Router.DB.Connection(tt.chainName, tt.connectionId)
+			res, err := s.ctx.Router.DB.Connection(context.Background(), tt.chainName, tt.connectionId)
 			if tt.success {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res)

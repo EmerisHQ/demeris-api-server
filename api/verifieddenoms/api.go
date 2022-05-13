@@ -24,9 +24,10 @@ func Register(router *gin.Engine, db *database.Database) {
 // @Router /verified_denoms [get]
 func GetVerifiedDenoms(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 		var res VerifiedDenomsResponse
 
-		chains, err := db.Chains()
+		chains, err := db.Chains(ctx)
 
 		if err != nil {
 			e := apierrors.New(

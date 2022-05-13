@@ -1,7 +1,10 @@
 package database
 
 import (
+	"context"
+
 	"github.com/emerishq/demeris-backend-models/tracelistener"
+	"github.com/getsentry/sentry-go"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -13,7 +16,9 @@ type DelegationResponse struct {
 	ValidatorShares string `db:"delegator_shares" json:"delegator_shares"`
 }
 
-func (d *Database) Delegations(address string) ([]DelegationResponse, error) {
+func (d *Database) Delegations(ctx context.Context, address string) ([]DelegationResponse, error) {
+	defer sentry.StartSpan(ctx, "db.Delegations").Finish()
+
 	var delegations []DelegationResponse
 
 	q, args, err := sqlx.In(`
@@ -34,10 +39,12 @@ func (d *Database) Delegations(address string) ([]DelegationResponse, error) {
 
 	q = d.dbi.DB.Rebind(q)
 
-	return delegations, d.dbi.DB.Select(&delegations, q, args...)
+	return delegations, d.dbi.DB.SelectContext(ctx, &delegations, q, args...)
 }
 
-func (d *Database) DelegationsOldResponse(address string) ([]tracelistener.DelegationRow, error) {
+func (d *Database) DelegationsOldResponse(ctx context.Context, address string) ([]tracelistener.DelegationRow, error) {
+	defer sentry.StartSpan(ctx, "db.DelegationsOldResponse").Finish()
+
 	var delegations []tracelistener.DelegationRow
 
 	q, args, err := sqlx.In(`
@@ -62,5 +69,5 @@ func (d *Database) DelegationsOldResponse(address string) ([]tracelistener.Deleg
 
 	q = d.dbi.DB.Rebind(q)
 
-	return delegations, d.dbi.DB.Select(&delegations, q, args...)
+	return delegations, d.dbi.DB.SelectContext(ctx, &delegations, q, args...)
 }

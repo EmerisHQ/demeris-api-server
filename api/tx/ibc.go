@@ -52,12 +52,13 @@ func getIBCSeqFromTx(data []byte) []string {
 // @Router /tx/{srcChain}/{destChain}/{txHash} [get]
 func GetDestTx(db *database.Database, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 
 		srcChain := c.Param("src-chain")
 		destChain := c.Param("dest-chain")
 		txHash := c.Param("tx-hash")
 
-		srcChainInfo, err := db.Chain(srcChain)
+		srcChainInfo, err := db.Chain(ctx, srcChain)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -74,7 +75,7 @@ func GetDestTx(db *database.Database, sdkServiceClients sdkservice.SDKServiceCli
 		}
 
 		// validate destination srcChainInfo is present
-		destChainInfo, err := db.Chain(destChain)
+		destChainInfo, err := db.Chain(ctx, destChain)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
