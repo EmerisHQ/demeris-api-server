@@ -41,7 +41,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 		GET("/mint/annual_provisions", GetAnnualProvisions(sdkServiceClients)).
 		GET("/mint/epoch_provisions", GetEpochProvisions(sdkServiceClients)).
 		GET("/staking/params", GetStakingParams(sdkServiceClients)).
-		GET("/apr", GetStakingAPR(db, s, sdkServiceClients)).
+		GET("/apr", GetStakingAPR(s, sdkServiceClients)).
 		GET("/staking/pool", GetStakingPool(sdkServiceClients)).
 		GET("/distribution/params", GetDistributionParams(sdkServiceClients)).
 		GET("/budget/params", GetBudgetParams(sdkServiceClients))

@@ -29,10 +29,8 @@ import (
 )
 
 const (
-	aprCacheDuration  = 24 * time.Hour
-	aprCachePrefix    = "api-server/chain-aprs"
-	osmosisChainName  = "osmosis"
-	crescentChainName = "crescent"
+	aprCacheDuration = 24 * time.Hour
+	aprCachePrefix   = "api-server/chain-aprs"
 
 	ecosystemIncentiveBudget = "budget-ecosystem-incentive"
 	devTeamBudget            = "budget-dev-team"
@@ -1030,7 +1028,7 @@ func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Hand
 // @Success 200 {object} APRResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/APR [get]
-func GetStakingAPR(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
+func GetStakingAPR(s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
