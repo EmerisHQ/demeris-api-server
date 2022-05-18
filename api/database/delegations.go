@@ -22,7 +22,7 @@ func (d *Database) Delegations(ctx context.Context, address string) ([]Delegatio
 	var delegations []DelegationResponse
 
 	q, args, err := sqlx.In(`
-	SELECT d.chain_name, d.delegator_address, d.validator_address, d.amount, v.tokens, v.delegator_shares
+	SELECT DISTINCT d.chain_name, d.delegator_address, d.validator_address, d.amount, v.tokens, v.delegator_shares
 	FROM tracelistener.delegations as d
 	INNER JOIN tracelistener.validators as v ON 
 		d.validator_address=v.validator_address
