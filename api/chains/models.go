@@ -212,12 +212,12 @@ type DistributionParamsResponse struct {
 type CrecentMintParamsResponse struct {
 	Params struct {
 		MintDenom          string `json:"mint_denom"`
-		BlockTimeThreshold string `json:"block_time_threshold"`
+		BlockTimeThreshold int64  `json:"block_time_threshold"`
 		InflationSchedules []struct {
-			StartTime string `json:"block_time_threshold"`
+			StartTime string `json:"start_time"`
 			EndTime   string `json:"end_time"`
 			Amount    string `json:"amount"`
-		}
+		} `json:"inflation_schedules"`
 	} `json:"params"`
 }
 
