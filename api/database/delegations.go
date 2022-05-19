@@ -25,7 +25,7 @@ func (d *Database) Delegations(ctx context.Context, address string) ([]Delegatio
 	SELECT d.chain_name, d.delegator_address, d.validator_address, d.amount, v.tokens, v.delegator_shares
 	FROM tracelistener.delegations as d
 	INNER JOIN tracelistener.validators as v ON 
-		d.validator_address=v.validator_address
+		d.chain_name=v.chain_name AND d.validator_address=v.validator_address
 	WHERE d.delegator_address=(?)
 	AND d.chain_name IN (
 		SELECT chain_name FROM cns.chains WHERE enabled=true
