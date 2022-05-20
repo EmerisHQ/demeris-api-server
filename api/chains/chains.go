@@ -1515,7 +1515,7 @@ func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilit
 
 	now := time.Now()
 	for _, schedule := range mintParamsData.Params.InflationSchedules {
-		StartTime, err := time.Parse("2006-01-02T15:04:05.000Z", fixTimeFormat(schedule.StartTime))
+		StartTime, err := time.Parse(time.RFC3339, schedule.StartTime)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -1530,7 +1530,7 @@ func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilit
 
 			return currentInflationAmount, err
 		}
-		EndTime, err := time.Parse("2006-01-02T15:04:05.000Z", fixTimeFormat(schedule.EndTime))
+		EndTime, err := time.Parse(time.RFC3339, schedule.EndTime)
 		if err != nil {
 			e := apierrors.New(
 				"chains",
@@ -1565,13 +1565,6 @@ func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilit
 		}
 	}
 	return currentInflationAmount, nil
-}
-
-// time returned from crescent mint params are of format "2022-04-13T00:00:00Z"
-// to make it ISO-8601 complaint we'll have to change this to "2022-04-13T00:00:00.000Z"
-func fixTimeFormat(timeString string) string {
-	newTimeString := timeString[:len(timeString)-1] + ".000Z"
-	return newTimeString
 }
 
 // GetChainsStatuses returns the status of all the enabled chains.
