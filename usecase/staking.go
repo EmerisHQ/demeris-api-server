@@ -118,6 +118,7 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 		)
 	}
 	supply := coin.Amount.ToDec()
+	fmt.Println("COIN", denomSupplyRes.Coins[0].Amount, coin, supply)
 
 	//-----------------------------------------
 	// get inflation

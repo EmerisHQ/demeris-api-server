@@ -17,7 +17,7 @@ func TestStakingAPR(t *testing.T) {
 	var (
 		ctx                = context.Background()
 		genericErr         = errors.New("oups")
-		stakingPoolBytes   = []byte(`{"pool":{"bonded_tokens":"17956057156155"}}`)
+		stakingPoolBytes   = []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`)
 		stakingParamsBytes = []byte(`{"params":{"bond_denom":"lamb"}}`)
 		mintInflationBytes = []byte(`{"inflation":"0.112331651975797806"}`)
 		budgetParamsBytes  = []byte(`{"params":{"budgets":[
@@ -131,8 +131,8 @@ func TestStakingAPR(t *testing.T) {
 					Denom:     &([]string{"lamb"})[0],
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "100000uatom"},
-						{Denom: "blamb", Amount: "1000000ubatom"},
+						{Denom: "lamb", Amount: "100000"},
+						{Denom: "blamb", Amount: "1000000"},
 					},
 				}, nil)
 			},
@@ -162,7 +162,7 @@ func TestStakingAPR(t *testing.T) {
 					Denom:     &([]string{"lamb"})[0],
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "1000000uatom"},
+						{Denom: "lamb", Amount: "296346737551905"},
 					},
 				}, nil)
 				m.sdkClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
@@ -193,7 +193,7 @@ func TestStakingAPR(t *testing.T) {
 					Denom:     &([]string{"lamb"})[0],
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "1000000uatom"},
+						{Denom: "lamb", Amount: "296346737551905"},
 					},
 				}, nil)
 				m.sdkClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
@@ -226,7 +226,7 @@ func TestStakingAPR(t *testing.T) {
 					Denom:     &([]string{"lamb"})[0],
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "1000000uatom"},
+						{Denom: "lamb", Amount: "296346737551905"},
 					},
 				}, nil)
 				m.sdkClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
