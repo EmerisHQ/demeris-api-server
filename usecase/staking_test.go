@@ -1,4 +1,4 @@
-package staking_test
+package usecase_test
 
 import (
 	"context"
@@ -6,31 +6,13 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/emerishq/demeris-api-server/api/chains/staking"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
-	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type mocks struct {
-	t         *testing.T
-	sdkClient *MockSDKClient
-}
-
-func newStaking(t *testing.T, setup func(mocks)) *staking.Staking {
-	ctrl := gomock.NewController(t)
-	m := mocks{
-		t:         t,
-		sdkClient: NewMockSDKClient(ctrl),
-	}
-	if setup != nil {
-		setup(m)
-	}
-	return staking.New(m.sdkClient)
-}
 
 func TestStakingAPR(t *testing.T) {
 	var (
@@ -44,7 +26,7 @@ func TestStakingAPR(t *testing.T) {
 		name          string
 		chain         cns.Chain
 		expectedError *apierrors.Error
-		expectedAPR   float64
+		expectedAPR   sdktypes.Dec
 
 		setup func(mocks)
 	}{
@@ -59,26 +41,6 @@ func TestStakingAPR(t *testing.T) {
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
-				}).Return(nil, genericErr)
-			},
-		},
-		{
-			name: "fail: sdkClient.StakingParams returns an error",
-			chain: cns.Chain{
-				ChainName: "lambda",
-			},
-			expectedError: apierrors.Wrap(genericErr, "chains",
-				"cannot retrieve staking params from sdk-service",
-				http.StatusBadRequest),
-
-			setup: func(m mocks) {
-				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
-				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
-				}, nil)
-				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "lambda",
 				}).Return(nil, genericErr)
 			},
@@ -198,7 +160,7 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "lambda",
 			},
-			expectedAPR: 20,
+			expectedAPR: sdktypes.NewDec(20),
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
@@ -231,7 +193,7 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "osmosis",
 			},
-			expectedAPR: 5,
+			expectedAPR: sdktypes.NewDec(5),
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
@@ -264,31 +226,13 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "crescent",
 			},
-			expectedAPR: 5,
+			expectedAPR: sdktypes.NewDec(5),
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: stakingPoolBytes,
-				}, nil)
-				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
-					ChainName: "crescent",
-				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamBytes,
-				}, nil)
-				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
-					ChainName: "crescent",
-					Denom:     &([]string{"lamb"})[0],
-				}).Return(&sdkutilities.Supply2{
-					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "1000000uatom"},
-					},
-				}, nil)
-				m.sdkClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
-					ChainName: "crescent",
-				}).Return(&sdkutilities.MintInflation2{
-					MintInflation: mintInflationBytes,
 				}, nil)
 			},
 		},
@@ -297,9 +241,9 @@ func TestStakingAPR(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 			assert := assert.New(t)
-			s := newStaking(t, tt.setup)
+			app := newApp(t, tt.setup)
 
-			apr, err := s.APR(ctx, tt.chain)
+			apr, err := app.StakingAPR(ctx, tt.chain)
 
 			if tt.expectedError != nil {
 				require.Equal(tt.expectedError, err)

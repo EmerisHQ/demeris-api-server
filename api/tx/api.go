@@ -92,7 +92,7 @@ func Tx(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKS
 // relayTx relays the tx to the specifc endpoint
 // relayTx will also perform the ticketing mechanism
 // Always expect broadcast mode to be `async`
-func relayTx(ctx context.Context, services sdkutilities.Client, store *store.Store, txBytes []byte, chainName string, owner string) (string, error) {
+func relayTx(ctx context.Context, services *sdkutilities.Client, store *store.Store, txBytes []byte, chainName string, owner string) (string, error) {
 	res, err := services.BroadcastTx(ctx, &sdkutilities.BroadcastTxPayload{
 		ChainName: chainName,
 		TxBytes:   txBytes,

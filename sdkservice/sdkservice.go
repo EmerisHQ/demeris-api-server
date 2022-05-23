@@ -32,9 +32,9 @@ func SdkServiceURL(version string) string {
 	return fmt.Sprintf(sdkServiceURLFmt, version)
 }
 
-type SDKServiceClients map[string]sdkutilities.Client
+type SDKServiceClients map[string]*sdkutilities.Client
 
-func (clients SDKServiceClients) GetSDKServiceClient(version string) (sdkutilities.Client, *apierrors.Error) {
+func (clients SDKServiceClients) GetSDKServiceClient(version string) (*sdkutilities.Client, *apierrors.Error) {
 	if v, ok := sdkExceptionMappings[version]; ok {
 		version = v
 	}
@@ -58,7 +58,7 @@ func InitializeClients() (SDKServiceClients, error) {
 		if err != nil {
 			return clients, err
 		}
-		clients[version] = client
+		clients[version] = &client
 	}
 
 	return clients, nil
