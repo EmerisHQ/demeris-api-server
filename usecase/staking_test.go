@@ -8,7 +8,6 @@ import (
 
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-backend-models/cns"
-	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,15 +17,31 @@ func TestStakingAPR(t *testing.T) {
 	var (
 		ctx                = context.Background()
 		genericErr         = errors.New("oups")
-		stakingPoolBytes   = []byte(`{"pool":{"bonded_tokens":"50000000"}}`)
-		stakingParamBytes  = []byte(`{"params":{"bond_denom":"lamb"}}`)
-		mintInflationBytes = []byte(`{"inflation":"10.0"}`)
+		stakingPoolBytes   = []byte(`{"pool":{"bonded_tokens":"17956057156155"}}`)
+		stakingParamsBytes = []byte(`{"params":{"bond_denom":"lamb"}}`)
+		mintInflationBytes = []byte(`{"inflation":"0.112331651975797806"}`)
+		budgetParamsBytes  = []byte(`{"params":{"budgets":[
+      {"name":"budget-ecosystem-incentive","rate":"0.662500000000000000"},
+      {"name":"xxx","rate":"1"},
+      {"name":"budget-dev-team","rate":"0.250000000000000000"}
+    ]}}`)
+		distributionParamsBytes = []byte(`{"params":{
+      "community_tax":"0.285714285700000000"
+    }}`)
+		mintParamsEmptyBytes = []byte(`{"params":{}}`)
+		mintParamsBytes      = []byte(`{"params":{
+      "inflation_schedules":[{
+        "start_time":"2022-04-13T00:00:00Z",
+        "end_time":"2122-04-13T00:00:00Z",
+        "amount":"108700000000000"
+      }]
+    }}`)
 	)
 	tests := []struct {
 		name          string
 		chain         cns.Chain
 		expectedError *apierrors.Error
-		expectedAPR   sdktypes.Dec
+		expectedAPR   string
 
 		setup func(mocks)
 	}{
@@ -83,7 +98,7 @@ func TestStakingAPR(t *testing.T) {
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "lambda",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamBytes,
+					StakingParams: stakingParamsBytes,
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "lambda",
@@ -109,7 +124,7 @@ func TestStakingAPR(t *testing.T) {
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "lambda",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamBytes,
+					StakingParams: stakingParamsBytes,
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "lambda",
@@ -140,7 +155,7 @@ func TestStakingAPR(t *testing.T) {
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "lambda",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamBytes,
+					StakingParams: stakingParamsBytes,
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "lambda",
@@ -160,7 +175,7 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "lambda",
 			},
-			expectedAPR: sdktypes.NewDec(20),
+			expectedAPR: "0.000000625591971500",
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
@@ -171,7 +186,7 @@ func TestStakingAPR(t *testing.T) {
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "lambda",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamBytes,
+					StakingParams: stakingParamsBytes,
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "lambda",
@@ -193,7 +208,7 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "osmosis",
 			},
-			expectedAPR: sdktypes.NewDec(5),
+			expectedAPR: "0.000000156397992900",
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
@@ -204,7 +219,7 @@ func TestStakingAPR(t *testing.T) {
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamBytes,
+					StakingParams: stakingParamsBytes,
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "osmosis",
@@ -222,17 +237,62 @@ func TestStakingAPR(t *testing.T) {
 			},
 		},
 		{
-			name: "ok: crescent chain",
+			name: "ok: crescent chain, no inflation found",
 			chain: cns.Chain{
 				ChainName: "crescent",
 			},
-			expectedAPR: sdktypes.NewDec(5),
+			expectedAPR: "0.000000000000000000",
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: stakingPoolBytes,
+				}, nil)
+				m.sdkClient.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
+					ChainName: "crescent",
+				}).Return(&sdkutilities.BudgetParams2{
+					BudgetParams: budgetParamsBytes,
+				}, nil)
+				m.sdkClient.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
+					ChainName: "crescent",
+				}).Return(&sdkutilities.DistributionParams2{
+					DistributionParams: distributionParamsBytes,
+				}, nil)
+				m.sdkClient.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
+					ChainName: "crescent",
+				}).Return(&sdkutilities.MintParams2{
+					MintParams: mintParamsEmptyBytes,
+				}, nil)
+			},
+		},
+		{
+			name: "ok: crescent chain, inflation found",
+			chain: cns.Chain{
+				ChainName: "crescent",
+			},
+			expectedAPR: "4.324048228917309007",
+
+			setup: func(m mocks) {
+				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+					ChainName: "crescent",
+				}).Return(&sdkutilities.StakingPool2{
+					StakingPool: stakingPoolBytes,
+				}, nil)
+				m.sdkClient.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
+					ChainName: "crescent",
+				}).Return(&sdkutilities.BudgetParams2{
+					BudgetParams: budgetParamsBytes,
+				}, nil)
+				m.sdkClient.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
+					ChainName: "crescent",
+				}).Return(&sdkutilities.DistributionParams2{
+					DistributionParams: distributionParamsBytes,
+				}, nil)
+				m.sdkClient.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
+					ChainName: "crescent",
+				}).Return(&sdkutilities.MintParams2{
+					MintParams: mintParamsBytes,
 				}, nil)
 			},
 		},
@@ -250,7 +310,7 @@ func TestStakingAPR(t *testing.T) {
 				return
 			}
 			require.NoError(err)
-			assert.Equal(tt.expectedAPR, apr)
+			assert.Equal(tt.expectedAPR, apr.String())
 		})
 	}
 }

@@ -31,41 +31,6 @@ type StakingParamsResponse struct {
 	} `json:"params"`
 }
 
-type BudgetParamsResponse struct {
-	Params struct {
-		EpochBlocks int64 `json:"epoch_blocks"`
-		Budgets     []struct {
-			Name               string `json:"name"`
-			Rate               string `json:"rate"`
-			SourceAddress      string `json:"source_address"`
-			DestinationAddress string `json:"destination_address"`
-			StartTime          string `json:"start_time"`
-			EndTime            string `json:"end_time"`
-		} `json:"budgets"`
-	} `json:"params"`
-}
-
-type DistributionParamsResponse struct {
-	Params struct {
-		CommunityTax        string `json:"community_tax"`
-		BaseProposerReward  string `json:"base_proposer_reward"`
-		BonusProposerReward string `json:"bonus_proposer_reward"`
-		WithdrawAddrEnabled bool   `json:"withdraw_addr_enabled"`
-	} `json:"params"`
-}
-
-type CrecentMintParamsResponse struct {
-	Params struct {
-		MintDenom          string `json:"mint_denom"`
-		BlockTimeThreshold string `json:"block_time_threshold"`
-		InflationSchedules []struct {
-			StartTime string `json:"block_time_threshold"`
-			EndTime   string `json:"end_time"`
-			Amount    string `json:"amount"`
-		}
-	} `json:"params"`
-}
-
 func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
 	//-----------------------------------------
 	// 1- get bonded tokens
@@ -201,36 +166,37 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 func (app *App) getCrescentAPR(ctx context.Context, chain cns.Chain, bondedTokens sdktypes.Dec) (sdktypes.Dec, error) {
 	budgetRate, err := app.getBudgetRate(ctx, chain)
 	if err != nil {
-		return sdktypes.Dec{}, apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot get budget rate"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot get budget rate: %w", err),
-			"name",
-			chain.ChainName,
-		)
+		return sdktypes.Dec{}, err
 	}
 
 	tax, err := app.getTax(ctx, chain)
 	if err != nil {
-		return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
-			"cannot get tax",
-			http.StatusBadRequest,
-		)
+		return sdktypes.Dec{}, err
 	}
 
 	currentInflationAmount, err := app.getCurrentInflationAmount(ctx, chain)
 	if err != nil {
-		return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
-			"cannot get current inflation amount",
-			http.StatusBadRequest,
-		)
+		return sdktypes.Dec{}, err
 	}
 
-	OneDec := sdktypes.NewDec(1)
-	apr := OneDec.Sub(tax).Mul(OneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens)
+	oneDec := sdktypes.NewDec(1)
+	fmt.Printf("%s - %s * ( %s - %s) * %s / %s", oneDec, tax, oneDec, budgetRate, currentInflationAmount, bondedTokens)
+	apr := oneDec.Sub(tax).Mul(oneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens)
 	return apr, nil
+}
+
+type BudgetParamsResponse struct {
+	Params struct {
+		EpochBlocks int64 `json:"epoch_blocks"`
+		Budgets     []struct {
+			Name               string `json:"name"`
+			Rate               string `json:"rate"`
+			SourceAddress      string `json:"source_address"`
+			DestinationAddress string `json:"destination_address"`
+			StartTime          string `json:"start_time"`
+			EndTime            string `json:"end_time"`
+		} `json:"budgets"`
+	} `json:"params"`
 }
 
 func (app *App) getBudgetRate(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
@@ -257,7 +223,7 @@ func (app *App) getBudgetRate(ctx context.Context, chain cns.Chain) (sdktypes.De
 		ecosystemIncentiveBudget = "budget-ecosystem-incentive"
 		devTeamBudget            = "budget-dev-team"
 	)
-	var budgetRate sdktypes.Dec
+	budgetRate := sdktypes.NewDec(0)
 	for _, budget := range budgetParamsData.Params.Budgets {
 		if budget.Name == ecosystemIncentiveBudget || budget.Name == devTeamBudget {
 			rate, err := sdktypes.NewDecFromStr(budget.Rate)
@@ -270,8 +236,16 @@ func (app *App) getBudgetRate(ctx context.Context, chain cns.Chain) (sdktypes.De
 			budgetRate.Add(rate)
 		}
 	}
-
 	return budgetRate, nil
+}
+
+type DistributionParamsResponse struct {
+	Params struct {
+		CommunityTax        string `json:"community_tax"`
+		BaseProposerReward  string `json:"base_proposer_reward"`
+		BonusProposerReward string `json:"bonus_proposer_reward"`
+		WithdrawAddrEnabled bool   `json:"withdraw_addr_enabled"`
+	} `json:"params"`
 }
 
 func (app *App) getTax(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
@@ -306,6 +280,18 @@ func (app *App) getTax(ctx context.Context, chain cns.Chain) (sdktypes.Dec, erro
 	return tax, nil
 }
 
+type CrecentMintParamsResponse struct {
+	Params struct {
+		MintDenom          string `json:"mint_denom"`
+		BlockTimeThreshold string `json:"block_time_threshold"`
+		InflationSchedules []struct {
+			StartTime time.Time `json:"start_time"`
+			EndTime   time.Time `json:"end_time"`
+			Amount    string    `json:"amount"`
+		} `json:"inflation_schedules"`
+	} `json:"params"`
+}
+
 func (app *App) getCurrentInflationAmount(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
 	mintParamsResp, err := app.sdkClient.MintParams(ctx, &sdkutilities.MintParamsPayload{
 		ChainName: chain.ChainName,
@@ -329,21 +315,8 @@ func (app *App) getCurrentInflationAmount(ctx context.Context, chain cns.Chain) 
 
 	now := time.Now()
 	for _, schedule := range mintParamsData.Params.InflationSchedules {
-		startTime, err := time.Parse(now.String(), schedule.StartTime)
-		if err != nil {
-			return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
-				"cannot convert start time to time",
-				http.StatusBadRequest,
-			)
-		}
-		endTime, err := time.Parse(now.String(), schedule.EndTime)
-		if err != nil {
-			return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
-				"cannot convert end time to time",
-				http.StatusBadRequest,
-			)
-		}
-		if startTime.After(now) && endTime.Before(now) {
+		fmt.Println(schedule, schedule.StartTime.Before(now), schedule.EndTime.After(now))
+		if schedule.StartTime.Before(now) && schedule.EndTime.After(now) {
 			currentInflationAmount, err := sdktypes.NewDecFromStr(schedule.Amount)
 			if err != nil {
 				return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
