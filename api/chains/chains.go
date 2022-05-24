@@ -1355,7 +1355,7 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 }
 
 func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
-	var budgetRate sdktypes.Dec
+	budgetRate := sdktypes.NewDec(0)
 
 	budgetParamsResp, err := client.BudgetParams(c.Request.Context(), &sdkutilities.BudgetParamsPayload{
 		ChainName: chain.ChainName,
