@@ -3,20 +3,19 @@ package usecase_test
 import (
 	"testing"
 
+	"github.com/emerishq/demeris-api-server/mocks"
 	"github.com/emerishq/demeris-api-server/usecase"
-	gomock "github.com/golang/mock/gomock"
 )
 
-type mocks struct {
+type mockeds struct {
 	t         *testing.T
-	sdkClient *MockSDKClient
+	sdkClient *mocks.SDKService
 }
 
-func newApp(t *testing.T, setup func(mocks)) *usecase.App {
-	ctrl := gomock.NewController(t)
-	m := mocks{
+func newApp(t *testing.T, setup func(mockeds)) *usecase.App {
+	m := mockeds{
 		t:         t,
-		sdkClient: NewMockSDKClient(ctrl),
+		sdkClient: mocks.NewSDKService(t),
 	}
 	if setup != nil {
 		setup(m)

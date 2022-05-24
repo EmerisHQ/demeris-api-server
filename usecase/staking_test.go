@@ -26,7 +26,7 @@ func TestStakingAPR(t *testing.T) {
 		expectedError *apierrors.Error
 		expectedAPR   string
 
-		setup func(mocks)
+		setup func(mockeds)
 	}{
 		{
 			name: "fail: sdkClient.StakingPool returns an error",
@@ -37,7 +37,7 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve staking pool from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(nil, genericErr)
@@ -52,7 +52,7 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve staking params from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
@@ -72,7 +72,7 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve supply denom from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
@@ -98,7 +98,7 @@ func TestStakingAPR(t *testing.T) {
 				"expected 1 denom for chain: cosmos-hub - denom: uatom, found 2",
 				http.StatusBadRequest),
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
@@ -129,7 +129,7 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve inflation from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
@@ -160,7 +160,7 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "18.160862201947935500",
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
@@ -193,7 +193,7 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "61.996006578275985200",
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.StakingPool2{
@@ -226,7 +226,7 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "0.000000000000000000",
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
@@ -262,7 +262,7 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "37.938810219014751900",
 
-			setup: func(m mocks) {
+			setup: func(m mockeds) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
