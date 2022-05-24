@@ -15,27 +15,10 @@ import (
 
 func TestStakingAPR(t *testing.T) {
 	var (
-		ctx                = context.Background()
-		genericErr         = errors.New("oups")
-		stakingPoolBytes   = []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`)
-		stakingParamsBytes = []byte(`{"params":{"bond_denom":"lamb"}}`)
-		mintInflationBytes = []byte(`{"inflation":"0.112331651975797806"}`)
-		budgetParamsBytes  = []byte(`{"params":{"budgets":[
-      {"name":"budget-ecosystem-incentive","rate":"0.662500000000000000"},
-      {"name":"xxx","rate":"1"},
-      {"name":"budget-dev-team","rate":"0.250000000000000000"}
-    ]}}`)
-		distributionParamsBytes = []byte(`{"params":{
-      "community_tax":"0.285714285700000000"
-    }}`)
-		mintParamsEmptyBytes = []byte(`{"params":{}}`)
-		mintParamsBytes      = []byte(`{"params":{
-      "inflation_schedules":[{
-        "start_time":"2022-04-13T00:00:00Z",
-        "end_time":"2122-04-13T00:00:00Z",
-        "amount":"108700000000000"
-      }]
-    }}`)
+		ctx        = context.Background()
+		genericErr = errors.New("oups")
+		denomAtom  = "uatom"
+		denomOsmo  = "uosmo"
 	)
 	tests := []struct {
 		name          string
@@ -48,7 +31,7 @@ func TestStakingAPR(t *testing.T) {
 		{
 			name: "fail: sdkClient.StakingPool returns an error",
 			chain: cns.Chain{
-				ChainName: "lambda",
+				ChainName: "cosmos-hub",
 			},
 			expectedError: apierrors.Wrap(genericErr, "chains",
 				"cannot retrieve staking pool from sdk-service",
@@ -56,14 +39,14 @@ func TestStakingAPR(t *testing.T) {
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(nil, genericErr)
 			},
 		},
 		{
 			name: "fail: sdkClient.StakingParams returns an error",
 			chain: cns.Chain{
-				ChainName: "lambda",
+				ChainName: "cosmos-hub",
 			},
 			expectedError: apierrors.Wrap(genericErr, "chains",
 				"cannot retrieve staking params from sdk-service",
@@ -71,19 +54,19 @@ func TestStakingAPR(t *testing.T) {
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(nil, genericErr)
 			},
 		},
 		{
 			name: "fail: sdkClient.SupplyDenom returns an error",
 			chain: cns.Chain{
-				ChainName: "lambda",
+				ChainName: "cosmos-hub",
 			},
 			expectedError: apierrors.Wrap(genericErr, "chains",
 				"cannot retrieve supply denom from sdk-service",
@@ -91,48 +74,48 @@ func TestStakingAPR(t *testing.T) {
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamsBytes,
+					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
-					ChainName: "lambda",
-					Denom:     &([]string{"lamb"})[0],
+					ChainName: "cosmos-hub",
+					Denom:     &denomAtom,
 				}).Return(nil, genericErr)
 			},
 		},
 		{
 			name: "fail: sdkClient.SupplyDenom returns multiple coins",
 			chain: cns.Chain{
-				ChainName: "lambda",
+				ChainName: "cosmos-hub",
 			},
 			expectedError: apierrors.New("chains",
-				"expected 1 denom for chain: lambda - denom: lamb, found 2",
+				"expected 1 denom for chain: cosmos-hub - denom: uatom, found 2",
 				http.StatusBadRequest),
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamsBytes,
+					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
-					ChainName: "lambda",
-					Denom:     &([]string{"lamb"})[0],
+					ChainName: "cosmos-hub",
+					Denom:     &denomAtom,
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "100000"},
-						{Denom: "blamb", Amount: "1000000"},
+						{Denom: "atom", Amount: "100000uatom"},
+						{Denom: "batom", Amount: "1000000ubatom"},
 					},
 				}, nil)
 			},
@@ -140,7 +123,7 @@ func TestStakingAPR(t *testing.T) {
 		{
 			name: "fail: sdkClient.MintInflation returns an error",
 			chain: cns.Chain{
-				ChainName: "lambda",
+				ChainName: "cosmos-hub",
 			},
 			expectedError: apierrors.Wrap(genericErr, "chains",
 				"cannot retrieve inflation from sdk-service",
@@ -148,58 +131,58 @@ func TestStakingAPR(t *testing.T) {
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamsBytes,
+					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
-					ChainName: "lambda",
-					Denom:     &([]string{"lamb"})[0],
+					ChainName: "cosmos-hub",
+					Denom:     &denomAtom,
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "296346737551905"},
+						{Denom: "atom", Amount: "296346737551905uatom"},
 					},
 				}, nil)
 				m.sdkClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(nil, genericErr)
 			},
 		},
 		{
-			name: "ok: lambda chain",
+			name: "ok: cosmos-hub chain",
 			chain: cns.Chain{
-				ChainName: "lambda",
+				ChainName: "cosmos-hub",
 			},
-			expectedAPR: "0.000000625591971500",
+			expectedAPR: "18.160862201947935500",
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamsBytes,
+					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
-					ChainName: "lambda",
-					Denom:     &([]string{"lamb"})[0],
+					ChainName: "cosmos-hub",
+					Denom:     &denomAtom,
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "296346737551905"},
+						{Denom: "atom", Amount: "296346737551905uatom"},
 					},
 				}, nil)
 				m.sdkClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
-					ChainName: "lambda",
+					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.MintInflation2{
-					MintInflation: mintInflationBytes,
+					MintInflation: []byte(`{"inflation":"0.112331651975797806"}`),
 				}, nil)
 			},
 		},
@@ -208,31 +191,31 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "osmosis",
 			},
-			expectedAPR: "0.000000156397992900",
+			expectedAPR: "61.996006578275985200",
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"120975533972991"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.StakingParams2{
-					StakingParams: stakingParamsBytes,
+					StakingParams: []byte(`{"params":{"bond_denom":"uosmo"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "osmosis",
-					Denom:     &([]string{"lamb"})[0],
+					Denom:     &denomOsmo,
 				}).Return(&sdkutilities.Supply2{
 					Coins: []*sdkutilities.Coin{
-						{Denom: "lamb", Amount: "296346737551905"},
+						{Denom: "osmo", Amount: "377806829582915uosmo"},
 					},
 				}, nil)
 				m.sdkClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.MintInflation2{
-					MintInflation: mintInflationBytes,
+					MintInflation: []byte(`{"inflation":"0.794056582648834299"}`),
 				}, nil)
 			},
 		},
@@ -247,22 +230,28 @@ func TestStakingAPR(t *testing.T) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"17907124553766"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.BudgetParams2{
-					BudgetParams: budgetParamsBytes,
+					BudgetParams: []byte(`{"params":{"budgets":[
+              {"name":"budget-ecosystem-incentive","rate":"0.662500000000000000"},
+              {"name":"xxx","rate":"1"},
+              {"name":"budget-dev-team","rate":"0.250000000000000000"}
+            ]}}`),
 				}, nil)
 				m.sdkClient.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.DistributionParams2{
-					DistributionParams: distributionParamsBytes,
+					DistributionParams: []byte(`{"params":{
+            "community_tax":"0.285714285700000000"
+          }}`),
 				}, nil)
 				m.sdkClient.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.MintParams2{
-					MintParams: mintParamsEmptyBytes,
+					MintParams: []byte(`{"params":{}}`),
 				}, nil)
 			},
 		},
@@ -271,28 +260,47 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "crescent",
 			},
-			expectedAPR: "4.324048228917309007",
+			expectedAPR: "???",
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: stakingPoolBytes,
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.BudgetParams2{
-					BudgetParams: budgetParamsBytes,
+					BudgetParams: []byte(`{"params":{"budgets":[
+              {"name":"budget-ecosystem-incentive","rate":"0.662500000000000000"},
+              {"name":"xxx","rate":"1"},
+              {"name":"budget-dev-team","rate":"0.250000000000000000"}
+            ]}}`),
 				}, nil)
 				m.sdkClient.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.DistributionParams2{
-					DistributionParams: distributionParamsBytes,
+					DistributionParams: []byte(`{"params":{
+            "community_tax":"0.285714285700000000"
+          }}`),
 				}, nil)
 				m.sdkClient.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.MintParams2{
-					MintParams: mintParamsBytes,
+					MintParams: []byte(`{"params":{
+              "inflation_schedules":[
+              {
+                "start_time": "2022-04-13T00:00:00Z",
+                "end_time": "2023-04-13T00:00:00Z",
+                "amount": "108700000000000"
+              },
+              {
+                "start_time": "2023-04-13T00:00:00Z",
+                "end_time": "2024-04-13T00:00:00Z",
+                "amount": "216100000000000"
+              }
+              ]
+            }}`),
 				}, nil)
 			},
 		},

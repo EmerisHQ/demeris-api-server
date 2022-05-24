@@ -118,7 +118,6 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 		)
 	}
 	supply := coin.Amount.ToDec()
-	fmt.Println("COIN", denomSupplyRes.Coins[0].Amount, coin, supply)
 
 	//-----------------------------------------
 	// get inflation
@@ -159,8 +158,7 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 	//-----------------------------------------
 	// Compute APR
 
-	apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
-	return apr, nil
+	return inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100), nil
 }
 
 // apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
@@ -181,9 +179,11 @@ func (app *App) getCrescentAPR(ctx context.Context, chain cns.Chain, bondedToken
 	}
 
 	oneDec := sdktypes.NewDec(1)
-	fmt.Printf("%s - %s * ( %s - %s) * %s / %s", oneDec, tax, oneDec, budgetRate, currentInflationAmount, bondedTokens)
-	apr := oneDec.Sub(tax).Mul(oneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens)
-	return apr, nil
+	fmt.Printf("(1-%s)*(1-%s)*%s/%s\n", budgetRate, tax, currentInflationAmount, bondedTokens)
+	return oneDec.Sub(tax).
+		Mul(oneDec.Sub(budgetRate)).
+		Mul(currentInflationAmount).
+		Quo(bondedTokens), nil
 }
 
 type BudgetParamsResponse struct {
@@ -234,7 +234,7 @@ func (app *App) getBudgetRate(ctx context.Context, chain cns.Chain) (sdktypes.De
 					http.StatusBadRequest,
 				)
 			}
-			budgetRate.Add(rate)
+			budgetRate = budgetRate.Add(rate)
 		}
 	}
 	return budgetRate, nil
@@ -316,7 +316,6 @@ func (app *App) getCurrentInflationAmount(ctx context.Context, chain cns.Chain) 
 
 	now := time.Now()
 	for _, schedule := range mintParamsData.Params.InflationSchedules {
-		fmt.Println(schedule, schedule.StartTime.Before(now), schedule.EndTime.After(now))
 		if schedule.StartTime.Before(now) && schedule.EndTime.After(now) {
 			currentInflationAmount, err := sdktypes.NewDecFromStr(schedule.Amount)
 			if err != nil {
