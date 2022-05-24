@@ -1410,7 +1410,7 @@ func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) 
 
 				return budgetRate, err
 			}
-			budgetRate.Add(rate)
+			budgetRate = budgetRate.Add(rate)
 		}
 	}
 
