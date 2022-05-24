@@ -9,9 +9,12 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
+	"github.com/emerishq/demeris-api-server/lib/stringcache"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/gin-gonic/gin"
 
@@ -378,6 +381,23 @@ func TestGetStakingAPR(t *testing.T) {
 					Return("18.2", nil)
 			},
 		},
+		{
+			name:               "ok: cache miss",
+			expectedStatusCode: http.StatusOK,
+			expectedBody:       `{"apr":18.2}`,
+
+			setup: func(m mockeds) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("", stringcache.ErrCacheMiss)
+
+				apr, _ := sdktypes.NewDecFromStr("18.2")
+				m.app.EXPECT().StakingAPR(ctx, cns.Chain{ChainName: "cosmos-hub"}).
+					Return(apr, nil)
+
+				m.cacheBackend.EXPECT().Set(ctx, "api-server/chain-aprs/cosmos-hub",
+					"18.200000000000000000", time.Hour*24).Return(nil)
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -390,6 +410,10 @@ func TestGetStakingAPR(t *testing.T) {
 			// add logger or else it fails
 			logger := logging.New(logging.LoggingConfig{})
 			c.Set(logging.LoggerKey, logger)
+			// add chain in gin
+			// NOTE(tb): this is done by the middleware but I think it should be done
+			// in the usecase package.
+			c.Set(chains.ChainContextKey, cns.Chain{ChainName: "cosmos-hub"})
 			ch := newChainAPI(t, tt.setup)
 
 			ch.GetStakingAPR(c)
