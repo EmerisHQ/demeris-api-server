@@ -179,11 +179,11 @@ func (app *App) getCrescentAPR(ctx context.Context, chain cns.Chain, bondedToken
 	}
 
 	oneDec := sdktypes.NewDec(1)
-	fmt.Printf("(1-%s)*(1-%s)*%s/%s\n", budgetRate, tax, currentInflationAmount, bondedTokens)
 	return oneDec.Sub(tax).
 		Mul(oneDec.Sub(budgetRate)).
 		Mul(currentInflationAmount).
-		Quo(bondedTokens), nil
+		Quo(bondedTokens).
+		MulInt64(100), nil
 }
 
 type BudgetParamsResponse struct {

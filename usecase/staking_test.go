@@ -260,13 +260,13 @@ func TestStakingAPR(t *testing.T) {
 			chain: cns.Chain{
 				ChainName: "crescent",
 			},
-			expectedAPR: "???",
+			expectedAPR: "37.938810219014751900",
 
 			setup: func(m mocks) {
 				m.sdkClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
-					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
+					StakingPool: []byte(`{"pool":{"bonded_tokens":"17907124553766"}}`),
 				}, nil)
 				m.sdkClient.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 					ChainName: "crescent",
