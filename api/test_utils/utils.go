@@ -240,6 +240,7 @@ func Setup(runServer bool) *TestingCtx {
 			c.KubernetesNamespace,
 			&informer,
 			clients,
+			nil,
 			c.Debug,
 		)
 

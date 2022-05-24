@@ -6,12 +6,27 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
-	"github.com/emerishq/emeris-utils/store"
+	"github.com/emerishq/demeris-api-server/usecase"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
+type ChainAPI struct {
+	cacheBackend stringcache.CacheBackend
+	app          usecase.IApp
+}
+
+func New(c stringcache.CacheBackend, app usecase.IApp) *ChainAPI {
+	return &ChainAPI{
+		cacheBackend: c,
+		app:          app,
+	}
+}
+
+func Register(router *gin.Engine, db *database.Database, cacheBackend stringcache.CacheBackend, sdkServiceClients sdkservice.SDKServiceClients, app usecase.IApp) {
+	chainAPI := New(cacheBackend, app)
+
 	router.Group("/chains").
 		GET("", GetChains(db)).
 		GET("/status", GetChainsStatuses(db)).
@@ -25,10 +40,9 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 		Use(RequireChainEnabled("chain", db)).
 		GET("/primary_channels", GetPrimaryChannels(db)).
 		GET("/primary_channel/:counterparty", GetPrimaryChannelWithCounterparty(db)).
-		GET("/validators", GetValidators(db, s))
+		GET("/validators", GetValidators(db, cacheBackend))
 
-	chain.Group("").
-		Use(GetChainMiddleware("chain", db)).
+	chain.Use(GetChainMiddleware("chain", db)).
 		GET("", GetChain).
 		GET("/bech32", GetChainBech32Config).
 		GET("/status", GetChainStatus(db)).
@@ -41,7 +55,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 		GET("/mint/annual_provisions", GetAnnualProvisions(sdkServiceClients)).
 		GET("/mint/epoch_provisions", GetEpochProvisions(sdkServiceClients)).
 		GET("/staking/params", GetStakingParams(sdkServiceClients)).
-		GET("/apr", GetStakingAPR(s, sdkServiceClients)).
+		GET("/apr", chainAPI.GetStakingAPR).
 		GET("/staking/pool", GetStakingPool(sdkServiceClients)).
 		GET("/distribution/params", GetDistributionParams(sdkServiceClients)).
 		GET("/budget/params", GetBudgetParams(sdkServiceClients))

@@ -1,7 +1,11 @@
 package usecase
 
 import (
-	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
+	"context"
+
+	"github.com/emerishq/demeris-api-server/sdkservice"
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
 )
 
 const (
@@ -9,12 +13,16 @@ const (
 	crescentChainName = "crescent"
 )
 
-type App struct {
-	sdkClient sdkutilities.Service
+type IApp interface {
+	StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error)
 }
 
-func NewApp(sdk sdkutilities.Service) *App {
+type App struct {
+	sdkServiceClients sdkservice.SDKServiceClients
+}
+
+func NewApp(sdk sdkservice.SDKServiceClients) IApp {
 	return &App{
-		sdkClient: sdk,
+		sdkServiceClients: sdk,
 	}
 }

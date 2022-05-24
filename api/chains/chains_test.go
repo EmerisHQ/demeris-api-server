@@ -1,18 +1,23 @@
 package chains_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
+	"github.com/emerishq/emeris-utils/logging"
+	"github.com/gin-gonic/gin"
 
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -353,4 +358,45 @@ func TestGetChainsStatuses(t *testing.T) {
 	require.Equal(t, 200, resp.StatusCode)
 
 	utils.TruncateCNSDB(testingCtx, t)
+}
+
+func TestGetStakingAPR(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name               string
+		expectedStatusCode int
+		expectedBody       string
+		setup              func(mockeds)
+	}{
+		{
+			name:               "ok: cache hit",
+			expectedStatusCode: http.StatusOK,
+			expectedBody:       `{"apr":18.2}`,
+
+			setup: func(m mockeds) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("18.2", nil)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+			assert := assert.New(t)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Params = gin.Params{gin.Param{Key: "chain", Value: "cosmos-hub"}}
+			c.Request, _ = http.NewRequestWithContext(ctx, http.MethodGet, "", nil)
+			// add logger or else it fails
+			logger := logging.New(logging.LoggingConfig{})
+			c.Set(logging.LoggerKey, logger)
+			ch := newChainAPI(t, tt.setup)
+
+			ch.GetStakingAPR(c)
+
+			require.Empty(c.Errors)
+			assert.Equal(tt.expectedStatusCode, w.Code)
+			assert.Equal(tt.expectedBody, w.Body.String())
+		})
+	}
 }

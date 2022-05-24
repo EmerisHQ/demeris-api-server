@@ -35,7 +35,15 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 	//-----------------------------------------
 	// 1- get bonded tokens
 
-	stakingPoolRes, err := app.sdkClient.StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+	sdkClient, err := app.sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
+	if err != nil {
+		return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
+			fmt.Sprintf("cannot retrieve sdk service for version %s", chain.MajorSDKVersion()),
+			http.StatusBadRequest,
+		)
+	}
+
+	stakingPoolRes, err := sdkClient.StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 		ChainName: chain.ChainName,
 	})
 	if err != nil {
@@ -64,13 +72,13 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 	// apr for crescent is calculated differently as it follows custom inflation schedules
 	// apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
 	if strings.ToLower(chain.ChainName) == crescentChainName {
-		return app.getCrescentAPR(ctx, chain, bondedTokens)
+		return app.getCrescentAPR(ctx, sdkClient, chain, bondedTokens)
 	}
 
 	//-----------------------------------------
 	// 2- get supply
 
-	stakingParamsRes, err := app.sdkClient.StakingParams(ctx, &sdkutilities.StakingParamsPayload{
+	stakingParamsRes, err := sdkClient.StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 		ChainName: chain.ChainName,
 	})
 
@@ -90,7 +98,7 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 		)
 	}
 
-	denomSupplyRes, err := app.sdkClient.SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
+	denomSupplyRes, err := sdkClient.SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 		ChainName: chain.ChainName,
 		Denom:     &stakingParamsData.Params.BondDenom,
 	})
@@ -122,7 +130,7 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 	//-----------------------------------------
 	// get inflation
 
-	inflationRes, err := app.sdkClient.MintInflation(ctx, &sdkutilities.MintInflationPayload{
+	inflationRes, err := sdkClient.MintInflation(ctx, &sdkutilities.MintInflationPayload{
 		ChainName: chain.ChainName,
 	})
 	if err != nil {
@@ -162,18 +170,18 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 }
 
 // apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
-func (app *App) getCrescentAPR(ctx context.Context, chain cns.Chain, bondedTokens sdktypes.Dec) (sdktypes.Dec, error) {
-	budgetRate, err := app.getBudgetRate(ctx, chain)
+func (app *App) getCrescentAPR(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain, bondedTokens sdktypes.Dec) (sdktypes.Dec, error) {
+	budgetRate, err := app.getBudgetRate(ctx, sdkClient, chain)
 	if err != nil {
 		return sdktypes.Dec{}, err
 	}
 
-	tax, err := app.getTax(ctx, chain)
+	tax, err := app.getTax(ctx, sdkClient, chain)
 	if err != nil {
 		return sdktypes.Dec{}, err
 	}
 
-	currentInflationAmount, err := app.getCurrentInflationAmount(ctx, chain)
+	currentInflationAmount, err := app.getCurrentInflationAmount(ctx, sdkClient, chain)
 	if err != nil {
 		return sdktypes.Dec{}, err
 	}
@@ -200,8 +208,8 @@ type BudgetParamsResponse struct {
 	} `json:"params"`
 }
 
-func (app *App) getBudgetRate(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
-	budgetParamsResp, err := app.sdkClient.BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
+func (app *App) getBudgetRate(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain) (sdktypes.Dec, error) {
+	budgetParamsResp, err := sdkClient.BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 		ChainName: chain.ChainName,
 	})
 	if err != nil {
@@ -249,8 +257,8 @@ type DistributionParamsResponse struct {
 	} `json:"params"`
 }
 
-func (app *App) getTax(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
-	distributionParamsResp, err := app.sdkClient.DistributionParams(ctx,
+func (app *App) getTax(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain) (sdktypes.Dec, error) {
+	distributionParamsResp, err := sdkClient.DistributionParams(ctx,
 		&sdkutilities.DistributionParamsPayload{
 			ChainName: chain.ChainName,
 		})
@@ -293,8 +301,8 @@ type CrecentMintParamsResponse struct {
 	} `json:"params"`
 }
 
-func (app *App) getCurrentInflationAmount(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
-	mintParamsResp, err := app.sdkClient.MintParams(ctx, &sdkutilities.MintParamsPayload{
+func (app *App) getCurrentInflationAmount(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain) (sdktypes.Dec, error) {
+	mintParamsResp, err := sdkClient.MintParams(ctx, &sdkutilities.MintParamsPayload{
 		ChainName: chain.ChainName,
 	})
 

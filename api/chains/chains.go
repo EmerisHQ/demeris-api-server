@@ -20,10 +20,8 @@ import (
 	"github.com/emerishq/demeris-api-server/lib/ginutils"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
-	"github.com/emerishq/demeris-api-server/usecase"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/emeris-utils/logging"
-	"github.com/emerishq/emeris-utils/store"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
@@ -1024,68 +1022,61 @@ func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Hand
 // @Success 200 {object} APRResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/APR [get]
-func GetStakingAPR(s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := c.Request.Context()
-		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+func (ch *ChainAPI) GetStakingAPR(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
-		chainName := c.Param("chain")
+	chainName := c.Param("chain")
 
-		aprCache := stringcache.NewStringCache(
-			logger,
-			stringcache.NewStoreBackend(s),
-			aprCacheDuration,
-			aprCachePrefix,
-			getAPR(c, sdkServiceClients),
+	aprCache := stringcache.NewStringCache(
+		logger,
+		ch.cacheBackend,
+		aprCacheDuration,
+		aprCachePrefix,
+		ch.getAPR(c),
+	)
+	aprString, err := aprCache.Get(ctx, chainName, false)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot get APR"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot get APR: %w", err),
+			"name",
+			chainName,
 		)
-		aprString, err := aprCache.Get(ctx, chainName, false)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot get APR"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot get APR: %w", err),
-				"name",
-				chainName,
-			)
-			_ = c.Error(e)
+		_ = c.Error(e)
 
-			return
-		}
-
-		apr, err := strconv.ParseFloat(aprString, 64)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot convert apr to float"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot convert apr to float: %w", err),
-				"name",
-				chainName,
-				"APR",
-				apr,
-			)
-			_ = c.Error(e)
-
-			return
-		}
-		res := APRResponse{APR: apr}
-		c.JSON(http.StatusOK, res)
+		return
 	}
+
+	apr, err := strconv.ParseFloat(aprString, 64)
+	if err != nil {
+		e := apierrors.New(
+			"chains",
+			fmt.Sprintf("cannot convert apr to float"),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot convert apr to float: %w", err),
+			"name",
+			chainName,
+			"APR",
+			apr,
+		)
+		_ = c.Error(e)
+
+		return
+	}
+	res := APRResponse{APR: apr}
+	c.JSON(http.StatusOK, res)
 }
 
-func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stringcache.HandlerFunc {
+func (ch *ChainAPI) getAPR(c *gin.Context) stringcache.HandlerFunc {
 	return func(ctx context.Context, key string) (string, error) {
 		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
-		if e != nil {
-			_ = c.Error(e)
-			return "", fmt.Errorf(e.Error())
-		}
 
-		apr, err := usecase.NewApp(client).StakingAPR(ctx, chain)
+		apr, err := ch.app.StakingAPR(ctx, chain)
 		if err != nil {
 			c.Error(err)
 			return "", err
