@@ -317,7 +317,7 @@ func (app *App) getCurrentInflationAmount(ctx context.Context, sdkClient sdkutil
 	err = json.Unmarshal(mintParamsResp.MintParams, &mintParamsData)
 	if err != nil {
 		return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
-			"cannot unmarshal distribution params",
+			"cannot unmarshal mint params",
 			http.StatusBadRequest,
 		)
 	}
