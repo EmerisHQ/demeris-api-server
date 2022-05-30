@@ -1350,12 +1350,12 @@ func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, 
 	}
 
 	OneDec := sdktypes.NewDec(1)
-	apr := OneDec.Sub(tax).Mul(OneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens)
+	apr := OneDec.Sub(tax).Mul(OneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens).MulInt64(100)
 	return apr.String(), nil
 }
 
 func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
-	var budgetRate sdktypes.Dec
+	budgetRate := sdktypes.NewDec(0)
 
 	budgetParamsResp, err := client.BudgetParams(c.Request.Context(), &sdkutilities.BudgetParamsPayload{
 		ChainName: chain.ChainName,
@@ -1410,7 +1410,7 @@ func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) 
 
 				return budgetRate, err
 			}
-			budgetRate.Add(rate)
+			budgetRate = budgetRate.Add(rate)
 		}
 	}
 
@@ -1501,10 +1501,10 @@ func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilit
 	if err != nil {
 		e := apierrors.New(
 			"chains",
-			fmt.Sprintf("cannot unmarshal distribution params"),
+			fmt.Sprintf("cannot unmarshal mint params"),
 			http.StatusBadRequest,
 		).WithLogContext(
-			fmt.Errorf("cannot unmarshal distribution params: %w", err),
+			fmt.Errorf("cannot unmarshal mint params: %w", err),
 			"name",
 			chain.ChainName,
 		)
@@ -1515,37 +1515,7 @@ func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilit
 
 	now := time.Now()
 	for _, schedule := range mintParamsData.Params.InflationSchedules {
-		StartTime, err := time.Parse(now.String(), schedule.StartTime)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot convert start time to time"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot convert start time to time: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return currentInflationAmount, err
-		}
-		EndTime, err := time.Parse(now.String(), schedule.EndTime)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot convert end time to time"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot convert end time to time: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return currentInflationAmount, err
-		}
-		if StartTime.After(now) && EndTime.Before(now) {
+		if schedule.StartTime.Before(now) && schedule.EndTime.After(now) {
 			currentInflationAmount, err = sdktypes.NewDecFromStr(schedule.Amount)
 			if err != nil {
 				e := apierrors.New(

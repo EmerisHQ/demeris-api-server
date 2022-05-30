@@ -3,6 +3,7 @@ package chains
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-backend-models/cns"
@@ -212,12 +213,12 @@ type DistributionParamsResponse struct {
 type CrecentMintParamsResponse struct {
 	Params struct {
 		MintDenom          string `json:"mint_denom"`
-		BlockTimeThreshold string `json:"block_time_threshold"`
+		BlockTimeThreshold int64  `json:"block_time_threshold"`
 		InflationSchedules []struct {
-			StartTime string `json:"block_time_threshold"`
-			EndTime   string `json:"end_time"`
-			Amount    string `json:"amount"`
-		}
+			StartTime time.Time `json:"start_time"`
+			EndTime   time.Time `json:"end_time"`
+			Amount    string    `json:"amount"`
+		} `json:"inflation_schedules"`
 	} `json:"params"`
 }
 
