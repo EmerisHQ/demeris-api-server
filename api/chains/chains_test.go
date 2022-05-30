@@ -3,6 +3,7 @@ package chains_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -369,6 +370,7 @@ func TestGetStakingAPR(t *testing.T) {
 		name               string
 		expectedStatusCode int
 		expectedBody       string
+		expectedError      string
 		setup              func(mockeds)
 	}{
 		{
@@ -379,6 +381,16 @@ func TestGetStakingAPR(t *testing.T) {
 			setup: func(m mockeds) {
 				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
 					Return("18.2", nil)
+			},
+		},
+		{
+			name:               "fail: cache hit but not a float",
+			expectedStatusCode: http.StatusOK,
+			expectedError:      "chains: strconv.ParseFloat: parsing \"xx\": invalid syntax",
+
+			setup: func(m mockeds) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("xx", nil)
 			},
 		},
 		{
@@ -396,6 +408,19 @@ func TestGetStakingAPR(t *testing.T) {
 
 				m.cacheBackend.EXPECT().Set(ctx, "api-server/chain-aprs/cosmos-hub",
 					"18.200000000000000000", time.Hour*24).Return(nil)
+			},
+		},
+		{
+			name:               "fail: cache miss but app returns an error",
+			expectedStatusCode: http.StatusOK,
+			expectedError:      "chains: app error",
+
+			setup: func(m mockeds) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("", stringcache.ErrCacheMiss)
+
+				m.app.EXPECT().StakingAPR(ctx, cns.Chain{ChainName: "cosmos-hub"}).
+					Return(sdktypes.Dec{}, errors.New("app error"))
 			},
 		},
 	}
@@ -418,8 +443,13 @@ func TestGetStakingAPR(t *testing.T) {
 
 			ch.GetStakingAPR(c)
 
-			require.Empty(c.Errors)
 			assert.Equal(tt.expectedStatusCode, w.Code)
+			if tt.expectedError != "" {
+				require.Len(c.Errors, 1, "expected one error but got %d", len(c.Errors))
+				require.EqualError(c.Errors[0], tt.expectedError)
+				return
+			}
+			require.Empty(c.Errors)
 			assert.Equal(tt.expectedBody, w.Body.String())
 		})
 	}

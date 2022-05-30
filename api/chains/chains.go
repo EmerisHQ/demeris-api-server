@@ -1033,56 +1033,33 @@ func (ch *ChainAPI) GetStakingAPR(c *gin.Context) {
 		ch.cacheBackend,
 		aprCacheDuration,
 		aprCachePrefix,
-		ch.getAPR(c),
+		stringcache.HandlerFunc(
+			func(ctx context.Context, key string) (string, error) {
+				chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
+
+				apr, err := ch.app.StakingAPR(ctx, chain)
+				if err != nil {
+					return "", err
+				}
+				return apr.String(), nil
+			},
+		),
 	)
 	aprString, err := aprCache.Get(ctx, chainName, false)
 	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot get APR"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot get APR: %w", err),
-			"name",
-			chainName,
-		)
+		e := apierrors.Wrap(err, "chains", "cannot get APR", http.StatusBadRequest)
 		_ = c.Error(e)
-
 		return
 	}
 
 	apr, err := strconv.ParseFloat(aprString, 64)
 	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot convert apr to float"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot convert apr to float: %w", err),
-			"name",
-			chainName,
-			"APR",
-			apr,
-		)
+		e := apierrors.Wrap(err, "chains", "cannot convert APR to float", http.StatusBadRequest)
 		_ = c.Error(e)
-
 		return
 	}
 	res := APRResponse{APR: apr}
 	c.JSON(http.StatusOK, res)
-}
-
-func (ch *ChainAPI) getAPR(c *gin.Context) stringcache.HandlerFunc {
-	return func(ctx context.Context, key string) (string, error) {
-		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-
-		apr, err := ch.app.StakingAPR(ctx, chain)
-		if err != nil {
-			c.Error(err)
-			return "", err
-		}
-		return apr.String(), nil
-	}
 }
 
 // GetChainsStatuses returns the status of all the enabled chains.
