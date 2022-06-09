@@ -371,14 +371,14 @@ func TestGetStakingAPR(t *testing.T) {
 		expectedStatusCode int
 		expectedBody       string
 		expectedError      string
-		setup              func(mockeds)
+		setup              func(mocks)
 	}{
 		{
 			name:               "ok: cache hit",
 			expectedStatusCode: http.StatusOK,
 			expectedBody:       `{"apr":18.2}`,
 
-			setup: func(m mockeds) {
+			setup: func(m mocks) {
 				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
 					Return("18.2", nil)
 			},
@@ -388,7 +388,7 @@ func TestGetStakingAPR(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 			expectedError:      "chains: strconv.ParseFloat: parsing \"xx\": invalid syntax",
 
-			setup: func(m mockeds) {
+			setup: func(m mocks) {
 				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
 					Return("xx", nil)
 			},
@@ -398,7 +398,7 @@ func TestGetStakingAPR(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 			expectedBody:       `{"apr":18.2}`,
 
-			setup: func(m mockeds) {
+			setup: func(m mocks) {
 				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
 					Return("", stringcache.ErrCacheMiss)
 
@@ -415,7 +415,7 @@ func TestGetStakingAPR(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 			expectedError:      "chains: app error",
 
-			setup: func(m mockeds) {
+			setup: func(m mocks) {
 				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
 					Return("", stringcache.ErrCacheMiss)
 

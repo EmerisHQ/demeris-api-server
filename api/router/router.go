@@ -49,7 +49,7 @@ func New(
 	kubeNamespace string,
 	genericInformer informers.GenericInformer,
 	sdkServiceClients sdkservice.SDKServiceClients,
-	app usecase.IApp,
+	app *usecase.App,
 	debug bool,
 ) *Router {
 	gin.SetMode(gin.ReleaseMode)
@@ -133,7 +133,7 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 
 func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store,
 	relayersInformer *relayer.Informer, sdkServiceClients sdkservice.SDKServiceClients,
-	app usecase.IApp) {
+	app *usecase.App) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
 	account.Register(engine, db, s, sdkServiceClients)

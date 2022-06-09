@@ -4,18 +4,19 @@ import (
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
-	"github.com/emerishq/demeris-api-server/mocks"
+	gomock "github.com/golang/mock/gomock"
 )
 
-type mockeds struct {
-	cacheBackend *mocks.CacheBackend
-	app          *mocks.App
+type mocks struct {
+	cacheBackend *MockCacheBackend
+	app          *MockApp
 }
 
-func newChainAPI(t *testing.T, setup func(mockeds)) *chains.ChainAPI {
-	m := mockeds{
-		cacheBackend: mocks.NewCacheBackend(t),
-		app:          mocks.NewApp(t),
+func newChainAPI(t *testing.T, setup func(mocks)) *chains.ChainAPI {
+	ctrl := gomock.NewController(t)
+	m := mocks{
+		cacheBackend: NewMockCacheBackend(ctrl),
+		app:          NewMockApp(ctrl),
 	}
 	if setup != nil {
 		setup(m)

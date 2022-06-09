@@ -22,6 +22,8 @@ lint:
 	golangci-lint run ./...
 
 generate-mocks:
+	go install github.com/golang/mock/mockgen
+	go generate api/...
 	go install github.com/vektra/mockery/v2
 	-@rm mocks/*.go
 	mockery --srcpkg sigs.k8s.io/controller-runtime/pkg/client --name Client
@@ -30,7 +32,6 @@ generate-mocks:
 		--name Service --structname SDKService --filename sdkservice.go --with-expecter
 	mockery --dir sdkservice --name SDKServiceClients --filename sdkserviceclients.go --with-expecter
 	mockery -r --dir lib --all --with-expecter
-	mockery --dir usecase --name IApp --with-expecter --filename app.go --structname App
 
 $(OBJS):
 	go build -o build/$@ -ldflags='-X main.Version=${BRANCH}-${COMMIT}' ${EXTRAFLAGS} ${BASEPKG}/cmd/$@

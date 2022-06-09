@@ -6,25 +6,23 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
-	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
-	"github.com/emerishq/demeris-api-server/usecase"
 	"github.com/gin-gonic/gin"
 )
 
 type ChainAPI struct {
-	cacheBackend stringcache.CacheBackend
-	app          usecase.IApp
+	cacheBackend CacheBackend
+	app          App
 }
 
-func New(c stringcache.CacheBackend, app usecase.IApp) *ChainAPI {
+func New(c CacheBackend, app App) *ChainAPI {
 	return &ChainAPI{
 		cacheBackend: c,
 		app:          app,
 	}
 }
 
-func Register(router *gin.Engine, db *database.Database, cacheBackend stringcache.CacheBackend, sdkServiceClients sdkservice.SDKServiceClients, app usecase.IApp) {
+func Register(router *gin.Engine, db *database.Database, cacheBackend CacheBackend, sdkServiceClients sdkservice.SDKServiceClients, app App) {
 	chainAPI := New(cacheBackend, app)
 
 	router.Group("/chains").
