@@ -4,28 +4,31 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/emerishq/demeris-api-server/mocks"
 	"github.com/emerishq/demeris-api-server/usecase"
-	"github.com/stretchr/testify/mock"
+	"github.com/golang/mock/gomock"
 )
 
-type mockeds struct {
+type mocks struct {
 	t                 *testing.T
-	sdkServiceClients *mocks.SDKServiceClients
-	sdkService        *mocks.SDKService
+	sdkServiceClients *MockSDKServiceClients
+	sdkServiceClient  *MockSDKServiceClient
 }
 
-func newApp(t *testing.T, setup func(mockeds)) usecase.IApp {
-	m := mockeds{
+func newApp(t *testing.T, setup func(mocks)) *usecase.App {
+	ctrl := gomock.NewController(t)
+	m := mocks{
 		t:                 t,
-		sdkServiceClients: mocks.NewSDKServiceClients(t),
-		sdkService:        mocks.NewSDKService(t),
+		sdkServiceClients: NewMockSDKServiceClients(ctrl),
+		sdkServiceClient:  NewMockSDKServiceClient(ctrl),
 	}
 
 	// Pre-setup expectations on sdkServiceClients
-	m.sdkServiceClients.EXPECT().GetSDKServiceClient("42").Return(m.sdkService, nil).Maybe()
-	m.sdkServiceClients.EXPECT().GetSDKServiceClient("44").Return(m.sdkService, nil).Maybe()
-	m.sdkServiceClients.EXPECT().GetSDKServiceClient(mock.Anything).Return(nil, errors.New("version not found")).Maybe()
+	m.sdkServiceClients.EXPECT().GetSDKServiceClient("42").
+		Return(m.sdkServiceClient, nil).AnyTimes()
+	m.sdkServiceClients.EXPECT().GetSDKServiceClient("44").
+		Return(m.sdkServiceClient, nil).AnyTimes()
+	m.sdkServiceClients.EXPECT().GetSDKServiceClient(gomock.Any()).
+		Return(nil, errors.New("version not found")).AnyTimes()
 
 	if setup != nil {
 		setup(m)

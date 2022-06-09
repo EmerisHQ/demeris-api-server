@@ -16,7 +16,7 @@ type stakingPool struct {
 	} `json:"pool"`
 }
 
-func getStakingPool(ctx context.Context, sdk sdkutilities.Service, chainName string) (stakingPool, error) {
+func getStakingPool(ctx context.Context, sdk SDKServiceClient, chainName string) (stakingPool, error) {
 	resp, err := sdk.StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 		ChainName: chainName,
 	})
@@ -37,7 +37,7 @@ type stakingParams struct {
 	} `json:"params"`
 }
 
-func getStakingParams(ctx context.Context, sdk sdkutilities.Service, chainName string) (stakingParams, error) {
+func getStakingParams(ctx context.Context, sdk SDKServiceClient, chainName string) (stakingParams, error) {
 	resp, err := sdk.StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 		ChainName: chainName,
 	})
@@ -48,7 +48,7 @@ func getStakingParams(ctx context.Context, sdk sdkutilities.Service, chainName s
 	return sp, json.Unmarshal(resp.StakingParams, &sp)
 }
 
-func getMintInflation(ctx context.Context, sdk sdkutilities.Service, chainName string) (sdktypes.Dec, error) {
+func getMintInflation(ctx context.Context, sdk SDKServiceClient, chainName string) (sdktypes.Dec, error) {
 	resp, err := sdk.MintInflation(ctx, &sdkutilities.MintInflationPayload{
 		ChainName: chainName,
 	})
@@ -80,7 +80,7 @@ type budgetParams struct {
 	} `json:"params"`
 }
 
-func getBudgetParams(ctx context.Context, sdk sdkutilities.Service, chainName string) (budgetParams, error) {
+func getBudgetParams(ctx context.Context, sdk SDKServiceClient, chainName string) (budgetParams, error) {
 	resp, err := sdk.BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 		ChainName: chainName,
 	})
@@ -100,7 +100,7 @@ type distributionParams struct {
 	} `json:"params"`
 }
 
-func getDistributionParams(ctx context.Context, sdk sdkutilities.Service, chainName string) (distributionParams, error) {
+func getDistributionParams(ctx context.Context, sdk SDKServiceClient, chainName string) (distributionParams, error) {
 	resp, err := sdk.DistributionParams(ctx,
 		&sdkutilities.DistributionParamsPayload{ChainName: chainName})
 
@@ -123,7 +123,7 @@ type crescentMintParams struct {
 	} `json:"params"`
 }
 
-func getCrescentMintParams(ctx context.Context, sdk sdkutilities.Service, chainName string) (crescentMintParams, error) {
+func getCrescentMintParams(ctx context.Context, sdk SDKServiceClient, chainName string) (crescentMintParams, error) {
 	resp, err := sdk.MintParams(ctx, &sdkutilities.MintParamsPayload{ChainName: chainName})
 	if err != nil {
 		return crescentMintParams{}, err

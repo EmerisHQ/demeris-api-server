@@ -26,7 +26,7 @@ func TestStakingAPR(t *testing.T) {
 		expectedError *apierrors.Error
 		expectedAPR   string
 
-		setup func(mockeds)
+		setup func(mocks)
 	}{
 		{
 			name: "fail: sdkServiceClient version not found",
@@ -48,8 +48,8 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve staking pool from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(nil, genericErr)
 			},
@@ -64,13 +64,13 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve staking params from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
-				m.sdkService.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
+				m.sdkServiceClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "cosmos-hub",
 				}).Return(nil, genericErr)
 			},
@@ -85,18 +85,18 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve supply denom from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
-				m.sdkService.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
+				m.sdkServiceClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
 					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
-				m.sdkService.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
+				m.sdkServiceClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "cosmos-hub",
 					Denom:     &denomAtom,
 				}).Return(nil, genericErr)
@@ -112,18 +112,18 @@ func TestStakingAPR(t *testing.T) {
 				"expected 1 denom for chain: cosmos-hub - denom: uatom, found 2",
 				http.StatusBadRequest),
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
-				m.sdkService.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
+				m.sdkServiceClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
 					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
-				m.sdkService.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
+				m.sdkServiceClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "cosmos-hub",
 					Denom:     &denomAtom,
 				}).Return(&sdkutilities.Supply2{
@@ -144,18 +144,18 @@ func TestStakingAPR(t *testing.T) {
 				"cannot retrieve inflation from sdk-service",
 				http.StatusBadRequest),
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
-				m.sdkService.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
+				m.sdkServiceClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
 					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
-				m.sdkService.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
+				m.sdkServiceClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "cosmos-hub",
 					Denom:     &denomAtom,
 				}).Return(&sdkutilities.Supply2{
@@ -163,7 +163,7 @@ func TestStakingAPR(t *testing.T) {
 						{Denom: "atom", Amount: "296346737551905uatom"},
 					},
 				}, nil)
-				m.sdkService.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
+				m.sdkServiceClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
 					ChainName: "cosmos-hub",
 				}).Return(nil, genericErr)
 			},
@@ -176,18 +176,18 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "18.160862201947935500",
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"183301421577182"}}`),
 				}, nil)
-				m.sdkService.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
+				m.sdkServiceClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.StakingParams2{
 					StakingParams: []byte(`{"params":{"bond_denom":"uatom"}}`),
 				}, nil)
-				m.sdkService.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
+				m.sdkServiceClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "cosmos-hub",
 					Denom:     &denomAtom,
 				}).Return(&sdkutilities.Supply2{
@@ -195,7 +195,7 @@ func TestStakingAPR(t *testing.T) {
 						{Denom: "atom", Amount: "296346737551905uatom"},
 					},
 				}, nil)
-				m.sdkService.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
+				m.sdkServiceClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
 					ChainName: "cosmos-hub",
 				}).Return(&sdkutilities.MintInflation2{
 					MintInflation: []byte(`{"inflation":"0.112331651975797806"}`),
@@ -210,18 +210,18 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "61.996006578275985200",
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"120975533972991"}}`),
 				}, nil)
-				m.sdkService.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
+				m.sdkServiceClient.EXPECT().StakingParams(ctx, &sdkutilities.StakingParamsPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.StakingParams2{
 					StakingParams: []byte(`{"params":{"bond_denom":"uosmo"}}`),
 				}, nil)
-				m.sdkService.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
+				m.sdkServiceClient.EXPECT().SupplyDenom(ctx, &sdkutilities.SupplyDenomPayload{
 					ChainName: "osmosis",
 					Denom:     &denomOsmo,
 				}).Return(&sdkutilities.Supply2{
@@ -229,7 +229,7 @@ func TestStakingAPR(t *testing.T) {
 						{Denom: "osmo", Amount: "377806829582915uosmo"},
 					},
 				}, nil)
-				m.sdkService.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
+				m.sdkServiceClient.EXPECT().MintInflation(ctx, &sdkutilities.MintInflationPayload{
 					ChainName: "osmosis",
 				}).Return(&sdkutilities.MintInflation2{
 					MintInflation: []byte(`{"inflation":"0.794056582648834299"}`),
@@ -244,13 +244,13 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "0.000000000000000000",
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"17907124553766"}}`),
 				}, nil)
-				m.sdkService.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
+				m.sdkServiceClient.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.BudgetParams2{
 					BudgetParams: []byte(`{"params":{"budgets":[
@@ -259,14 +259,14 @@ func TestStakingAPR(t *testing.T) {
               {"name":"budget-dev-team","rate":"0.250000000000000000"}
             ]}}`),
 				}, nil)
-				m.sdkService.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
+				m.sdkServiceClient.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.DistributionParams2{
 					DistributionParams: []byte(`{"params":{
             "community_tax":"0.285714285700000000"
           }}`),
 				}, nil)
-				m.sdkService.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
+				m.sdkServiceClient.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.MintParams2{
 					MintParams: []byte(`{"params":{}}`),
@@ -281,13 +281,13 @@ func TestStakingAPR(t *testing.T) {
 			},
 			expectedAPR: "37.938810219014751900",
 
-			setup: func(m mockeds) {
-				m.sdkService.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
+			setup: func(m mocks) {
+				m.sdkServiceClient.EXPECT().StakingPool(ctx, &sdkutilities.StakingPoolPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.StakingPool2{
 					StakingPool: []byte(`{"pool":{"bonded_tokens":"17907124553766"}}`),
 				}, nil)
-				m.sdkService.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
+				m.sdkServiceClient.EXPECT().BudgetParams(ctx, &sdkutilities.BudgetParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.BudgetParams2{
 					BudgetParams: []byte(`{"params":{"budgets":[
@@ -296,14 +296,14 @@ func TestStakingAPR(t *testing.T) {
               {"name":"budget-dev-team","rate":"0.250000000000000000"}
             ]}}`),
 				}, nil)
-				m.sdkService.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
+				m.sdkServiceClient.EXPECT().DistributionParams(ctx, &sdkutilities.DistributionParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.DistributionParams2{
 					DistributionParams: []byte(`{"params":{
             "community_tax":"0.285714285700000000"
           }}`),
 				}, nil)
-				m.sdkService.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
+				m.sdkServiceClient.EXPECT().MintParams(ctx, &sdkutilities.MintParamsPayload{
 					ChainName: "crescent",
 				}).Return(&sdkutilities.MintParams2{
 					MintParams: []byte(`{"params":{

@@ -109,7 +109,7 @@ func (app *App) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, 
 }
 
 // apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
-func (app *App) getCrescentAPR(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain, bondedTokens sdktypes.Dec) (sdktypes.Dec, error) {
+func (app *App) getCrescentAPR(ctx context.Context, sdkClient SDKServiceClient, chain cns.Chain, bondedTokens sdktypes.Dec) (sdktypes.Dec, error) {
 	budgetRate, err := getBudgetRate(ctx, sdkClient, chain)
 	if err != nil {
 		return sdktypes.Dec{}, err
@@ -133,7 +133,7 @@ func (app *App) getCrescentAPR(ctx context.Context, sdkClient sdkutilities.Servi
 		MulInt64(100), nil
 }
 
-func getBudgetRate(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain) (sdktypes.Dec, error) {
+func getBudgetRate(ctx context.Context, sdkClient SDKServiceClient, chain cns.Chain) (sdktypes.Dec, error) {
 	budgetParams, err := getBudgetParams(ctx, sdkClient, chain.ChainName)
 	if err != nil {
 		return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
@@ -162,7 +162,7 @@ func getBudgetRate(ctx context.Context, sdkClient sdkutilities.Service, chain cn
 	return budgetRate, nil
 }
 
-func getTax(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain) (sdktypes.Dec, error) {
+func getTax(ctx context.Context, sdkClient SDKServiceClient, chain cns.Chain) (sdktypes.Dec, error) {
 	distributionParams, err := getDistributionParams(ctx, sdkClient, chain.ChainName)
 	if err != nil {
 		return sdktypes.Dec{}, apierrors.Wrap(err, "chains",
@@ -181,7 +181,7 @@ func getTax(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain
 	return tax, nil
 }
 
-func getCrescentCurrentInflation(ctx context.Context, sdkClient sdkutilities.Service, chain cns.Chain) (sdktypes.Dec, error) {
+func getCrescentCurrentInflation(ctx context.Context, sdkClient SDKServiceClient, chain cns.Chain) (sdktypes.Dec, error) {
 	mintParams, err := getCrescentMintParams(ctx, sdkClient, chain.ChainName)
 	if err != nil {
 		return sdktypes.Dec{}, apierrors.Wrap(err, "chains",

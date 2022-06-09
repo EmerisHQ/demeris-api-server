@@ -23,14 +23,12 @@ lint:
 
 generate-mocks:
 	go install github.com/golang/mock/mockgen
-	go generate api/...
+	go generate ./api/...
+	go generate ./usecase/
 	go install github.com/vektra/mockery/v2
 	-@rm mocks/*.go
 	mockery --srcpkg sigs.k8s.io/controller-runtime/pkg/client --name Client
 	mockery --srcpkg k8s.io/client-go/informers --name GenericInformer
-	mockery --srcpkg github.com/emerishq/sdk-service-meta/gen/sdk_utilities \
-		--name Service --structname SDKService --filename sdkservice.go --with-expecter
-	mockery --dir sdkservice --name SDKServiceClients --filename sdkserviceclients.go --with-expecter
 	mockery -r --dir lib --all --with-expecter
 
 $(OBJS):
