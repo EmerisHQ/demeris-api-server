@@ -3,7 +3,6 @@ package chains
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-backend-models/cns"
@@ -121,28 +120,6 @@ type Validator struct {
 	Avatar string `json:"avatar,omitempty"`
 }
 
-//nolint //deadcode but used in swagger generation
-type InflationResponse struct {
-	Inflation string `json:"inflation"`
-}
-
-type StakingParamsResponse struct {
-	Params struct {
-		UnbondingTime     int64  `json:"unbonding_time"`
-		MaxValidators     int64  `json:"max_validators"`
-		MaxEntries        int64  `json:"max_entries"`
-		HistoricalEntries int64  `json:"historical_entries"`
-		BondDenom         string `json:"bond_denom"`
-	} `json:"params"`
-}
-
-type StakingPoolResponse struct {
-	Pool struct {
-		NotBondedTokens string `json:"not_bonded_tokens"`
-		BondedTokens    string `json:"bonded_tokens"`
-	} `json:"pool"`
-}
-
 // nolint :ditto
 type ParamsResponse struct {
 	Params struct {
@@ -185,41 +162,6 @@ type ChainStatus struct {
 
 type ChainsStatusesResponse struct {
 	Chains map[string]ChainStatus `json:"chains"`
-}
-
-type BudgetParamsResponse struct {
-	Params struct {
-		EpochBlocks int64 `json:"epoch_blocks"`
-		Budgets     []struct {
-			Name               string `json:"name"`
-			Rate               string `json:"rate"`
-			SourceAddress      string `json:"source_address"`
-			DestinationAddress string `json:"destination_address"`
-			StartTime          string `json:"start_time"`
-			EndTime            string `json:"end_time"`
-		} `json:"budgets"`
-	} `json:"params"`
-}
-
-type DistributionParamsResponse struct {
-	Params struct {
-		CommunityTax        string `json:"community_tax"`
-		BaseProposerReward  string `json:"base_proposer_reward"`
-		BonusProposerReward string `json:"bonus_proposer_reward"`
-		WithdrawAddrEnabled bool   `json:"withdraw_addr_enabled"`
-	} `json:"params"`
-}
-
-type CrecentMintParamsResponse struct {
-	Params struct {
-		MintDenom          string `json:"mint_denom"`
-		BlockTimeThreshold int64  `json:"block_time_threshold"`
-		InflationSchedules []struct {
-			StartTime time.Time `json:"start_time"`
-			EndTime   time.Time `json:"end_time"`
-			Amount    string    `json:"amount"`
-		} `json:"inflation_schedules"`
-	} `json:"params"`
 }
 
 func NewChainsStatusesResponse(sz int) ChainsStatusesResponse {

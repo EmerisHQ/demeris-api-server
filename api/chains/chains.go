@@ -3,7 +3,6 @@ package chains
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -14,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/api/apiutils"
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
@@ -24,18 +22,12 @@ import (
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/emeris-utils/logging"
-	"github.com/emerishq/emeris-utils/store"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
 const (
-	aprCacheDuration  = 24 * time.Hour
-	aprCachePrefix    = "api-server/chain-aprs"
-	osmosisChainName  = "osmosis"
-	crescentChainName = "crescent"
-
-	ecosystemIncentiveBudget = "budget-ecosystem-incentive"
-	devTeamBudget            = "budget-dev-team"
+	aprCacheDuration = 24 * time.Hour
+	aprCachePrefix   = "api-server/chain-aprs"
 )
 
 const (
@@ -1030,511 +1022,44 @@ func GetEpochProvisions(sdkServiceClients sdkservice.SDKServiceClients) gin.Hand
 // @Success 200 {object} APRResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /chain/{chainName}/APR [get]
-func GetStakingAPR(db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := c.Request.Context()
-		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
+func (ch *ChainAPI) GetStakingAPR(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
 
-		chainName := c.Param("chain")
+	chainName := c.Param("chain")
 
-		aprCache := stringcache.NewStringCache(
-			logger,
-			stringcache.NewStoreBackend(s),
-			aprCacheDuration,
-			aprCachePrefix,
-			getAPR(c, sdkServiceClients),
-		)
-		aprString, err := aprCache.Get(ctx, chainName, false)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot get APR"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot get APR: %w", err),
-				"name",
-				chainName,
-			)
-			_ = c.Error(e)
+	aprCache := stringcache.NewStringCache(
+		logger,
+		ch.cacheBackend,
+		aprCacheDuration,
+		aprCachePrefix,
+		stringcache.HandlerFunc(
+			func(ctx context.Context, key string) (string, error) {
+				chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
 
-			return
-		}
-
-		apr, err := strconv.ParseFloat(aprString, 64)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot convert apr to float"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot convert apr to float: %w", err),
-				"name",
-				chainName,
-				"APR",
-				apr,
-			)
-			_ = c.Error(e)
-
-			return
-		}
-		res := APRResponse{APR: apr}
-		c.JSON(http.StatusOK, res)
-	}
-}
-
-func getAPR(c *gin.Context, sdkServiceClients sdkservice.SDKServiceClients) stringcache.HandlerFunc {
-	return func(ctx context.Context, key string) (string, error) {
-		chain := ginutils.GetValue[cns.Chain](c, ChainContextKey)
-		client, e := sdkServiceClients.GetSDKServiceClient(chain.MajorSDKVersion())
-		if e != nil {
-			_ = c.Error(e)
-			return "", fmt.Errorf(e.Error())
-		}
-
-		// get number of bonded tokens from staking/pool data
-		stakingPoolRes, err := client.StakingPool(ctx, &sdkutilities.StakingPoolPayload{
-			ChainName: chain.ChainName,
-		})
-
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve staking pool from sdk-service"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve staking pool from sdk-service: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		var stakingPoolData StakingPoolResponse
-		err = json.Unmarshal(stakingPoolRes.StakingPool, &stakingPoolData)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot unmarshal staking pool"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot unmarshal staking pool: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		bondedTokens, err := sdktypes.NewDecFromStr(stakingPoolData.Pool.BondedTokens)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot convert bonded_tokens to sdktypes.Dec"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot convert bonded_tokens to sdktypes.Dec: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		// apr for crescent is calculated differently as it follows custom inflation schedules
-		// apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
-		if strings.ToLower(chain.ChainName) == crescentChainName {
-			return getCrescentAPR(c, chain, bondedTokens, client)
-		}
-
-		// get staking coin denom from staking params
-		stakingParamsRes, err := client.StakingParams(ctx, &sdkutilities.StakingParamsPayload{
-			ChainName: chain.ChainName,
-		})
-
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve staking params from sdk-service"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve staking params from sdk-service: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		var stakingParamsData StakingParamsResponse
-		err = json.Unmarshal(stakingParamsRes.StakingParams, &stakingParamsData)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot unmarshal staking params"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot unmarshal staking params: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		bond_denom := stakingParamsData.Params.BondDenom
-
-		// get supply of staking denom
-		payload := &sdkutilities.SupplyDenomPayload{
-			ChainName: chain.ChainName,
-			Denom:     &bond_denom,
-		}
-
-		denomSupplyRes, err := client.SupplyDenom(ctx, payload)
-		if err != nil || len(denomSupplyRes.Coins) != 1 { // Expected exactly one response
-			cause := fmt.Sprintf("cannot retrieve supply for chain: %s - denom: %s from sdk-service", chain.ChainName, bond_denom)
-			if denomSupplyRes != nil && len(denomSupplyRes.Coins) != 1 {
-				cause = fmt.Sprintf("expected 1 denom for chain: %s - denom: %s, found %v", chain.ChainName, bond_denom, denomSupplyRes.Coins)
-			}
-			e := apierrors.New(
-				"chains",
-				cause,
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve denom supply from sdk-service: %w", err),
-				"chain name", chain.ChainName,
-				"denom name", bond_denom,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		// denomSupplyRes.Coins[0].Amount is of pattern {amount}{denom} Ex: 438926033423uxyz
-		// Hence, converting it to type coin to extract amount
-		coin, err := sdktypes.ParseCoinNormalized(denomSupplyRes.Coins[0].Amount)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot convert amount to coin"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot convert amount to coin: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		supply := coin.Amount.ToDec()
-
-		// get inflation
-		inflationRes, err := client.MintInflation(ctx, &sdkutilities.MintInflationPayload{
-			ChainName: chain.ChainName,
-		})
-
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot retrieve inflation from sdk-service"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot retrieve inflation from sdk-service: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		var inflationData InflationResponse
-		err = json.Unmarshal(inflationRes.MintInflation, &inflationData)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot unmarshal inflation"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot unmarshal inflation: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		inflation, err := sdktypes.NewDecFromStr(inflationData.Inflation)
-		if err != nil {
-			e := apierrors.New(
-				"chains",
-				fmt.Sprintf("cannot convert inflation to sdktypes.Dec"),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot convert inflation to sdktypes.Dec: %w", err),
-				"name",
-				chain.ChainName,
-			)
-			_ = c.Error(e)
-
-			return "", err
-		}
-
-		// only 25% of the newly minted tokens are distributed as staking rewards for osmosis
-		if strings.ToLower(chain.ChainName) == osmosisChainName {
-			inflation = inflation.QuoInt64(4)
-		}
-
-		// calculate staking APR
-		apr := inflation.Quo(bondedTokens.Quo(supply)).MulInt64(100)
-		return apr.String(), nil
-	}
-}
-
-// apr=(1-budget rate)*(1-tax)*CurrentInflationAmount/Bonded tokens
-func getCrescentAPR(c *gin.Context, chain cns.Chain, bondedTokens sdktypes.Dec, client sdkutilities.Client) (string, error) {
-	budgetRate, err := getBudgetRate(c, chain, client)
+				apr, err := ch.app.StakingAPR(ctx, chain)
+				if err != nil {
+					return "", err
+				}
+				return apr.String(), nil
+			},
+		),
+	)
+	aprString, err := aprCache.Get(ctx, chainName, false)
 	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot get budget rate"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot get budget rate: %w", err),
-			"name",
-			chain.ChainName,
-		)
+		e := apierrors.Wrap(err, "chains", "cannot get APR", http.StatusBadRequest)
 		_ = c.Error(e)
-
-		return "", err
+		return
 	}
 
-	tax, err := getTax(c, chain, client)
+	apr, err := strconv.ParseFloat(aprString, 64)
 	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot get tax"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot get tax: %w", err),
-			"name",
-			chain.ChainName,
-		)
+		e := apierrors.Wrap(err, "chains", "cannot convert APR to float", http.StatusBadRequest)
 		_ = c.Error(e)
-
-		return "", err
+		return
 	}
-
-	currentInflationAmount, err := getCurrentInflationAmount(c, chain, client)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot get current inflation amount"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot get current inflation amount: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return "", err
-	}
-
-	OneDec := sdktypes.NewDec(1)
-	apr := OneDec.Sub(tax).Mul(OneDec.Sub(budgetRate)).Mul(currentInflationAmount).Quo(bondedTokens).MulInt64(100)
-	return apr.String(), nil
-}
-
-func getBudgetRate(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
-	budgetRate := sdktypes.NewDec(0)
-
-	budgetParamsResp, err := client.BudgetParams(c.Request.Context(), &sdkutilities.BudgetParamsPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve budget params from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve budget params from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return budgetRate, err
-	}
-
-	var budgetParamsData BudgetParamsResponse
-	err = json.Unmarshal(budgetParamsResp.BudgetParams, &budgetParamsData)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot unmarshal budget params"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot unmarshal budget params: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return budgetRate, err
-	}
-
-	for _, budget := range budgetParamsData.Params.Budgets {
-		if budget.Name == ecosystemIncentiveBudget || budget.Name == devTeamBudget {
-			rate, err := sdktypes.NewDecFromStr(budget.Rate)
-			if err != nil {
-				e := apierrors.New(
-					"chains",
-					fmt.Sprintf("cannot convert budget rate to Dec"),
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("cannot convert budget rate to Dec: %w", err),
-					"name",
-					chain.ChainName,
-				)
-				_ = c.Error(e)
-
-				return budgetRate, err
-			}
-			budgetRate = budgetRate.Add(rate)
-		}
-	}
-
-	return budgetRate, nil
-}
-
-func getTax(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
-	var tax sdktypes.Dec
-
-	distributionParamsResp, err := client.DistributionParams(c.Request.Context(), &sdkutilities.DistributionParamsPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve distribution params from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve distribution params from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return tax, err
-	}
-
-	var distributionParamsData DistributionParamsResponse
-	err = json.Unmarshal(distributionParamsResp.DistributionParams, &distributionParamsData)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot unmarshal distribution params"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot unmarshal distribution params: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return tax, err
-	}
-
-	tax, err = sdktypes.NewDecFromStr(distributionParamsData.Params.CommunityTax)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot convert tax to Dec"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot convert tax to Dec: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return tax, err
-	}
-	return tax, nil
-}
-
-func getCurrentInflationAmount(c *gin.Context, chain cns.Chain, client sdkutilities.Client) (sdktypes.Dec, error) {
-	currentInflationAmount := sdktypes.NewDec(0)
-
-	mintParamsResp, err := client.MintParams(c.Request.Context(), &sdkutilities.MintParamsPayload{
-		ChainName: chain.ChainName,
-	})
-
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot retrieve mint params from sdk-service"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot retrieve mint params from sdk-service: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return currentInflationAmount, err
-	}
-
-	var mintParamsData CrecentMintParamsResponse
-	err = json.Unmarshal(mintParamsResp.MintParams, &mintParamsData)
-	if err != nil {
-		e := apierrors.New(
-			"chains",
-			fmt.Sprintf("cannot unmarshal mint params"),
-			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot unmarshal mint params: %w", err),
-			"name",
-			chain.ChainName,
-		)
-		_ = c.Error(e)
-
-		return currentInflationAmount, err
-	}
-
-	now := time.Now()
-	for _, schedule := range mintParamsData.Params.InflationSchedules {
-		if schedule.StartTime.Before(now) && schedule.EndTime.After(now) {
-			currentInflationAmount, err = sdktypes.NewDecFromStr(schedule.Amount)
-			if err != nil {
-				e := apierrors.New(
-					"chains",
-					fmt.Sprintf("cannot convert amount to dec"),
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("cannot convert amount to dec: %w", err),
-					"name",
-					chain.ChainName,
-				)
-				_ = c.Error(e)
-
-				return currentInflationAmount, err
-			}
-			break
-		}
-	}
-	return currentInflationAmount, nil
+	res := APRResponse{APR: apr}
+	c.JSON(http.StatusOK, res)
 }
 
 // GetChainsStatuses returns the status of all the enabled chains.

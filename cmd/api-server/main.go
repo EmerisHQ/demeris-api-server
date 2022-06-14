@@ -13,6 +13,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/router"
 	"github.com/emerishq/demeris-api-server/lib/fflag"
 	"github.com/emerishq/demeris-api-server/sdkservice"
+	"github.com/emerishq/demeris-api-server/usecase"
 	"github.com/emerishq/emeris-utils/k8s"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
@@ -107,6 +108,8 @@ func main() {
 		l.Panicw("cannot initialize sdk-service clients", "error", err)
 	}
 
+	app := usecase.NewApp(sdkServiceClients)
+
 	r := router.New(
 		dbi,
 		l,
@@ -115,6 +118,7 @@ func main() {
 		cfg.KubernetesNamespace,
 		informer,
 		sdkServiceClients,
+		app,
 		cfg.Debug,
 	)
 

@@ -13,7 +13,6 @@ import (
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/emerishq/emeris-utils/logging"
-	"github.com/emerishq/emeris-utils/store"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -38,7 +37,7 @@ const (
 // @Success 200 {object} ValidatorsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /validators [get]
-func GetValidators(db *database.Database, s *store.Store) gin.HandlerFunc {
+func GetValidators(db *database.Database, cache stringcache.CacheBackend) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		logger := ginutils.GetValue[*zap.SugaredLogger](c, logging.LoggerKey)
@@ -64,7 +63,7 @@ func GetValidators(db *database.Database, s *store.Store) gin.HandlerFunc {
 		adaptValidators := make([]*Validator, 0, len(validators))
 		avatarCache := stringcache.NewStringCache(
 			logger,
-			stringcache.NewStoreBackend(s),
+			cache,
 			avatarCacheDuration,
 			avatarCachePrefix,
 			stringcache.HandlerFunc(fetchKeybaseAvatar),

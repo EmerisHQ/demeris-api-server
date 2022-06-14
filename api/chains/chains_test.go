@@ -1,18 +1,27 @@
 package chains_test
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/emerishq/demeris-api-server/api/chains"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
+	"github.com/emerishq/demeris-api-server/lib/stringcache"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/emeris-utils/logging"
+	"github.com/gin-gonic/gin"
 
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -353,4 +362,95 @@ func TestGetChainsStatuses(t *testing.T) {
 	require.Equal(t, 200, resp.StatusCode)
 
 	utils.TruncateCNSDB(testingCtx, t)
+}
+
+func TestGetStakingAPR(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name               string
+		expectedStatusCode int
+		expectedBody       string
+		expectedError      string
+		setup              func(mocks)
+	}{
+		{
+			name:               "ok: cache hit",
+			expectedStatusCode: http.StatusOK,
+			expectedBody:       `{"apr":18.2}`,
+
+			setup: func(m mocks) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("18.2", nil)
+			},
+		},
+		{
+			name:               "fail: cache hit but not a float",
+			expectedStatusCode: http.StatusOK,
+			expectedError:      "chains: strconv.ParseFloat: parsing \"xx\": invalid syntax",
+
+			setup: func(m mocks) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("xx", nil)
+			},
+		},
+		{
+			name:               "ok: cache miss",
+			expectedStatusCode: http.StatusOK,
+			expectedBody:       `{"apr":18.2}`,
+
+			setup: func(m mocks) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("", stringcache.ErrCacheMiss)
+
+				apr, _ := sdktypes.NewDecFromStr("18.2")
+				m.app.EXPECT().StakingAPR(ctx, cns.Chain{ChainName: "cosmos-hub"}).
+					Return(apr, nil)
+
+				m.cacheBackend.EXPECT().Set(ctx, "api-server/chain-aprs/cosmos-hub",
+					"18.200000000000000000", time.Hour*24).Return(nil)
+			},
+		},
+		{
+			name:               "fail: cache miss but app returns an error",
+			expectedStatusCode: http.StatusOK,
+			expectedError:      "chains: app error",
+
+			setup: func(m mocks) {
+				m.cacheBackend.EXPECT().Get(ctx, "api-server/chain-aprs/cosmos-hub").
+					Return("", stringcache.ErrCacheMiss)
+
+				m.app.EXPECT().StakingAPR(ctx, cns.Chain{ChainName: "cosmos-hub"}).
+					Return(sdktypes.Dec{}, errors.New("app error"))
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+			assert := assert.New(t)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Params = gin.Params{gin.Param{Key: "chain", Value: "cosmos-hub"}}
+			c.Request, _ = http.NewRequestWithContext(ctx, http.MethodGet, "", nil)
+			// add logger or else it fails
+			logger := logging.New(logging.LoggingConfig{})
+			c.Set(logging.LoggerKey, logger)
+			// add chain in gin
+			// NOTE(tb): this is done by the middleware but I think it should be done
+			// in the usecase package.
+			c.Set(chains.ChainContextKey, cns.Chain{ChainName: "cosmos-hub"})
+			ch := newChainAPI(t, tt.setup)
+
+			ch.GetStakingAPR(c)
+
+			assert.Equal(tt.expectedStatusCode, w.Code)
+			if tt.expectedError != "" {
+				require.Len(c.Errors, 1, "expected one error but got %d", len(c.Errors))
+				require.EqualError(c.Errors[0], tt.expectedError)
+				return
+			}
+			require.Empty(c.Errors)
+			assert.Equal(tt.expectedBody, w.Body.String())
+		})
+	}
 }

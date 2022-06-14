@@ -85,5 +85,5 @@ func setup(t *testing.T) (router.Router, config.Config, *observer.ObservedLogs, 
 	clients, err := sdkservice.InitializeClients()
 	require.NoError(t, err)
 
-	return *router.New(db, observedLogger.Sugar(), s, nil, "", nil, clients, cfg.Debug), *cfg, observedLogs, func() { tServer.Stop() }
+	return *router.New(db, observedLogger.Sugar(), s, nil, "", nil, clients, nil, cfg.Debug), *cfg, observedLogs, func() { tServer.Stop() }
 }

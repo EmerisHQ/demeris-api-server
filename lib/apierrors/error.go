@@ -39,3 +39,12 @@ func New(namespace string, cause string, statusCode int) *Error {
 		Cause:      cause,
 	}
 }
+
+func Wrap(err error, namespace, cause string, statusCode int) *Error {
+	return &Error{
+		StatusCode:    statusCode,
+		Namespace:     namespace,
+		Cause:         cause,
+		InternalCause: err,
+	}
+}

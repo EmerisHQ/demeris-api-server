@@ -22,7 +22,11 @@ lint:
 	golangci-lint run ./...
 
 generate-mocks:
-	@rm mocks/*.go || true
+	go install github.com/golang/mock/mockgen
+	go generate ./api/...
+	go generate ./usecase/
+	go install github.com/vektra/mockery/v2
+	-@rm mocks/*.go
 	mockery --srcpkg sigs.k8s.io/controller-runtime/pkg/client --name Client
 	mockery --srcpkg k8s.io/client-go/informers --name GenericInformer
 	mockery -r --dir lib --all --with-expecter

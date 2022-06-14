@@ -8,7 +8,9 @@ import (
 	"github.com/emerishq/demeris-api-server/api/cached"
 	"github.com/emerishq/demeris-api-server/api/liquidity"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
+	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
+	"github.com/emerishq/demeris-api-server/usecase"
 	"k8s.io/client-go/informers"
 
 	"github.com/emerishq/demeris-api-server/api/relayer"
@@ -47,6 +49,7 @@ func New(
 	kubeNamespace string,
 	genericInformer informers.GenericInformer,
 	sdkServiceClients sdkservice.SDKServiceClients,
+	app *usecase.App,
 	debug bool,
 ) *Router {
 	gin.SetMode(gin.ReleaseMode)
@@ -81,7 +84,7 @@ func New(
 
 	relayersInformer := relayer.NewInformer(genericInformer, kubeNamespace)
 
-	registerRoutes(engine, r.DB, r.s, relayersInformer, sdkServiceClients)
+	registerRoutes(engine, r.DB, r.s, relayersInformer, sdkServiceClients, app)
 
 	return r
 }
@@ -128,8 +131,9 @@ func tryGetIntCorrelationID(c *gin.Context) string {
 	return id
 }
 
-func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, relayersInformer *relayer.Informer,
-	sdkServiceClients sdkservice.SDKServiceClients) {
+func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store,
+	relayersInformer *relayer.Informer, sdkServiceClients sdkservice.SDKServiceClients,
+	app *usecase.App) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
 	account.Register(engine, db, s, sdkServiceClients)
@@ -140,7 +144,7 @@ func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store, r
 
 	// @tag.name Chain
 	// @tag.description Chain-related endpoints
-	chains.Register(engine, db, s, sdkServiceClients)
+	chains.Register(engine, db, stringcache.NewStoreBackend(s), sdkServiceClients, app)
 
 	// @tag.name Transactions
 	// @tag.description Transaction-related endpoints
