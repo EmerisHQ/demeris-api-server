@@ -4,6 +4,12 @@ import (
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 )
 
+type AccountsResponse struct {
+	Balances             []Balance             `json:"balances"`
+	StakingBalances      []StakingBalance      `json:"staking_balances"`
+	UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations"`
+}
+
 type BalancesResponse struct {
 	Balances []Balance `json:"balances"`
 }

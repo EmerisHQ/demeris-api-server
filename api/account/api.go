@@ -2,9 +2,11 @@ package account
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
@@ -29,6 +31,9 @@ const (
 )
 
 func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
+
+	router.GET("/accounts/:rawaddress", GetAccounts(db))
+
 	group := router.Group("/account/:address")
 	group.GET("/balance", GetBalancesByAddress(db))
 	group.GET("/stakingbalances", GetDelegationsByAddress(db))
@@ -36,6 +41,43 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 	group.GET("/numbers", GetNumbersByAddress(db, sdkServiceClients))
 	group.GET("/tickets", GetUserTickets(db, s))
 	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(db, sdkServiceClients))
+}
+
+func GetAccounts(db *database.Database) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		rawAddress := c.Param("rawaddress")
+		bz, err := hex.DecodeString(rawAddress)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		chains, err := db.Chains(ctx)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		addrs := make([]string, len(chains))
+		for i, ch := range chains {
+			// Get chain address bech 32 human readable part (aka prefix or tag)
+			// FIXME(tb): MainPrefix or PrefixAccount or ?
+			hrp := ch.NodeInfo.Bech32Config.MainPrefix
+			addr, err := bech32.ConvertAndEncode(hrp, bz)
+			if err != nil {
+				c.Error(err)
+			}
+			addrs[i] = addr
+		}
+		balances, err := getBalances(ctx, db, addrs...)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		c.JSON(http.StatusOK, AccountsResponse{
+			Balances: balances,
+		})
+	}
 }
 
 // GetBalancesByAddress returns account of an address.
@@ -51,12 +93,10 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
-		var res BalancesResponse
 
 		address := c.Param("address")
 
-		balances, err := db.Balances(ctx, address)
-
+		balances, err := getBalances(ctx, db, address)
 		if err != nil {
 			e := apierrors.New(
 				"account",
@@ -70,36 +110,31 @@ func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 			_ = c.Error(e)
 			return
 		}
-
-		vd, err := verifiedDenomsMap(ctx, db)
-		if err != nil {
-			e := apierrors.New(
-				"account",
-				fmt.Sprintf("cannot retrieve account for address %v", address),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot query database verified denoms: %w", err),
-				"address",
-				address,
-			)
-			_ = c.Error(e)
-			return
-		}
-
-		// TODO: get unique chains
-		// perhaps we can remove this since there will be another endpoint specifically for fee tokens
-
-		for _, b := range balances {
-			res.Balances = append(res.Balances, balanceRespForBalance(
-				ctx,
-				b,
-				vd,
-				db.DenomTrace,
-			))
-		}
-
-		c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusOK, BalancesResponse{Balances: balances})
 	}
+}
+
+func getBalances(ctx context.Context, db *database.Database, addrs ...string) ([]Balance, error) {
+	balances, err := db.Balances(ctx, addrs...)
+	if err != nil {
+		return nil, err
+	}
+	vd, err := verifiedDenomsMap(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: get unique chains
+	// perhaps we can remove this since there will be another endpoint specifically for fee tokens
+	res := make([]Balance, len(balances))
+	for i, b := range balances {
+		res[i] = balanceRespForBalance(
+			ctx,
+			b,
+			vd,
+			db.DenomTrace,
+		)
+	}
+	return res, nil
 }
 
 // What lies ahead is a refactoring operation to ease testing of the algorithm implemented
@@ -179,10 +214,8 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 		var res StakingBalancesResponse
 
 		address := c.Param("address")
-
 		if fflag.Enabled(c, FixSlashedDelegations) {
-			dl, err := db.Delegations(ctx, address)
-
+			balances, err := getStakingBalances(ctx, db, address)
 			if err != nil {
 				e := apierrors.New(
 					"delegations",
@@ -194,70 +227,12 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 					address,
 				)
 				_ = c.Error(e)
-
 				return
 			}
+			c.JSON(http.StatusOK, StakingBalancesResponse{StakingBalances: balances})
 
-			for _, del := range dl {
-				delegationAmount, err := sdktypes.NewDecFromStr(del.Amount)
-				if err != nil {
-					e := apierrors.New(
-						"delegations",
-						fmt.Sprintf("cannot convert delegation amount to Dec"),
-						http.StatusInternalServerError,
-					).WithLogContext(
-						fmt.Errorf("cannot convert delegation amount to Dec: %w", err),
-						"address",
-						address,
-					)
-					_ = c.Error(e)
-
-					return
-				}
-
-				validatorShares, err := sdktypes.NewDecFromStr(del.ValidatorShares)
-				if err != nil {
-					e := apierrors.New(
-						"delegations",
-						fmt.Sprintf("cannot convert validator total shares to Dec"),
-						http.StatusInternalServerError,
-					).WithLogContext(
-						fmt.Errorf("cannot convert validator total shares to Dec: %w", err),
-						"address",
-						address,
-					)
-					_ = c.Error(e)
-
-					return
-				}
-
-				validatorTokens, err := sdktypes.NewDecFromStr(del.ValidatorTokens)
-				if err != nil {
-					e := apierrors.New(
-						"delegations",
-						fmt.Sprintf("cannot convert validator total tokens to Dec"),
-						http.StatusInternalServerError,
-					).WithLogContext(
-						fmt.Errorf("cannot convert validator total tokens to Dec: %w", err),
-						"address",
-						address,
-					)
-					_ = c.Error(e)
-
-					return
-				}
-
-				// apply shares * total_validator_balance / total_validator_shares
-				balance := delegationAmount.Mul(validatorTokens).Quo(validatorShares)
-				res.StakingBalances = append(res.StakingBalances, StakingBalance{
-					ValidatorAddress: del.Validator,
-					Amount:           balance.String(),
-					ChainName:        del.ChainName,
-				})
-			}
-
-			c.JSON(http.StatusOK, res)
 		} else {
+
 			dl, err := db.DelegationsOldResponse(ctx, address)
 
 			if err != nil {
@@ -286,6 +261,42 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 			c.JSON(http.StatusOK, res)
 		}
 	}
+}
+
+func getStakingBalances(ctx context.Context, db *database.Database, addrs ...string) ([]StakingBalance, error) {
+
+	dl, err := db.Delegations(ctx, addrs...)
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot retrieve delegations for address %v: %w", addrs, err)
+	}
+
+	var res []StakingBalance
+	for _, del := range dl {
+		delegationAmount, err := sdktypes.NewDecFromStr(del.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert delegation amount to Dec: %w", err)
+		}
+
+		validatorShares, err := sdktypes.NewDecFromStr(del.ValidatorShares)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert validator total shares to Dec: %w", err)
+		}
+
+		validatorTokens, err := sdktypes.NewDecFromStr(del.ValidatorTokens)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert validator total tokens to Dec: %w", err)
+		}
+
+		// apply shares * total_validator_balance / total_validator_shares
+		balance := delegationAmount.Mul(validatorTokens).Quo(validatorShares)
+		res = append(res, StakingBalance{
+			ValidatorAddress: del.Validator,
+			Amount:           balance.String(),
+			ChainName:        del.ChainName,
+		})
+	}
+	return res, nil
 }
 
 // GetUnbondingDelegationsByAddress returns the unbonding delegations of an address

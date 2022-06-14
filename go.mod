@@ -14,7 +14,7 @@ require (
 	github.com/allinbits/starport-operator v0.0.1-alpha.45
 	github.com/cockroachdb/cockroach-go/v2 v2.2.8
 	github.com/cosmos/cosmos-sdk v0.45.3
-	github.com/emerishq/demeris-backend-models v1.5.0
+	github.com/emerishq/demeris-backend-models v1.7.2
 	github.com/emerishq/emeris-cns-server v0.0.0-20220422070001-a18e063b6374
 	github.com/emerishq/emeris-price-oracle v1.0.0
 	github.com/emerishq/emeris-utils v1.9.0
@@ -22,14 +22,14 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/gin-contrib/zap v0.0.2
 	github.com/gin-gonic/gin v1.7.7
-	github.com/go-playground/validator/v10 v10.10.1
+	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.7
 	github.com/gravity-devs/liquidity v1.5.0
 	github.com/jmoiron/sqlx v1.3.3
-	github.com/lib/pq v1.10.4
+	github.com/lib/pq v1.10.6
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.1
 	github.com/swaggo/swag v1.8.0
@@ -58,7 +58,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.1.2 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
@@ -78,7 +78,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v0.0.0-20200901110807-248326c1351b // indirect
-	github.com/ethereum/go-ethereum v1.10.17 // indirect
+	github.com/ethereum/go-ethereum v1.10.18 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
