@@ -29,7 +29,13 @@ type PoolsStrategy interface {
 type PoolPricesResult map[StrategyID]options.O[[]options.O[PoolPrice]]
 
 func (a *App) PoolPrices(ctx context.Context) PoolPricesResult {
-	strategies := []PoolsStrategy{}
+	crescent := NewCrescentPoolsStrategy(a.crescentClient, a.sdkServiceClients)
+	osmosis := NewOsmosisPoolsStrategy(a.osmosisClient)
+
+	strategies := []PoolsStrategy{
+		crescent,
+		osmosis,
+	}
 
 	result := make(PoolPricesResult, len(strategies))
 	for _, strategy := range strategies {
