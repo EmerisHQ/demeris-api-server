@@ -8,9 +8,95 @@ import (
 	context "context"
 	reflect "reflect"
 
+	database "github.com/emerishq/demeris-api-server/api/database"
+	cns "github.com/emerishq/demeris-backend-models/cns"
+	tracelistener "github.com/emerishq/demeris-backend-models/tracelistener"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	gomock "github.com/golang/mock/gomock"
 )
+
+// MockDB is a mock of DB interface.
+type MockDB struct {
+	ctrl     *gomock.Controller
+	recorder *MockDBMockRecorder
+}
+
+// MockDBMockRecorder is the mock recorder for MockDB.
+type MockDBMockRecorder struct {
+	mock *MockDB
+}
+
+// NewMockDB creates a new mock instance.
+func NewMockDB(ctrl *gomock.Controller) *MockDB {
+	mock := &MockDB{ctrl: ctrl}
+	mock.recorder = &MockDBMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDB) EXPECT() *MockDBMockRecorder {
+	return m.recorder
+}
+
+// Balances mocks base method.
+func (m *MockDB) Balances(ctx context.Context, addresses []string) ([]tracelistener.BalanceRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Balances", ctx, addresses)
+	ret0, _ := ret[0].([]tracelistener.BalanceRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Balances indicates an expected call of Balances.
+func (mr *MockDBMockRecorder) Balances(ctx, addresses interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Balances", reflect.TypeOf((*MockDB)(nil).Balances), ctx, addresses)
+}
+
+// Delegations mocks base method.
+func (m *MockDB) Delegations(ctx context.Context, addresses []string) ([]database.DelegationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delegations", ctx, addresses)
+	ret0, _ := ret[0].([]database.DelegationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delegations indicates an expected call of Delegations.
+func (mr *MockDBMockRecorder) Delegations(ctx, addresses interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegations", reflect.TypeOf((*MockDB)(nil).Delegations), ctx, addresses)
+}
+
+// DenomTrace mocks base method.
+func (m *MockDB) DenomTrace(ctx context.Context, chain, hash string) (tracelistener.IBCDenomTraceRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DenomTrace", ctx, chain, hash)
+	ret0, _ := ret[0].(tracelistener.IBCDenomTraceRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DenomTrace indicates an expected call of DenomTrace.
+func (mr *MockDBMockRecorder) DenomTrace(ctx, chain, hash interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomTrace", reflect.TypeOf((*MockDB)(nil).DenomTrace), ctx, chain, hash)
+}
+
+// VerifiedDenoms mocks base method.
+func (m *MockDB) VerifiedDenoms(arg0 context.Context) (map[string]cns.DenomList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifiedDenoms", arg0)
+	ret0, _ := ret[0].(map[string]cns.DenomList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifiedDenoms indicates an expected call of VerifiedDenoms.
+func (mr *MockDBMockRecorder) VerifiedDenoms(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifiedDenoms", reflect.TypeOf((*MockDB)(nil).VerifiedDenoms), arg0)
+}
 
 // MockSDKServiceClients is a mock of SDKServiceClients interface.
 type MockSDKServiceClients struct {

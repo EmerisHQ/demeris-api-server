@@ -283,7 +283,6 @@ func Setup(runServer bool) *TestingCtx {
 
 	c.DatabaseConnectionURL = cdbTestServer.PGURL().String()
 	checkNotNil(c.DatabaseConnectionURL, "CDB conn. string", l)
-	fmt.Println("CONN", c.DatabaseConnectionURL)
 
 	// FIXME: Do NOT initialize and migrate the DB using the CNS server's connection method
 	// A big no-no here, using one service's internals inside the other

@@ -108,7 +108,7 @@ func main() {
 		l.Panicw("cannot initialize sdk-service clients", "error", err)
 	}
 
-	app := usecase.NewApp(sdkServiceClients)
+	app := usecase.NewApp(dbi, sdkServiceClients)
 
 	r := router.New(
 		dbi,

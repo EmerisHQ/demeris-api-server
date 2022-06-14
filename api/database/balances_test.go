@@ -35,7 +35,7 @@ func (s *TestSuite) TestBalances() {
 	})
 
 	// case 1: one address
-	bs, err := s.ctx.Router.DB.Balances(ctx, "adr1")
+	bs, err := s.ctx.Router.DB.Balances(ctx, []string{"adr1"})
 
 	require.NoError(err)
 	if assert.Len(bs, 1) {
@@ -47,7 +47,7 @@ func (s *TestSuite) TestBalances() {
 	}
 
 	// case 2: multiple addresses
-	bs, err = s.ctx.Router.DB.Balances(ctx, "adr1", "adr2")
+	bs, err = s.ctx.Router.DB.Balances(ctx, []string{"adr1", "adr2"})
 
 	require.NoError(err)
 	if assert.Len(bs, 2) {

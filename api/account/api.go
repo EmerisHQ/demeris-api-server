@@ -115,7 +115,7 @@ func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
 }
 
 func getBalances(ctx context.Context, db *database.Database, addrs ...string) ([]Balance, error) {
-	balances, err := db.Balances(ctx, addrs...)
+	balances, err := db.Balances(ctx, addrs)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +265,7 @@ func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 
 func getStakingBalances(ctx context.Context, db *database.Database, addrs ...string) ([]StakingBalance, error) {
 
-	dl, err := db.Delegations(ctx, addrs...)
+	dl, err := db.Delegations(ctx, addrs)
 
 	if err != nil {
 		return nil, fmt.Errorf("cannot retrieve delegations for address %v: %w", addrs, err)

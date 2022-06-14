@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func (d *Database) Balances(ctx context.Context, addresses ...string) ([]tracelistener.BalanceRow, error) {
+func (d *Database) Balances(ctx context.Context, addresses []string) ([]tracelistener.BalanceRow, error) {
 	defer sentry.StartSpan(ctx, "db.Balances").Finish()
 
 	var balances []tracelistener.BalanceRow

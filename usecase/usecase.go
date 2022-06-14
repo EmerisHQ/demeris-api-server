@@ -6,11 +6,13 @@ const (
 )
 
 type App struct {
+	db                DB
 	sdkServiceClients SDKServiceClients
 }
 
-func NewApp(sdk SDKServiceClients) *App {
+func NewApp(db DB, sdk SDKServiceClients) *App {
 	return &App{
+		db:                db,
 		sdkServiceClients: sdk,
 	}
 }

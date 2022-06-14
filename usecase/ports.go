@@ -3,10 +3,20 @@ package usecase
 import (
 	"context"
 
+	"github.com/emerishq/demeris-api-server/api/database"
+	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
 //go:generate mockgen -package usecase_test -source ports.go -destination ports_mocks_test.go
+
+type DB interface {
+	Balances(ctx context.Context, addresses []string) ([]tracelistener.BalanceRow, error)
+	Delegations(ctx context.Context, addresses []string) ([]database.DelegationResponse, error)
+	VerifiedDenoms(context.Context) (map[string]cns.DenomList, error)
+	DenomTrace(ctx context.Context, chain string, hash string) (tracelistener.IBCDenomTraceRow, error)
+}
 
 type SDKServiceClients interface {
 	GetSDKServiceClient(version string) (sdkutilities.Service, error)

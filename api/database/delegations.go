@@ -16,7 +16,7 @@ type DelegationResponse struct {
 	ValidatorShares string `db:"delegator_shares" json:"delegator_shares"`
 }
 
-func (d *Database) Delegations(ctx context.Context, addresses ...string) ([]DelegationResponse, error) {
+func (d *Database) Delegations(ctx context.Context, addresses []string) ([]DelegationResponse, error) {
 	defer sentry.StartSpan(ctx, "db.Delegations").Finish()
 
 	var delegations []DelegationResponse
