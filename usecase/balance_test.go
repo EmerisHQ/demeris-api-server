@@ -75,7 +75,7 @@ func TestBalances(t *testing.T) {
 					nil,
 				)
 				m.db.EXPECT().VerifiedDenoms(ctx).Return(map[string]cns.DenomList{
-					"xxx": cns.DenomList{
+					"xxx": {
 						{Name: "denom1", Verified: true},
 					},
 				}, nil)
@@ -112,7 +112,7 @@ func TestBalances(t *testing.T) {
 					nil,
 				)
 				m.db.EXPECT().VerifiedDenoms(ctx).Return(map[string]cns.DenomList{
-					"xxx": cns.DenomList{
+					"xxx": {
 						{Name: "denom1", Verified: true},
 						{Name: "denom2", Verified: false},
 					}}, nil)
@@ -157,7 +157,7 @@ func TestBalances(t *testing.T) {
 					nil,
 				)
 				m.db.EXPECT().VerifiedDenoms(ctx).Return(map[string]cns.DenomList{
-					"xxx": cns.DenomList{
+					"xxx": {
 						{Name: "denom2", Verified: true},
 					}}, nil)
 				m.db.EXPECT().DenomTrace(ctx, "chain2", "xxx").Return(
@@ -200,7 +200,7 @@ func TestBalances(t *testing.T) {
 					nil,
 				)
 				m.db.EXPECT().VerifiedDenoms(ctx).Return(map[string]cns.DenomList{
-					"xxx": cns.DenomList{
+					"xxx": {
 						{Name: "denom1", Verified: true},
 						{Name: "denom2", Verified: true},
 					}}, nil)

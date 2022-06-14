@@ -2,11 +2,9 @@ package account
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/emerishq/emeris-utils/store"
@@ -30,9 +28,20 @@ const (
 	FixSlashedDelegations = "fixslasheddelegations"
 )
 
-func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients) {
+type AccountAPI struct {
+	app App
+}
 
-	router.GET("/accounts/:rawaddress", GetAccounts(db))
+func New(app App) *AccountAPI {
+	return &AccountAPI{
+		app: app,
+	}
+}
+
+func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients, app App) {
+
+	accountAPI := New(app)
+	router.GET("/accounts/:rawaddress", accountAPI.GetAccounts)
 
 	group := router.Group("/account/:address")
 	group.GET("/balance", GetBalancesByAddress(db))
@@ -43,41 +52,22 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(db, sdkServiceClients))
 }
 
-func GetAccounts(db *database.Database) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := c.Request.Context()
-		rawAddress := c.Param("rawaddress")
-		bz, err := hex.DecodeString(rawAddress)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		chains, err := db.Chains(ctx)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-		addrs := make([]string, len(chains))
-		for i, ch := range chains {
-			// Get chain address bech 32 human readable part (aka prefix or tag)
-			// FIXME(tb): MainPrefix or PrefixAccount or ?
-			hrp := ch.NodeInfo.Bech32Config.MainPrefix
-			addr, err := bech32.ConvertAndEncode(hrp, bz)
-			if err != nil {
-				c.Error(err)
-			}
-			addrs[i] = addr
-		}
-		balances, err := getBalances(ctx, db, addrs...)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-		c.JSON(http.StatusOK, AccountsResponse{
-			Balances: balances,
-		})
+func (a *AccountAPI) GetAccounts(c *gin.Context) {
+	ctx := c.Request.Context()
+	rawAddress := c.Param("rawaddress")
+	addrs, err := a.app.DeriveRawAddress(ctx, rawAddress)
+	if err != nil {
+		c.Error(err)
+		return
 	}
+	balances, err := a.app.Balances(ctx, addrs)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, AccountsResponse{
+		Balances: balances,
+	})
 }
 
 // GetBalancesByAddress returns account of an address.

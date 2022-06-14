@@ -12,6 +12,7 @@ import (
 //go:generate mockgen -package usecase_test -source ports.go -destination ports_mocks_test.go
 
 type DB interface {
+	Chains(ctx context.Context) ([]cns.Chain, error)
 	Balances(ctx context.Context, addresses []string) ([]tracelistener.BalanceRow, error)
 	Delegations(ctx context.Context, addresses []string) ([]database.DelegationResponse, error)
 	VerifiedDenoms(context.Context) (map[string]cns.DenomList, error)

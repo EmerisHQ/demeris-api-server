@@ -53,6 +53,21 @@ func (mr *MockDBMockRecorder) Balances(ctx, addresses interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Balances", reflect.TypeOf((*MockDB)(nil).Balances), ctx, addresses)
 }
 
+// Chains mocks base method.
+func (m *MockDB) Chains(ctx context.Context) ([]cns.Chain, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Chains", ctx)
+	ret0, _ := ret[0].([]cns.Chain)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Chains indicates an expected call of Chains.
+func (mr *MockDBMockRecorder) Chains(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Chains", reflect.TypeOf((*MockDB)(nil).Chains), ctx)
+}
+
 // Delegations mocks base method.
 func (m *MockDB) Delegations(ctx context.Context, addresses []string) ([]database.DelegationResponse, error) {
 	m.ctrl.T.Helper()
