@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
@@ -33,4 +34,9 @@ type SDKServiceClient interface {
 	EmoneyInflation(context.Context, *sdkutilities.EmoneyInflationPayload) (res *sdkutilities.EmoneyInflation2, err error)
 	BudgetParams(context.Context, *sdkutilities.BudgetParamsPayload) (res *sdkutilities.BudgetParams2, err error)
 	DistributionParams(context.Context, *sdkutilities.DistributionParamsPayload) (res *sdkutilities.DistributionParams2, err error)
+}
+
+// DenomPrices returns the USD price of a denom of the given chain.
+type DenomPricer interface {
+	DenomPrice(ctx context.Context, chainName, denom string) (sdktypes.Dec, error)
 }
