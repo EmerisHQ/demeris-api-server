@@ -72,7 +72,7 @@ func TestGetPrice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := poclient.NewPOClient(tt.poBaseURL)
-			price, err := client.GetPrice(tt.symbol)
+			price, err := client.GetPrice(context.Background(), tt.symbol)
 			if tt.success {
 				require.NoError(t, err)
 				require.NotEmpty(t, price)
