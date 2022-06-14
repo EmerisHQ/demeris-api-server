@@ -9,8 +9,8 @@ import (
 	reflect "reflect"
 	time "time"
 
+	types "github.com/cosmos/cosmos-sdk/types"
 	cns "github.com/emerishq/demeris-backend-models/cns"
-	sdktypes "github.com/emerishq/emeris-utils/exported/sdktypes"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -38,10 +38,10 @@ func (m *MockApp) EXPECT() *MockAppMockRecorder {
 }
 
 // StakingAPR mocks base method.
-func (m *MockApp) StakingAPR(ctx context.Context, chain cns.Chain) (sdktypes.Dec, error) {
+func (m *MockApp) StakingAPR(ctx context.Context, chain cns.Chain) (types.Dec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StakingAPR", ctx, chain)
-	ret0, _ := ret[0].(sdktypes.Dec)
+	ret0, _ := ret[0].(types.Dec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

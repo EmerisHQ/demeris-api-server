@@ -12,14 +12,13 @@ import (
 	"testing"
 	"time"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/api/chains"
 	utils "github.com/emerishq/demeris-api-server/api/test_utils"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
-	"github.com/emerishq/emeris-utils/exported/sdktypes"
+	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/gin-gonic/gin"
-
-	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/emerishq/emeris-utils/exported/sdktypes"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 
