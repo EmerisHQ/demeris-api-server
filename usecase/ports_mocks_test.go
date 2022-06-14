@@ -8,8 +8,11 @@ import (
 	context "context"
 	reflect "reflect"
 
+	types "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/crescent-network/crescent/x/liquidity/types"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 	gomock "github.com/golang/mock/gomock"
+	balancer "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
 // MockSDKServiceClients is a mock of SDKServiceClients interface.
@@ -371,4 +374,118 @@ func (m *MockSDKServiceClient) TxMetadata(arg0 context.Context, arg1 *sdkutiliti
 func (mr *MockSDKServiceClientMockRecorder) TxMetadata(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TxMetadata", reflect.TypeOf((*MockSDKServiceClient)(nil).TxMetadata), arg0, arg1)
+}
+
+// MockOsmosisClient is a mock of OsmosisClient interface.
+type MockOsmosisClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockOsmosisClientMockRecorder
+}
+
+// MockOsmosisClientMockRecorder is the mock recorder for MockOsmosisClient.
+type MockOsmosisClientMockRecorder struct {
+	mock *MockOsmosisClient
+}
+
+// NewMockOsmosisClient creates a new mock instance.
+func NewMockOsmosisClient(ctrl *gomock.Controller) *MockOsmosisClient {
+	mock := &MockOsmosisClient{ctrl: ctrl}
+	mock.recorder = &MockOsmosisClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockOsmosisClient) EXPECT() *MockOsmosisClientMockRecorder {
+	return m.recorder
+}
+
+// Pools mocks base method.
+func (m *MockOsmosisClient) Pools(ctx context.Context) ([]balancer.Pool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Pools", ctx)
+	ret0, _ := ret[0].([]balancer.Pool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Pools indicates an expected call of Pools.
+func (mr *MockOsmosisClientMockRecorder) Pools(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pools", reflect.TypeOf((*MockOsmosisClient)(nil).Pools), ctx)
+}
+
+// MockCrescentClient is a mock of CrescentClient interface.
+type MockCrescentClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockCrescentClientMockRecorder
+}
+
+// MockCrescentClientMockRecorder is the mock recorder for MockCrescentClient.
+type MockCrescentClientMockRecorder struct {
+	mock *MockCrescentClient
+}
+
+// NewMockCrescentClient creates a new mock instance.
+func NewMockCrescentClient(ctrl *gomock.Controller) *MockCrescentClient {
+	mock := &MockCrescentClient{ctrl: ctrl}
+	mock.recorder = &MockCrescentClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCrescentClient) EXPECT() *MockCrescentClientMockRecorder {
+	return m.recorder
+}
+
+// Pools mocks base method.
+func (m *MockCrescentClient) Pools(ctx context.Context) ([]types0.PoolResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Pools", ctx)
+	ret0, _ := ret[0].([]types0.PoolResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Pools indicates an expected call of Pools.
+func (mr *MockCrescentClientMockRecorder) Pools(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pools", reflect.TypeOf((*MockCrescentClient)(nil).Pools), ctx)
+}
+
+// MockDenomPricer is a mock of DenomPricer interface.
+type MockDenomPricer struct {
+	ctrl     *gomock.Controller
+	recorder *MockDenomPricerMockRecorder
+}
+
+// MockDenomPricerMockRecorder is the mock recorder for MockDenomPricer.
+type MockDenomPricerMockRecorder struct {
+	mock *MockDenomPricer
+}
+
+// NewMockDenomPricer creates a new mock instance.
+func NewMockDenomPricer(ctrl *gomock.Controller) *MockDenomPricer {
+	mock := &MockDenomPricer{ctrl: ctrl}
+	mock.recorder = &MockDenomPricerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDenomPricer) EXPECT() *MockDenomPricerMockRecorder {
+	return m.recorder
+}
+
+// DenomPrice mocks base method.
+func (m *MockDenomPricer) DenomPrice(ctx context.Context, chainName, denom string) (types.Dec, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DenomPrice", ctx, chainName, denom)
+	ret0, _ := ret[0].(types.Dec)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DenomPrice indicates an expected call of DenomPrice.
+func (mr *MockDenomPricerMockRecorder) DenomPrice(ctx, chainName, denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomPrice", reflect.TypeOf((*MockDenomPricer)(nil).DenomPrice), ctx, chainName, denom)
 }
