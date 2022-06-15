@@ -204,7 +204,7 @@ func GetUnbondingDelegationsByAddress(db *database.Database) gin.HandlerFunc {
 
 		address := c.Param("address")
 
-		unbondings, err := db.UnbondingDelegations(ctx, address)
+		unbondings, err := db.UnbondingDelegations(ctx, []string{address})
 
 		if err != nil {
 			e := apierrors.New(

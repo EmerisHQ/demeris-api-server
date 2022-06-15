@@ -115,6 +115,16 @@ const (
     amount text NOT NULL,
     UNIQUE (chain_name, delegator_address, validator_address)
   )`
+	createUnbondingDelegationsTable = `CREATE TABLE IF NOT EXISTS tracelistener.unbonding_delegations (
+id serial PRIMARY KEY NOT NULL,
+height integer NOT NULL,
+delete_height integer,
+chain_name text NOT NULL,
+delegator_address text NOT NULL,
+validator_address text NOT NULL,
+entries jsonb NOT NULL,
+UNIQUE (chain_name, delegator_address, validator_address)
+)`
 	createValidatorsTable = `CREATE TABLE IF NOT EXISTS tracelistener.validators(
 		id serial PRIMARY KEY NOT NULL,
     height integer NOT NULL,
@@ -149,9 +159,14 @@ const (
 	insertClient     = "INSERT INTO tracelistener.clients (chain_name, chain_id, client_id, latest_height, trusting_period) VALUES (($1), ($2), ($3), ($4), ($5)) ON CONFLICT (chain_name, chain_id, client_id) DO UPDATE SET chain_id=($2),client_id=($3),latest_height=($4),trusting_period=($5)"
 	insertBlocktime  = "INSERT INTO tracelistener.blocktime (chain_name, block_time) VALUES (($1), ($2)) ON CONFLICT (chain_name) DO UPDATE SET chain_name=($1),block_time=($2);"
 	insertBalance    = `INSERT INTO tracelistener.balances
-(height, chain_name, address, amount, denom) VALUES ($1,$2,$3,$4,$5)`
+(height, chain_name, address, amount, denom) 
+VALUES (:height, :chain_name, :address, :amount, :denom)`
 	insertDelegation = `INSERT INTO tracelistener.delegations
-(height, chain_name, delegator_address, validator_address, amount) VALUES ($1,$2,$3,$4,$5)`
+(height, chain_name, delegator_address, validator_address, amount)
+VALUES (:height, :chain_name, :delegator_address, :validator_address, :amount)`
+	insertUnbondingDelegation = `INSERT INTO tracelistener.unbonding_delegations
+(height, chain_name, delegator_address, validator_address, entries)
+VALUES (:height, :chain_name, :delegator_address, :validator_address, :entries)`
 	insertValidator = `INSERT INTO tracelistener.validators (height, chain_name, validator_address, operator_address, consensus_pubkey_type, consensus_pubkey_value, jailed, status, tokens, delegator_shares, moniker, identity, website, security_contact, details, unbonding_height, unbonding_time, commission_rate, max_rate, max_change_rate, update_time, min_self_delegation)
 		VALUES (:height, :chain_name, :validator_address, :operator_address, :consensus_pubkey_type, :consensus_pubkey_value, :jailed, :status, :tokens, :delegator_shares, :moniker, :identity, :website, :security_contact, :details, :unbonding_height, :unbonding_time, :commission_rate, :max_rate, :max_change_rate, :update_time, :min_self_delegation)`
 
@@ -171,6 +186,7 @@ var migrations = []string{
 	createBlockTimeTable,
 	createBalancesTable,
 	createDelegationsTable,
+	createUnbondingDelegationsTable,
 	createValidatorsTable,
 }
 
@@ -183,14 +199,15 @@ var truncating = []string{
 }
 
 type TracelistenerData struct {
-	Denoms      []DenomTrace
-	Channels    []Channel
-	Connections []Connection
-	Clients     []Client
-	BlockTimes  []BlockTime
-	Balances    []tracelistener.BalanceRow
-	Delegations []tracelistener.DelegationRow
-	Validators  []tracelistener.ValidatorRow
+	Denoms               []DenomTrace
+	Channels             []Channel
+	Connections          []Connection
+	Clients              []Client
+	BlockTimes           []BlockTime
+	Balances             []tracelistener.BalanceRow
+	Delegations          []tracelistener.DelegationRow
+	UnbondingDelegations []tracelistener.UnbondingDelegationRow
+	Validators           []tracelistener.ValidatorRow
 }
 
 type DenomTrace struct {
@@ -394,10 +411,16 @@ func InsertTraceListenerData(ctx *TestingCtx, t *testing.T, data TracelistenerDa
 		insertRow(ctx, t, insertBlocktime, d.ChainName, d.Time)
 	}
 	for _, d := range data.Balances {
-		insertRow(ctx, t, insertBalance, d.Height, d.ChainName, d.Address, d.Amount, d.Denom)
+		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertBalance, d)
+		require.NoError(t, err)
 	}
 	for _, d := range data.Delegations {
-		insertRow(ctx, t, insertDelegation, d.Height, d.ChainName, d.Delegator, d.Validator, d.Amount)
+		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertDelegation, d)
+		require.NoError(t, err)
+	}
+	for _, d := range data.UnbondingDelegations {
+		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertUnbondingDelegation, d)
+		require.NoError(t, err)
 	}
 	for _, d := range data.Validators {
 		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertValidator, d)

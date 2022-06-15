@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func (d *Database) UnbondingDelegations(ctx context.Context, address string) ([]tracelistener.UnbondingDelegationRow, error) {
+func (d *Database) UnbondingDelegations(ctx context.Context, addresses []string) ([]tracelistener.UnbondingDelegationRow, error) {
 	defer sentry.StartSpan(ctx, "db.UnbondingDelegations").Finish()
 
 	var unbondingDelegations []tracelistener.UnbondingDelegationRow
@@ -28,7 +28,7 @@ func (d *Database) UnbondingDelegations(ctx context.Context, address string) ([]
 		SELECT chain_name FROM cns.chains WHERE enabled=true
 	)
 	AND delete_height IS NULL
-	`, []string{address})
+	`, addresses)
 	if err != nil {
 		return nil, err
 	}
