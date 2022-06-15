@@ -56,7 +56,7 @@ func (s *CrescentPoolsStrategy) Pools(ctx context.Context) ([]LiquidityPool, err
 			supplies[s.Denom] = s.Amount
 		}
 
-		if res.Pagination.NextKey == nil || len(*res.Pagination.NextKey) == 0 {
+		if res.Pagination == nil || res.Pagination.NextKey == nil || len(*res.Pagination.NextKey) == 0 {
 			break
 		}
 		nextSupplyKey = res.Pagination.NextKey
