@@ -9,6 +9,7 @@ import (
 
 	"github.com/emerishq/demeris-api-server/api/account"
 	"github.com/emerishq/demeris-api-server/lib/fflag"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/emerishq/emeris-utils/logging"
 	"github.com/gin-gonic/gin"
 	gomock "github.com/golang/mock/gomock"
@@ -43,6 +44,20 @@ func TestGetAccounts(t *testing.T) {
 				{ValidatorAddress: "adr1", ChainName: "chain1", Amount: "42"},
 				{ValidatorAddress: "adr2", ChainName: "chain1", Amount: "42"},
 			},
+			UnbondingDelegations: []account.UnbondingDelegation{
+				{
+					ChainName:        "chain1",
+					ValidatorAddress: "vadr1",
+					Entries: []tracelistener.UnbondingDelegationEntry{
+						{
+							Balance:        "42",
+							InitialBalance: "1",
+							CreationHeight: 1024,
+							CompletionTime: "time",
+						},
+					},
+				},
+			},
 		}
 		respJSON, _ = json.Marshal(resp)
 	)
@@ -63,6 +78,7 @@ func TestGetAccounts(t *testing.T) {
 				m.app.EXPECT().DeriveRawAddress(ctx, "xxx").Return(adrs, nil)
 				m.app.EXPECT().Balances(ctx, adrs).Return(resp.Balances, nil)
 				m.app.EXPECT().StakingBalances(ctx, adrs).Return(resp.StakingBalances, nil)
+				m.app.EXPECT().UnbondingDelegations(ctx, adrs).Return(resp.UnbondingDelegations, nil)
 			},
 		},
 	}
@@ -204,5 +220,59 @@ func TestGetDelegationsPerAddress(t *testing.T) {
 			assert.JSONEq(tt.expectedBody, w.Body.String())
 		})
 	}
+}
 
+func TestGetUnbondingDelegationsPerAddress(t *testing.T) {
+	var (
+		ctx  = context.Background()
+		resp = account.UnbondingDelegationsResponse{
+			UnbondingDelegations: []account.UnbondingDelegation{
+				{ValidatorAddress: "adr1", ChainName: "chain1"},
+				{ValidatorAddress: "adr2", ChainName: "chain1"},
+			},
+		}
+		respJSON, _ = json.Marshal(resp)
+	)
+	tests := []struct {
+		name               string
+		expectedStatusCode int
+		expectedBody       string
+		expectedError      string
+		setup              func(mocks)
+	}{
+		{
+			name:               "ok",
+			expectedStatusCode: http.StatusOK,
+			expectedBody:       string(respJSON),
+
+			setup: func(m mocks) {
+				m.app.EXPECT().UnbondingDelegations(ctx, []string{"adr1"}).Return(resp.UnbondingDelegations, nil)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+			assert := assert.New(t)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Params = gin.Params{{Key: "address", Value: "adr1"}}
+			c.Request, _ = http.NewRequestWithContext(ctx, http.MethodGet, "", nil)
+			// add logger or else it fails
+			logger := logging.New(logging.LoggingConfig{})
+			c.Set(logging.LoggerKey, logger)
+			ac := newAccountAPI(t, tt.setup)
+
+			ac.GetUnbondingDelegationsByAddress(c)
+
+			assert.Equal(tt.expectedStatusCode, w.Code)
+			if tt.expectedError != "" {
+				require.Len(c.Errors, 1, "expected one error but got %d", len(c.Errors))
+				require.EqualError(c.Errors[0], tt.expectedError)
+				return
+			}
+			require.Empty(c.Errors)
+			assert.JSONEq(tt.expectedBody, w.Body.String())
+		})
+	}
 }

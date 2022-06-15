@@ -289,3 +289,83 @@ func TestStakingBalances(t *testing.T) {
 		})
 	}
 }
+
+func TestUnbondingDelegations(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name                        string
+		addresses                   []string
+		expectedError               string
+		expectedUnbondingDelegation []account.UnbondingDelegation
+		setup                       func(mocks)
+	}{
+		{
+			name:                        "ok: empty addresses",
+			expectedUnbondingDelegation: []account.UnbondingDelegation{},
+		},
+		{
+			name:                        "ok: delegations not found",
+			addresses:                   []string{"adr1"},
+			expectedUnbondingDelegation: []account.UnbondingDelegation{},
+
+			setup: func(m mocks) {
+				m.db.EXPECT().UnbondingDelegations(ctx, []string{"adr1"}).Return(nil, nil)
+			},
+		},
+		{
+			name:      "ok",
+			addresses: []string{"adr1"},
+			expectedUnbondingDelegation: []account.UnbondingDelegation{
+				{
+					ChainName:        "chain1",
+					ValidatorAddress: "vadr1",
+					Entries: []tracelistener.UnbondingDelegationEntry{
+						{
+							Balance:        "42",
+							InitialBalance: "1",
+							CreationHeight: 1024,
+							CompletionTime: "time",
+						},
+					},
+				},
+			},
+
+			setup: func(m mocks) {
+				m.db.EXPECT().UnbondingDelegations(ctx, []string{"adr1"}).Return(
+					[]tracelistener.UnbondingDelegationRow{
+						{
+							TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
+								ChainName: "chain1",
+							},
+							Validator: "vadr1",
+							Delegator: "dadr1",
+							Entries: []tracelistener.UnbondingDelegationEntry{
+								{
+									Balance:        "42",
+									InitialBalance: "1",
+									CreationHeight: 1024,
+									CompletionTime: "time",
+								},
+							},
+						},
+					},
+					nil,
+				)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := newApp(t, tt.setup)
+
+			unbondingDelegations, err := app.UnbondingDelegations(ctx, tt.addresses)
+
+			if tt.expectedError != "" {
+				require.EqualError(t, err, tt.expectedError)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedUnbondingDelegation, unbondingDelegations)
+		})
+	}
+}

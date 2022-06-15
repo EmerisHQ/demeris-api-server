@@ -50,7 +50,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 	group := router.Group("/account/:address")
 	group.GET("/balance", accountAPI.GetBalancesByAddress)
 	group.GET("/stakingbalances", accountAPI.GetDelegationsByAddress)
-	group.GET("/unbondingdelegations", GetUnbondingDelegationsByAddress(db))
+	group.GET("/unbondingdelegations", accountAPI.GetUnbondingDelegationsByAddress)
 	group.GET("/numbers", GetNumbersByAddress(db, sdkServiceClients))
 	group.GET("/tickets", GetUserTickets(db, s))
 	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(db, sdkServiceClients))
@@ -96,9 +96,19 @@ func (a *AccountAPI) GetAccounts(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
+	unbondingDelegations, err := a.app.UnbondingDelegations(ctx, addrs)
+	if err != nil {
+		err := apierrors.Wrap(err, "account",
+			fmt.Sprintf("cannot retrieve staking balances for raw address %v", rawAddress),
+			http.StatusBadRequest,
+		)
+		_ = c.Error(err)
+		return
+	}
 	c.JSON(http.StatusOK, AccountsResponse{
-		Balances:        balances,
-		StakingBalances: stakingBalances,
+		Balances:             balances,
+		StakingBalances:      stakingBalances,
+		UnbondingDelegations: unbondingDelegations,
 	})
 }
 
@@ -197,40 +207,23 @@ func (a *AccountAPI) GetDelegationsByAddress(c *gin.Context) {
 // @Success 200 {object} UnbondingDelegationsResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/unbondingdelegations [get]
-func GetUnbondingDelegationsByAddress(db *database.Database) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := c.Request.Context()
-		var res UnbondingDelegationsResponse
+func (a *AccountAPI) GetUnbondingDelegationsByAddress(c *gin.Context) {
+	ctx := c.Request.Context()
 
-		address := c.Param("address")
-
-		unbondings, err := db.UnbondingDelegations(ctx, []string{address})
-
-		if err != nil {
-			e := apierrors.New(
-				"unbonding delegations",
-				fmt.Sprintf("cannot retrieve unbonding delegations for address %v", address),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot query database unbonding delegations for addresses: %w", err),
-				"address",
-				address,
-			)
-			_ = c.Error(e)
-
-			return
-		}
-
-		for _, unbonding := range unbondings {
-			res.UnbondingDelegations = append(res.UnbondingDelegations, UnbondingDelegation{
-				ValidatorAddress: unbonding.Validator,
-				Entries:          unbonding.Entries,
-				ChainName:        unbonding.ChainName,
-			})
-		}
-
-		c.JSON(http.StatusOK, res)
+	address := c.Param("address")
+	unbondings, err := a.app.UnbondingDelegations(ctx, []string{address})
+	if err != nil {
+		err := apierrors.Wrap(err, "unbonding delegations",
+			fmt.Sprintf("cannot retrieve unbonding delegations for address %v", address),
+			http.StatusBadRequest,
+		)
+		_ = c.Error(err)
+		return
 	}
+
+	c.JSON(http.StatusOK, UnbondingDelegationsResponse{
+		UnbondingDelegations: unbondings,
+	})
 }
 
 // GetDelegatorRewards returns the delegations rewards of an address on a chain

@@ -79,3 +79,18 @@ func (mr *MockAppMockRecorder) StakingBalances(ctx, addresses interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StakingBalances", reflect.TypeOf((*MockApp)(nil).StakingBalances), ctx, addresses)
 }
+
+// UnbondingDelegations mocks base method.
+func (m *MockApp) UnbondingDelegations(ctx context.Context, addresses []string) ([]account.UnbondingDelegation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnbondingDelegations", ctx, addresses)
+	ret0, _ := ret[0].([]account.UnbondingDelegation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UnbondingDelegations indicates an expected call of UnbondingDelegations.
+func (mr *MockAppMockRecorder) UnbondingDelegations(ctx, addresses interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnbondingDelegations", reflect.TypeOf((*MockApp)(nil).UnbondingDelegations), ctx, addresses)
+}

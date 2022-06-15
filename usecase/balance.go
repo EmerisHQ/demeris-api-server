@@ -106,6 +106,28 @@ func (a *App) StakingBalances(ctx context.Context, addresses []string) ([]accoun
 	return res, nil
 }
 
+func (a *App) UnbondingDelegations(ctx context.Context, addresses []string) ([]account.UnbondingDelegation, error) {
+	defer sentry.StartSpan(ctx, "usecase.UnbondingDelegations").Finish()
+
+	if len(addresses) == 0 {
+		return []account.UnbondingDelegation{}, nil
+	}
+
+	unbondings, err := a.db.UnbondingDelegations(ctx, addresses)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]account.UnbondingDelegation, len(unbondings))
+	for i, unbonding := range unbondings {
+		res[i] = account.UnbondingDelegation{
+			ValidatorAddress: unbonding.Validator,
+			Entries:          unbonding.Entries,
+			ChainName:        unbonding.ChainName,
+		}
+	}
+	return res, nil
+}
+
 func (a *App) verifiedDenomsMap(ctx context.Context) (map[string]bool, error) {
 	chains, err := a.db.VerifiedDenoms(ctx)
 	if err != nil {

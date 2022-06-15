@@ -17,6 +17,7 @@ type DB interface {
 	Delegations(ctx context.Context, addresses []string) ([]database.DelegationResponse, error)
 	VerifiedDenoms(context.Context) (map[string]cns.DenomList, error)
 	DenomTrace(ctx context.Context, chain string, hash string) (tracelistener.IBCDenomTraceRow, error)
+	UnbondingDelegations(ctx context.Context, addresses []string) ([]tracelistener.UnbondingDelegationRow, error)
 }
 
 type SDKServiceClients interface {

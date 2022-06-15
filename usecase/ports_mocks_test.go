@@ -98,6 +98,21 @@ func (mr *MockDBMockRecorder) DenomTrace(ctx, chain, hash interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DenomTrace", reflect.TypeOf((*MockDB)(nil).DenomTrace), ctx, chain, hash)
 }
 
+// UnbondingDelegations mocks base method.
+func (m *MockDB) UnbondingDelegations(ctx context.Context, addresses []string) ([]tracelistener.UnbondingDelegationRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnbondingDelegations", ctx, addresses)
+	ret0, _ := ret[0].([]tracelistener.UnbondingDelegationRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UnbondingDelegations indicates an expected call of UnbondingDelegations.
+func (mr *MockDBMockRecorder) UnbondingDelegations(ctx, addresses interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnbondingDelegations", reflect.TypeOf((*MockDB)(nil).UnbondingDelegations), ctx, addresses)
+}
+
 // VerifiedDenoms mocks base method.
 func (m *MockDB) VerifiedDenoms(arg0 context.Context) (map[string]cns.DenomList, error) {
 	m.ctrl.T.Helper()
