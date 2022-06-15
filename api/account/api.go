@@ -44,7 +44,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 	router.GET("/accounts/:rawaddress", accountAPI.GetAccounts)
 
 	group := router.Group("/account/:address")
-	group.GET("/balance", GetBalancesByAddress(db))
+	group.GET("/balance", accountAPI.GetBalancesByAddress)
 	group.GET("/stakingbalances", GetDelegationsByAddress(db))
 	group.GET("/unbondingdelegations", GetUnbondingDelegationsByAddress(db))
 	group.GET("/numbers", GetNumbersByAddress(db, sdkServiceClients))
@@ -52,6 +52,16 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 	group.GET("/delegatorrewards/:chain", GetDelegatorRewards(db, sdkServiceClients))
 }
 
+// GetAccounts returns accounts from a raw address
+// @Summary Gets accounts' balance, delegation and rewards
+// @Tags Account
+// @ID get-account
+// @Description gets accounts' balance, delegation and rewards
+// @Produce json
+// @Param raw address path string true "raw address to query balance for"
+// @Success 200 {object} AccountsResponse
+// @Failure 500,403 {object} apierrors.UserFacingError
+// @Router /accounts/{rawaddress} [get]
 func (a *AccountAPI) GetAccounts(c *gin.Context) {
 	ctx := c.Request.Context()
 	rawAddress := c.Param("rawaddress")
@@ -80,112 +90,26 @@ func (a *AccountAPI) GetAccounts(c *gin.Context) {
 // @Success 200 {object} BalancesResponse
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /account/{address}/balance [get]
-func GetBalancesByAddress(db *database.Database) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := c.Request.Context()
+func (a *AccountAPI) GetBalancesByAddress(c *gin.Context) {
+	ctx := c.Request.Context()
 
-		address := c.Param("address")
+	address := c.Param("address")
 
-		balances, err := getBalances(ctx, db, address)
-		if err != nil {
-			e := apierrors.New(
-				"account",
-				fmt.Sprintf("cannot retrieve account for address %v", address),
-				http.StatusBadRequest,
-			).WithLogContext(
-				fmt.Errorf("cannot query database balance for address: %w", err),
-				"address",
-				address,
-			)
-			_ = c.Error(e)
-			return
-		}
-		c.JSON(http.StatusOK, BalancesResponse{Balances: balances})
-	}
-}
-
-func getBalances(ctx context.Context, db *database.Database, addrs ...string) ([]Balance, error) {
-	balances, err := db.Balances(ctx, addrs)
+	balances, err := a.app.Balances(ctx, []string{address})
 	if err != nil {
-		return nil, err
-	}
-	vd, err := verifiedDenomsMap(ctx, db)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: get unique chains
-	// perhaps we can remove this since there will be another endpoint specifically for fee tokens
-	res := make([]Balance, len(balances))
-	for i, b := range balances {
-		res[i] = balanceRespForBalance(
-			ctx,
-			b,
-			vd,
-			db.DenomTrace,
+		e := apierrors.New(
+			"account",
+			fmt.Sprintf("cannot retrieve account for address %v", address),
+			http.StatusBadRequest,
+		).WithLogContext(
+			fmt.Errorf("cannot query database balance for address: %w", err),
+			"address",
+			address,
 		)
+		_ = c.Error(e)
+		return
 	}
-	return res, nil
-}
-
-// What lies ahead is a refactoring operation to ease testing of the algorithm implemented
-// to determine whether a given IBC balance is verified or not.
-// Since at the time of this commit there isn't a well-formed testing framework for
-// api-server, we refactored the algo out, and provided a database querying function type.
-// This way we can easily implement table testing for this sensible component, and provide
-// fixes to it in a time-sensitive manner.
-// This will most probably go away as soon as we have proper testing in place.
-type denomTraceFunc func(context.Context, string, string) (tracelistener.IBCDenomTraceRow, error)
-
-func balanceRespForBalance(ctx context.Context, rawBalance tracelistener.BalanceRow, vd map[string]bool, dt denomTraceFunc) Balance {
-	balance := Balance{
-		Address: rawBalance.Address,
-		Amount:  rawBalance.Amount,
-		OnChain: rawBalance.ChainName,
-	}
-
-	verified := vd[rawBalance.Denom]
-	baseDenom := rawBalance.Denom
-
-	if rawBalance.Denom[:4] == "ibc/" {
-		// is ibc token
-		balance.Ibc = IbcInfo{
-			Hash: rawBalance.Denom[4:],
-		}
-
-		// if err is nil, the ibc denom has a denom trace associated with it
-		// so we return it, along with its verified status as well as the complete ibc
-		// path
-
-		// otherwise, since we don't touch `verified` and `baseDenom` variables, we stick to the
-		// original `ibc/...` denom, which will be unverified by default
-		denomTrace, err := dt(ctx, rawBalance.ChainName, rawBalance.Denom[4:])
-		if err == nil {
-			balance.Ibc.Path = denomTrace.Path
-			baseDenom = denomTrace.BaseDenom
-			verified = vd[denomTrace.BaseDenom]
-		}
-	}
-
-	balance.Verified = verified
-	balance.BaseDenom = baseDenom
-
-	return balance
-}
-
-func verifiedDenomsMap(ctx context.Context, d *database.Database) (map[string]bool, error) {
-	chains, err := d.VerifiedDenoms(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := make(map[string]bool)
-	for _, cc := range chains {
-		for _, vd := range cc {
-			ret[vd.Name] = vd.Verified
-		}
-	}
-
-	return ret, err
+	c.JSON(http.StatusOK, BalancesResponse{Balances: balances})
 }
 
 // GetDelegationsByAddress returns staking account of an address.
