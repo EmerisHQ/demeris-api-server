@@ -75,10 +75,10 @@ func TestGetAccounts(t *testing.T) {
 
 			setup: func(m mocks) {
 				adrs := []string{"adr1", "adr2"}
-				m.app.EXPECT().DeriveRawAddress(ctx, "xxx").Return(adrs, nil)
-				m.app.EXPECT().Balances(ctx, adrs).Return(resp.Balances, nil)
-				m.app.EXPECT().StakingBalances(ctx, adrs).Return(resp.StakingBalances, nil)
-				m.app.EXPECT().UnbondingDelegations(ctx, adrs).Return(resp.UnbondingDelegations, nil)
+				m.app.EXPECT().DeriveRawAddress(gomock.Any(), "xxx").Return(adrs, nil)
+				m.app.EXPECT().Balances(gomock.Any(), adrs).Return(resp.Balances, nil)
+				m.app.EXPECT().StakingBalances(gomock.Any(), adrs).Return(resp.StakingBalances, nil)
+				m.app.EXPECT().UnbondingDelegations(gomock.Any(), adrs).Return(resp.UnbondingDelegations, nil)
 			},
 		},
 	}

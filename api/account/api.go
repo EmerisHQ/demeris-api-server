@@ -67,8 +67,12 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 // @Failure 500,403 {object} apierrors.UserFacingError
 // @Router /accounts/{rawaddress} [get]
 func (a *AccountAPI) GetAccounts(c *gin.Context) {
-	ctx := c.Request.Context()
-	rawAddress := c.Param("rawaddress")
+	var (
+		ctx        = c.Request.Context()
+		rawAddress = c.Param("rawaddress")
+		resp       AccountsResponse
+	)
+	// Derive addresses
 	addrs, err := a.app.DeriveRawAddress(ctx, rawAddress)
 	if err != nil {
 		err := apierrors.Wrap(err, "account",
@@ -78,38 +82,49 @@ func (a *AccountAPI) GetAccounts(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	balances, err := a.app.Balances(ctx, addrs)
-	if err != nil {
-		err := apierrors.Wrap(err, "account",
-			fmt.Sprintf("cannot retrieve balances for raw address %v", rawAddress),
-			http.StatusBadRequest,
-		)
-		_ = c.Error(err)
-		return
-	}
-	stakingBalances, err := a.app.StakingBalances(ctx, addrs)
-	if err != nil {
-		err := apierrors.Wrap(err, "account",
-			fmt.Sprintf("cannot retrieve staking balances for raw address %v", rawAddress),
-			http.StatusBadRequest,
-		)
-		_ = c.Error(err)
-		return
-	}
-	unbondingDelegations, err := a.app.UnbondingDelegations(ctx, addrs)
-	if err != nil {
-		err := apierrors.Wrap(err, "account",
-			fmt.Sprintf("cannot retrieve staking balances for raw address %v", rawAddress),
-			http.StatusBadRequest,
-		)
-		_ = c.Error(err)
-		return
-	}
-	c.JSON(http.StatusOK, AccountsResponse{
-		Balances:             balances,
-		StakingBalances:      stakingBalances,
-		UnbondingDelegations: unbondingDelegations,
+
+	g, ctx := errgroup.WithContext(ctx)
+	// Fetch balances
+	g.Go(func() error {
+		balances, err := a.app.Balances(ctx, addrs)
+		if err != nil {
+			return apierrors.Wrap(err, "account",
+				fmt.Sprintf("cannot retrieve balances for raw address %v", rawAddress),
+				http.StatusBadRequest,
+			)
+		}
+		resp.Balances = balances
+		return nil
 	})
+	// Fetch staking balances
+	g.Go(func() error {
+		stakingBalances, err := a.app.StakingBalances(ctx, addrs)
+		if err != nil {
+			return apierrors.Wrap(err, "account",
+				fmt.Sprintf("cannot retrieve staking balances for raw address %v", rawAddress),
+				http.StatusBadRequest,
+			)
+		}
+		resp.StakingBalances = stakingBalances
+		return nil
+	})
+	// Fetch unbonding delegations
+	g.Go(func() error {
+		unbondingDelegations, err := a.app.UnbondingDelegations(ctx, addrs)
+		if err != nil {
+			return apierrors.Wrap(err, "account",
+				fmt.Sprintf("cannot retrieve staking balances for raw address %v", rawAddress),
+				http.StatusBadRequest,
+			)
+		}
+		resp.UnbondingDelegations = unbondingDelegations
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 // GetBalancesByAddress returns account of an address.
