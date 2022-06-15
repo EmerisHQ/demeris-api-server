@@ -24,6 +24,7 @@ func (s *TestSuite) TestDelegations() {
 					ChainName: "chain1", Height: 1024,
 				},
 				OperatorAddress: "opadr", ValidatorAddress: "vadr",
+				DelegatorShares: "1000", Tokens: "10000",
 			},
 		},
 		Delegations: []tracelistener.DelegationRow{
@@ -51,6 +52,8 @@ func (s *TestSuite) TestDelegations() {
 		assert.Equal("adr1", bs[0].Delegator)
 		assert.Equal("vadr", bs[0].Validator)
 		assert.Equal("42", bs[0].Amount)
+		assert.Equal("1000", bs[0].ValidatorShares)
+		assert.Equal("10000", bs[0].ValidatorTokens)
 	}
 
 	// case 2: multiple addresses
@@ -62,10 +65,14 @@ func (s *TestSuite) TestDelegations() {
 		assert.Equal("adr1", bs[0].Delegator)
 		assert.Equal("vadr", bs[0].Validator)
 		assert.Equal("42", bs[0].Amount)
+		assert.Equal("1000", bs[0].ValidatorShares)
+		assert.Equal("10000", bs[0].ValidatorTokens)
 
 		assert.Equal("chain1", bs[1].ChainName)
 		assert.Equal("adr2", bs[1].Delegator)
 		assert.Equal("vadr", bs[1].Validator)
 		assert.Equal("42", bs[1].Amount)
+		assert.Equal("1000", bs[1].ValidatorShares)
+		assert.Equal("10000", bs[1].ValidatorTokens)
 	}
 }

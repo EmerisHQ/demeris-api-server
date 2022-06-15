@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/emerishq/demeris-api-server/api/account"
+	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -20,7 +21,7 @@ func (a *App) Balances(ctx context.Context, addresses []string) ([]account.Balan
 		return nil, err
 	}
 	if len(balances) == 0 {
-		return nil, fmt.Errorf("balances not found for addresses %v", addresses)
+		return []account.Balance{}, nil
 	}
 	verifiedDenoms, err := a.verifiedDenomsMap(ctx)
 	if err != nil {
@@ -57,6 +58,50 @@ func (a *App) Balances(ctx context.Context, addresses []string) ([]account.Balan
 		}
 
 		res = append(res, balance)
+	}
+	return res, nil
+}
+
+// StakingBalance returns the staking balances of addresses.
+func (a *App) StakingBalances(ctx context.Context, addresses []string) ([]account.StakingBalance, error) {
+	defer sentry.StartSpan(ctx, "usecase.StakingBalances").Finish()
+
+	if len(addresses) == 0 {
+		return []account.StakingBalance{}, nil
+	}
+
+	delegations, err := a.db.Delegations(ctx, addresses)
+	if err != nil {
+		return nil, err
+	}
+	if len(delegations) == 0 {
+		return []account.StakingBalance{}, nil
+	}
+
+	var res []account.StakingBalance
+	for _, del := range delegations {
+		delegationAmount, err := sdktypes.NewDecFromStr(del.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert delegation amount to Dec: %w", err)
+		}
+
+		validatorShares, err := sdktypes.NewDecFromStr(del.ValidatorShares)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert validator total shares to Dec: %w", err)
+		}
+
+		validatorTokens, err := sdktypes.NewDecFromStr(del.ValidatorTokens)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert validator total tokens to Dec: %w", err)
+		}
+
+		// apply shares * total_validator_balance / total_validator_shares
+		balance := delegationAmount.Mul(validatorTokens).Quo(validatorShares)
+		res = append(res, account.StakingBalance{
+			ValidatorAddress: del.Validator,
+			Amount:           balance.String(),
+			ChainName:        del.ChainName,
+		})
 	}
 	return res, nil
 }

@@ -64,3 +64,18 @@ func (mr *MockAppMockRecorder) DeriveRawAddress(ctx, rawAddress interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeriveRawAddress", reflect.TypeOf((*MockApp)(nil).DeriveRawAddress), ctx, rawAddress)
 }
+
+// StakingBalances mocks base method.
+func (m *MockApp) StakingBalances(ctx context.Context, addresses []string) ([]account.StakingBalance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StakingBalances", ctx, addresses)
+	ret0, _ := ret[0].([]account.StakingBalance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StakingBalances indicates an expected call of StakingBalances.
+func (mr *MockAppMockRecorder) StakingBalances(ctx, addresses interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StakingBalances", reflect.TypeOf((*MockApp)(nil).StakingBalances), ctx, addresses)
+}

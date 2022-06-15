@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/emerishq/demeris-api-server/api/account"
+	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-backend-models/cns"
 	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/stretchr/testify/assert"
@@ -26,9 +27,9 @@ func TestBalances(t *testing.T) {
 			expectedBalances: []account.Balance{},
 		},
 		{
-			name:          "fail: adresses not found",
-			addresses:     []string{"adr1"},
-			expectedError: "balances not found for addresses [adr1]",
+			name:             "ok: balances not found",
+			addresses:        []string{"adr1"},
+			expectedBalances: []account.Balance{},
 
 			setup: func(m mocks) {
 				m.db.EXPECT().Balances(ctx, []string{"adr1"}).Return(nil, nil)
@@ -221,6 +222,70 @@ func TestBalances(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedBalances, balances)
+		})
+	}
+}
+
+func TestStakingBalances(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name                    string
+		addresses               []string
+		expectedError           string
+		expectedStakingBalances []account.StakingBalance
+		setup                   func(mocks)
+	}{
+		{
+			name:                    "ok: empty addresses",
+			expectedStakingBalances: []account.StakingBalance{},
+		},
+		{
+			name:                    "ok: delegations not found",
+			addresses:               []string{"adr1"},
+			expectedStakingBalances: []account.StakingBalance{},
+
+			setup: func(m mocks) {
+				m.db.EXPECT().Delegations(ctx, []string{"adr1"}).Return(nil, nil)
+			},
+		},
+		{
+			name:      "ok",
+			addresses: []string{"adr1"},
+			expectedStakingBalances: []account.StakingBalance{
+				{ChainName: "chain1", Amount: "84.000000000000000000"},
+			},
+
+			setup: func(m mocks) {
+				m.db.EXPECT().Delegations(ctx, []string{"adr1"}).Return(
+					[]database.DelegationResponse{
+						{
+							DelegationRow: tracelistener.DelegationRow{
+								TracelistenerDatabaseRow: tracelistener.TracelistenerDatabaseRow{
+									ChainName: "chain1",
+								},
+								Amount: "42",
+							},
+							ValidatorTokens: "10000",
+							ValidatorShares: "5000",
+						},
+					},
+					nil,
+				)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := newApp(t, tt.setup)
+
+			stakingBalances, err := app.StakingBalances(ctx, tt.addresses)
+
+			if tt.expectedError != "" {
+				require.EqualError(t, err, tt.expectedError)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedStakingBalances, stakingBalances)
 		})
 	}
 }

@@ -30,6 +30,8 @@ const (
 
 type AccountAPI struct {
 	app App
+	// FIXME remove when #801 is done
+	db *database.Database
 }
 
 func New(app App) *AccountAPI {
@@ -41,11 +43,13 @@ func New(app App) *AccountAPI {
 func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServiceClients sdkservice.SDKServiceClients, app App) {
 
 	accountAPI := New(app)
+	// FIXME remove when #801 is done
+	accountAPI.db = db
 	router.GET("/accounts/:rawaddress", accountAPI.GetAccounts)
 
 	group := router.Group("/account/:address")
 	group.GET("/balance", accountAPI.GetBalancesByAddress)
-	group.GET("/stakingbalances", GetDelegationsByAddress(db))
+	group.GET("/stakingbalances", accountAPI.GetDelegationsByAddress)
 	group.GET("/unbondingdelegations", GetUnbondingDelegationsByAddress(db))
 	group.GET("/numbers", GetNumbersByAddress(db, sdkServiceClients))
 	group.GET("/tickets", GetUserTickets(db, s))
@@ -67,16 +71,34 @@ func (a *AccountAPI) GetAccounts(c *gin.Context) {
 	rawAddress := c.Param("rawaddress")
 	addrs, err := a.app.DeriveRawAddress(ctx, rawAddress)
 	if err != nil {
-		c.Error(err)
+		err := apierrors.Wrap(err, "account",
+			fmt.Sprintf("cannot derive addresses from raw address %v", rawAddress),
+			http.StatusBadRequest,
+		)
+		_ = c.Error(err)
 		return
 	}
 	balances, err := a.app.Balances(ctx, addrs)
 	if err != nil {
-		c.Error(err)
+		err := apierrors.Wrap(err, "account",
+			fmt.Sprintf("cannot retrieve balances for raw address %v", rawAddress),
+			http.StatusBadRequest,
+		)
+		_ = c.Error(err)
+		return
+	}
+	stakingBalances, err := a.app.StakingBalances(ctx, addrs)
+	if err != nil {
+		err := apierrors.Wrap(err, "account",
+			fmt.Sprintf("cannot retrieve staking balances for raw address %v", rawAddress),
+			http.StatusBadRequest,
+		)
+		_ = c.Error(err)
 		return
 	}
 	c.JSON(http.StatusOK, AccountsResponse{
-		Balances: balances,
+		Balances:        balances,
+		StakingBalances: stakingBalances,
 	})
 }
 
@@ -97,16 +119,11 @@ func (a *AccountAPI) GetBalancesByAddress(c *gin.Context) {
 
 	balances, err := a.app.Balances(ctx, []string{address})
 	if err != nil {
-		e := apierrors.New(
-			"account",
-			fmt.Sprintf("cannot retrieve account for address %v", address),
+		err := apierrors.Wrap(err, "account",
+			fmt.Sprintf("cannot retrieve balances for address %v", address),
 			http.StatusBadRequest,
-		).WithLogContext(
-			fmt.Errorf("cannot query database balance for address: %w", err),
-			"address",
-			address,
 		)
-		_ = c.Error(e)
+		_ = c.Error(err)
 		return
 	}
 	c.JSON(http.StatusOK, BalancesResponse{Balances: balances})
@@ -122,95 +139,52 @@ func (a *AccountAPI) GetBalancesByAddress(c *gin.Context) {
 // @Success 200 {object} StakingBalancesResponse
 // @Failure 500,400 {object} apierrors.UserFacingError
 // @Router /account/{address}/stakingbalances [get]
-func GetDelegationsByAddress(db *database.Database) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := c.Request.Context()
-		var res StakingBalancesResponse
+func (a *AccountAPI) GetDelegationsByAddress(c *gin.Context) {
+	ctx := c.Request.Context()
+	var res StakingBalancesResponse
 
-		address := c.Param("address")
-		if fflag.Enabled(c, FixSlashedDelegations) {
-			balances, err := getStakingBalances(ctx, db, address)
-			if err != nil {
-				e := apierrors.New(
-					"delegations",
-					fmt.Sprintf("cannot retrieve delegations for address %v", address),
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("cannot query database delegations for addresses: %w", err),
-					"address",
-					address,
-				)
-				_ = c.Error(e)
-				return
-			}
-			c.JSON(http.StatusOK, StakingBalancesResponse{StakingBalances: balances})
-
-		} else {
-
-			dl, err := db.DelegationsOldResponse(ctx, address)
-
-			if err != nil {
-				e := apierrors.New(
-					"delegations",
-					fmt.Sprintf("cannot retrieve delegations for address %v", address),
-					http.StatusBadRequest,
-				).WithLogContext(
-					fmt.Errorf("cannot query database delegations for addresses: %w", err),
-					"address",
-					address,
-				)
-				_ = c.Error(e)
-
-				return
-			}
-
-			for _, del := range dl {
-				res.StakingBalances = append(res.StakingBalances, StakingBalance{
-					ValidatorAddress: del.Validator,
-					Amount:           del.Amount,
-					ChainName:        del.ChainName,
-				})
-			}
-
-			c.JSON(http.StatusOK, res)
-		}
-	}
-}
-
-func getStakingBalances(ctx context.Context, db *database.Database, addrs ...string) ([]StakingBalance, error) {
-
-	dl, err := db.Delegations(ctx, addrs)
-
-	if err != nil {
-		return nil, fmt.Errorf("cannot retrieve delegations for address %v: %w", addrs, err)
-	}
-
-	var res []StakingBalance
-	for _, del := range dl {
-		delegationAmount, err := sdktypes.NewDecFromStr(del.Amount)
+	address := c.Param("address")
+	if fflag.Enabled(c, FixSlashedDelegations) {
+		balances, err := a.app.StakingBalances(ctx, []string{address})
 		if err != nil {
-			return nil, fmt.Errorf("cannot convert delegation amount to Dec: %w", err)
+			err := apierrors.Wrap(err, "delegations",
+				fmt.Sprintf("cannot retrieve delegations for address %v", address),
+				http.StatusBadRequest,
+			)
+			_ = c.Error(err)
+			return
 		}
+		c.JSON(http.StatusOK, StakingBalancesResponse{StakingBalances: balances})
 
-		validatorShares, err := sdktypes.NewDecFromStr(del.ValidatorShares)
+	} else {
+
+		dl, err := a.db.DelegationsOldResponse(ctx, address)
+
 		if err != nil {
-			return nil, fmt.Errorf("cannot convert validator total shares to Dec: %w", err)
+			e := apierrors.New(
+				"delegations",
+				fmt.Sprintf("cannot retrieve delegations for address %v", address),
+				http.StatusBadRequest,
+			).WithLogContext(
+				fmt.Errorf("cannot query database delegations for addresses: %w", err),
+				"address",
+				address,
+			)
+			_ = c.Error(e)
+
+			return
 		}
 
-		validatorTokens, err := sdktypes.NewDecFromStr(del.ValidatorTokens)
-		if err != nil {
-			return nil, fmt.Errorf("cannot convert validator total tokens to Dec: %w", err)
+		for _, del := range dl {
+			res.StakingBalances = append(res.StakingBalances, StakingBalance{
+				ValidatorAddress: del.Validator,
+				Amount:           del.Amount,
+				ChainName:        del.ChainName,
+			})
 		}
 
-		// apply shares * total_validator_balance / total_validator_shares
-		balance := delegationAmount.Mul(validatorTokens).Quo(validatorShares)
-		res = append(res, StakingBalance{
-			ValidatorAddress: del.Validator,
-			Amount:           balance.String(),
-			ChainName:        del.ChainName,
-		})
+		c.JSON(http.StatusOK, res)
 	}
-	return res, nil
 }
 
 // GetUnbondingDelegationsByAddress returns the unbonding delegations of an address

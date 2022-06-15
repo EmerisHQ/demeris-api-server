@@ -9,4 +9,5 @@ import (
 type App interface {
 	DeriveRawAddress(ctx context.Context, rawAddress string) ([]string, error)
 	Balances(ctx context.Context, addresses []string) ([]Balance, error)
+	StakingBalances(ctx context.Context, addresses []string) ([]StakingBalance, error)
 }
