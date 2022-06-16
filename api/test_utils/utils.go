@@ -248,24 +248,6 @@ type BlockTime struct {
 	Time      time.Time
 }
 
-/*
-type Balance struct {
-	Height    string
-	ChainName string
-	Address   string
-	Amount    string
-	Denom     string
-}
-
-type Delegation struct {
-	Height           string
-	ChainName        string
-	DelegatorAddress string
-	ValidatorAddress string
-	Amount           string
-}
-*/
-
 // TestingCtx A struct to hold context for child tests
 type TestingCtx struct {
 	Router *router.Router
