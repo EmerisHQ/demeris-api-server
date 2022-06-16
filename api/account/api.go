@@ -82,6 +82,7 @@ func (a *AccountAPI) GetAccounts(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
+	fmt.Println("ADRS", addrs)
 
 	g, ctx := errgroup.WithContext(ctx)
 	// Fetch balances
@@ -113,7 +114,7 @@ func (a *AccountAPI) GetAccounts(c *gin.Context) {
 		unbondingDelegations, err := a.app.UnbondingDelegations(ctx, addrs)
 		if err != nil {
 			return apierrors.Wrap(err, "account",
-				fmt.Sprintf("cannot retrieve staking balances for raw address %v", rawAddress),
+				fmt.Sprintf("cannot retrieve unbonding delegations for raw address %v", rawAddress),
 				http.StatusBadRequest,
 			)
 		}
