@@ -212,7 +212,7 @@ func enoughBalance(ctx context.Context, address string, denom cnsmodels.Denom, d
 
 	addrHex := hex.EncodeToString(hb)
 
-	balance, err := db.Balances(ctx, addrHex)
+	balance, err := db.Balances(ctx, []string{addrHex})
 	if err != nil {
 		return false, err
 	}

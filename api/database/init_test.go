@@ -21,8 +21,8 @@ func (s *TestSuite) SetupSuite() {
 	s.ctx.CnsDB.AddChain(utils.ChainWithoutPublicEndpoints)
 	s.ctx.CnsDB.AddChain(utils.DisabledChain)
 
-	utils.RunTraceListnerMigrations(s.ctx, s.T())
-	utils.InsertTraceListnerData(s.ctx, s.T(), utils.VerifyTraceData)
+	utils.RunTraceListenerMigrations(s.ctx, s.T())
+	utils.InsertTraceListenerData(s.ctx, s.T(), utils.VerifyTraceData)
 }
 
 func (s *TestSuite) TearDownSuite() {

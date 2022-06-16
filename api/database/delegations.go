@@ -16,7 +16,7 @@ type DelegationResponse struct {
 	ValidatorShares string `db:"delegator_shares" json:"delegator_shares"`
 }
 
-func (d *Database) Delegations(ctx context.Context, address string) ([]DelegationResponse, error) {
+func (d *Database) Delegations(ctx context.Context, addresses []string) ([]DelegationResponse, error) {
 	defer sentry.StartSpan(ctx, "db.Delegations").Finish()
 
 	var delegations []DelegationResponse
@@ -26,19 +26,17 @@ func (d *Database) Delegations(ctx context.Context, address string) ([]Delegatio
 	FROM tracelistener.delegations as d
 	INNER JOIN tracelistener.validators as v ON 
 		d.chain_name=v.chain_name AND d.validator_address=v.validator_address
-	WHERE d.delegator_address=(?)
+	WHERE d.delegator_address IN (?)
 	AND d.chain_name IN (
 		SELECT chain_name FROM cns.chains WHERE enabled=true
 	)
 	AND v.delete_height IS NULL
 	AND d.delete_height IS NULL
-	`, []string{address})
+	`, addresses)
 	if err != nil {
 		return nil, err
 	}
-
 	q = d.dbi.DB.Rebind(q)
-
 	return delegations, d.dbi.DB.SelectContext(ctx, &delegations, q, args...)
 }
 

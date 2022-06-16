@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/emerishq/demeris-backend-models/cns"
+	"github.com/emerishq/demeris-backend-models/tracelistener"
 	"github.com/emerishq/emeris-utils/store"
 	"github.com/stretchr/testify/require"
 
@@ -94,11 +95,80 @@ const (
 		unique(chain_name)
 	)`
 
+	createBalancesTable = `CREATE TABLE IF NOT EXISTS tracelistener.balances (
+		id serial PRIMARY KEY NOT NULL,
+    height integer NOT NULL,
+    delete_height integer,
+    chain_name text NOT NULL,
+    address text NOT NULL,
+    amount text NOT NULL,
+    denom text NOT NULL,
+    UNIQUE (chain_name, address, denom)
+	)`
+	createDelegationsTable = `CREATE TABLE IF NOT EXISTS tracelistener.delegations (
+		id serial PRIMARY KEY NOT NULL,
+    height integer NOT NULL,
+    delete_height integer,
+    chain_name text NOT NULL,
+    delegator_address text NOT NULL,
+    validator_address text NOT NULL,
+    amount text NOT NULL,
+    UNIQUE (chain_name, delegator_address, validator_address)
+  )`
+	createUnbondingDelegationsTable = `CREATE TABLE IF NOT EXISTS tracelistener.unbonding_delegations (
+id serial PRIMARY KEY NOT NULL,
+height integer NOT NULL,
+delete_height integer,
+chain_name text NOT NULL,
+delegator_address text NOT NULL,
+validator_address text NOT NULL,
+entries jsonb NOT NULL,
+UNIQUE (chain_name, delegator_address, validator_address)
+)`
+	createValidatorsTable = `CREATE TABLE IF NOT EXISTS tracelistener.validators(
+		id serial PRIMARY KEY NOT NULL,
+    height integer NOT NULL,
+    delete_height integer,
+    chain_name text NOT NULL,
+    validator_address text NOT NULL,
+    operator_address text NOT NULL,
+    consensus_pubkey_type text,
+    consensus_pubkey_value bytes,
+    jailed bool NOT NULL,
+    status integer NOT NULL,
+    tokens text NOT NULL,
+    delegator_shares text NOT NULL,
+    moniker text,
+    identity text,
+    website text,
+    security_contact text,
+    details text,
+    unbonding_height bigint,
+    unbonding_time text,
+    commission_rate text NOT NULL,
+    max_rate text NOT NULL,
+    max_change_rate text NOT NULL,
+    update_time text NOT NULL,
+    min_self_delegation text NOT NULL,
+    UNIQUE (chain_name, operator_address)
+  )`
+
 	insertDenomTrace = "INSERT INTO tracelistener.denom_traces (path, base_denom, hash, chain_name) VALUES (($1), ($2), ($3), ($4)) ON CONFLICT (chain_name, hash) DO UPDATE SET base_denom=($2), hash=($3), path=($1)"
 	insertChannel    = "INSERT INTO tracelistener.channels (channel_id, counter_channel_id, port, state, hops, chain_name) VALUES (($1), ($2), ($3), ($4), ($5), ($6)) ON CONFLICT (chain_name, channel_id, port) DO UPDATE SET state=($4),counter_channel_id=($2),hops=($5),port=($3),channel_id=($1)"
 	insertConnection = "INSERT INTO tracelistener.connections (chain_name, connection_id, client_id, state, counter_connection_id, counter_client_id) VALUES (($1), ($2), ($3), ($4), ($5), ($6)) ON CONFLICT (chain_name, connection_id, client_id) DO UPDATE SET chain_name=($1),state=($4),counter_connection_id=($5),counter_client_id=($6)"
 	insertClient     = "INSERT INTO tracelistener.clients (chain_name, chain_id, client_id, latest_height, trusting_period) VALUES (($1), ($2), ($3), ($4), ($5)) ON CONFLICT (chain_name, chain_id, client_id) DO UPDATE SET chain_id=($2),client_id=($3),latest_height=($4),trusting_period=($5)"
 	insertBlocktime  = "INSERT INTO tracelistener.blocktime (chain_name, block_time) VALUES (($1), ($2)) ON CONFLICT (chain_name) DO UPDATE SET chain_name=($1),block_time=($2);"
+	insertBalance    = `INSERT INTO tracelistener.balances
+(height, chain_name, address, amount, denom) 
+VALUES (:height, :chain_name, :address, :amount, :denom)`
+	insertDelegation = `INSERT INTO tracelistener.delegations
+(height, chain_name, delegator_address, validator_address, amount)
+VALUES (:height, :chain_name, :delegator_address, :validator_address, :amount)`
+	insertUnbondingDelegation = `INSERT INTO tracelistener.unbonding_delegations
+(height, chain_name, delegator_address, validator_address, entries)
+VALUES (:height, :chain_name, :delegator_address, :validator_address, :entries)`
+	insertValidator = `INSERT INTO tracelistener.validators (height, chain_name, validator_address, operator_address, consensus_pubkey_type, consensus_pubkey_value, jailed, status, tokens, delegator_shares, moniker, identity, website, security_contact, details, unbonding_height, unbonding_time, commission_rate, max_rate, max_change_rate, update_time, min_self_delegation)
+		VALUES (:height, :chain_name, :validator_address, :operator_address, :consensus_pubkey_type, :consensus_pubkey_value, :jailed, :status, :tokens, :delegator_shares, :moniker, :identity, :website, :security_contact, :details, :unbonding_height, :unbonding_time, :commission_rate, :max_rate, :max_change_rate, :update_time, :min_self_delegation)`
 
 	truncateDenomTraces = `TRUNCATE tracelistener.denom_traces`
 	truncateChannels    = `TRUNCATE tracelistener.channels`
@@ -114,6 +184,10 @@ var migrations = []string{
 	createConnectionsTable,
 	createClientsTable,
 	createBlockTimeTable,
+	createBalancesTable,
+	createDelegationsTable,
+	createUnbondingDelegationsTable,
+	createValidatorsTable,
 }
 
 var truncating = []string{
@@ -125,11 +199,15 @@ var truncating = []string{
 }
 
 type TracelistenerData struct {
-	Denoms      []DenomTrace
-	Channels    []Channel
-	Connections []Connection
-	Clients     []Client
-	BlockTimes  []BlockTime
+	Denoms               []DenomTrace
+	Channels             []Channel
+	Connections          []Connection
+	Clients              []Client
+	BlockTimes           []BlockTime
+	Balances             []tracelistener.BalanceRow
+	Delegations          []tracelistener.DelegationRow
+	UnbondingDelegations []tracelistener.UnbondingDelegationRow
+	Validators           []tracelistener.ValidatorRow
 }
 
 type DenomTrace struct {
@@ -267,7 +345,7 @@ func Setup(runServer bool) *TestingCtx {
 }
 
 // Creates tracelistner database and required tables only if they dont exist
-func RunTraceListnerMigrations(ctx *TestingCtx, t *testing.T) {
+func RunTraceListenerMigrations(ctx *TestingCtx, t *testing.T) {
 	for _, m := range migrations {
 		_, err := ctx.CnsDB.Instance.DB.Exec(m)
 		require.NoError(t, err)
@@ -294,7 +372,7 @@ func insertRow(ctx *TestingCtx, t *testing.T, query string, args ...interface{})
 }
 
 //	inserts data from given struct into respective tracelistener tables
-func InsertTraceListnerData(ctx *TestingCtx, t *testing.T, data TracelistenerData) {
+func InsertTraceListenerData(ctx *TestingCtx, t *testing.T, data TracelistenerData) {
 	for _, d := range data.Denoms {
 		insertRow(ctx, t, insertDenomTrace, d.Path, d.BaseDenom, d.Hash, d.ChainName)
 	}
@@ -313,6 +391,22 @@ func InsertTraceListnerData(ctx *TestingCtx, t *testing.T, data TracelistenerDat
 
 	for _, d := range data.BlockTimes {
 		insertRow(ctx, t, insertBlocktime, d.ChainName, d.Time)
+	}
+	for _, d := range data.Balances {
+		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertBalance, d)
+		require.NoError(t, err)
+	}
+	for _, d := range data.Delegations {
+		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertDelegation, d)
+		require.NoError(t, err)
+	}
+	for _, d := range data.UnbondingDelegations {
+		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertUnbondingDelegation, d)
+		require.NoError(t, err)
+	}
+	for _, d := range data.Validators {
+		_, err := ctx.CnsDB.Instance.DB.NamedExec(insertValidator, d)
+		require.NoError(t, err)
 	}
 }
 

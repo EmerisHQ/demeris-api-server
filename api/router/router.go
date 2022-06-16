@@ -136,7 +136,7 @@ func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store,
 	app *usecase.App) {
 	// @tag.name Account
 	// @tag.description Account-querying endpoints
-	account.Register(engine, db, s, sdkServiceClients)
+	account.Register(engine, db, s, sdkServiceClients, app)
 
 	// @tag.name Denoms
 	// @tag.description Denoms-related endpoints

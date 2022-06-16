@@ -111,8 +111,8 @@ func TestGetChain(t *testing.T) {
 }
 
 func TestGetChains(t *testing.T) {
-	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
+	utils.RunTraceListenerMigrations(testingCtx, t)
+	utils.InsertTraceListenerData(testingCtx, t, utils.VerifyTraceData)
 
 	for _, tt := range getChainsTestCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -152,11 +152,11 @@ func TestGetChains(t *testing.T) {
 }
 
 func TestVerifyTrace(t *testing.T) {
-	utils.RunTraceListnerMigrations(testingCtx, t)
+	utils.RunTraceListenerMigrations(testingCtx, t)
 
 	for i, tt := range verifyTraceTestCases {
 		t.Run(fmt.Sprintf("%d %s", i, tt.name), func(t *testing.T) {
-			utils.InsertTraceListnerData(testingCtx, t, tt.dataStruct)
+			utils.InsertTraceListenerData(testingCtx, t, tt.dataStruct)
 			for _, chain := range tt.chains {
 				require.NoError(t, testingCtx.CnsDB.AddChain(chain))
 			}
@@ -194,8 +194,8 @@ func TestVerifyTrace(t *testing.T) {
 }
 
 func TestGetChainStatus(t *testing.T) {
-	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
+	utils.RunTraceListenerMigrations(testingCtx, t)
+	utils.InsertTraceListenerData(testingCtx, t, utils.VerifyTraceData)
 
 	tests := []struct {
 		name             string
@@ -321,8 +321,8 @@ func TestGetChainSupply(t *testing.T) {
 }
 
 func TestGetChainsStatuses(t *testing.T) {
-	utils.RunTraceListnerMigrations(testingCtx, t)
-	utils.InsertTraceListnerData(testingCtx, t, utils.VerifyTraceData)
+	utils.RunTraceListenerMigrations(testingCtx, t)
+	utils.InsertTraceListenerData(testingCtx, t, utils.VerifyTraceData)
 
 	// arrange
 	testChains := []cns.Chain{

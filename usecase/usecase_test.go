@@ -10,6 +10,7 @@ import (
 
 type mocks struct {
 	t                 *testing.T
+	db                *MockDB
 	sdkServiceClients *MockSDKServiceClients
 	sdkServiceClient  *MockSDKServiceClient
 }
@@ -18,6 +19,7 @@ func newApp(t *testing.T, setup func(mocks)) *usecase.App {
 	ctrl := gomock.NewController(t)
 	m := mocks{
 		t:                 t,
+		db:                NewMockDB(ctrl),
 		sdkServiceClients: NewMockSDKServiceClients(ctrl),
 		sdkServiceClient:  NewMockSDKServiceClient(ctrl),
 	}
@@ -33,5 +35,5 @@ func newApp(t *testing.T, setup func(mocks)) *usecase.App {
 	if setup != nil {
 		setup(m)
 	}
-	return usecase.NewApp(m.sdkServiceClients)
+	return usecase.NewApp(m.db, m.sdkServiceClients)
 }
