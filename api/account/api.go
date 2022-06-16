@@ -59,7 +59,7 @@ func Register(router *gin.Engine, db *database.Database, s *store.Store, sdkServ
 // GetAccounts returns accounts from a raw address
 // @Summary Gets accounts' balance, delegation and rewards
 // @Tags Account
-// @ID get-account
+// @ID get-accounts
 // @Description gets accounts' balance, delegation and rewards
 // @Produce json
 // @Param raw address path string true "raw address to query balance for"

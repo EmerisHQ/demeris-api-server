@@ -78,7 +78,7 @@ func (a *App) StakingBalances(ctx context.Context, addresses []string) ([]accoun
 		return []account.StakingBalance{}, nil
 	}
 
-	var res []account.StakingBalance
+	res := make([]account.StakingBalance, 0, len(delegations))
 	for _, del := range delegations {
 		delegationAmount, err := sdktypes.NewDecFromStr(del.Amount)
 		if err != nil {
