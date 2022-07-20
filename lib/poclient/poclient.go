@@ -1,7 +1,9 @@
 package poclient
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -30,6 +32,7 @@ type PricesResponse struct {
 type POClient struct {
 	PriceOracleBaseURL string
 	cache              *gocache.Cache
+	httpClient         http.Client
 }
 
 func NewPOClient(priceOracleBaseURL string) POClient {
@@ -37,11 +40,14 @@ func NewPOClient(priceOracleBaseURL string) POClient {
 	return POClient{
 		PriceOracleBaseURL: priceOracleBaseURL,
 		cache:              cache,
+		httpClient: http.Client{
+			Timeout: time.Second * 5,
+		},
 	}
 }
 
 // GetPrice returns price of token or fiat based on symbol
-func (c POClient) GetPrice(symbol string) (Price, error) {
+func (c POClient) GetPrice(ctx context.Context, symbol string) (Price, error) {
 	// converting symbol to uppercase
 	symbol = strings.ToUpper(symbol)
 
@@ -54,7 +60,12 @@ func (c POClient) GetPrice(symbol string) (Price, error) {
 		return price, nil
 	}
 
-	resp, err := http.Get(fmt.Sprintf(allPricesURL, c.PriceOracleBaseURL))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(allPricesURL, c.PriceOracleBaseURL), nil)
+	if err != nil {
+		return Price{}, err
+	}
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return Price{}, err
 	}
@@ -99,5 +110,7 @@ func (c POClient) GetPrice(symbol string) (Price, error) {
 		}
 	}
 
-	return Price{}, fmt.Errorf("cannot get price for given symbol: %s", symbol)
+	return Price{}, fmt.Errorf("%w: %s", ErrSymbolNotFound, symbol)
 }
+
+var ErrSymbolNotFound = errors.New("symbol not found")

@@ -356,3 +356,27 @@ func (d *Database) ChainsOnlineStatuses(ctx context.Context) ([]ChainOnlineStatu
 
 	return rows, nil
 }
+
+func (d *Database) Denoms(ctx context.Context) ([]cns.Denom, error) {
+	defer sentry.StartSpan(ctx, "db.DenomTicker").Finish()
+
+	q := `
+	SELECT denoms
+	FROM cns.chains
+	WHERE enabled
+	`
+
+	var rows []struct {
+		Denoms cns.DenomList `db:"denoms"`
+	}
+	if err := d.dbi.DB.SelectContext(ctx, &rows, q); err != nil {
+		return nil, err
+	}
+
+	var ret []cns.Denom
+	for _, r := range rows {
+		ret = append(ret, r.Denoms...)
+	}
+
+	return ret, nil
+}

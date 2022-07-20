@@ -24,7 +24,6 @@ import (
 	_ "github.com/emerishq/demeris-backend-models/tracelistener"
 	_ "github.com/emerishq/emeris-utils/exported/sdktypes"
 	_ "github.com/emerishq/emeris-utils/store"
-	_ "github.com/gravity-devs/liquidity/x/liquidity/types"
 	_ "github.com/swaggo/swag"
 	_ "github.com/tendermint/tendermint/proto/tendermint/version"
 	_ "github.com/tendermint/tendermint/rpc/core/types"

@@ -380,3 +380,9 @@ func (s *TestSuite) TestChainsOnlineStatuses() {
 		})
 	}
 }
+
+func (s *TestSuite) TestDenoms() {
+	denoms, err := s.ctx.Router.DB.Denoms(context.Background())
+	s.Require().NoError(err)
+	s.Require().Greater(len(denoms), 0)
+}

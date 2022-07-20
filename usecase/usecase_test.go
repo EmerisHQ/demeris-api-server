@@ -12,6 +12,9 @@ type mocks struct {
 	t                 *testing.T
 	sdkServiceClients *MockSDKServiceClients
 	sdkServiceClient  *MockSDKServiceClient
+	osmosisClient     *MockOsmosisClient
+	crescentClient    *MockCrescentClient
+	denomPricer       *MockDenomPricer
 }
 
 func newApp(t *testing.T, setup func(mocks)) *usecase.App {
@@ -20,6 +23,7 @@ func newApp(t *testing.T, setup func(mocks)) *usecase.App {
 		t:                 t,
 		sdkServiceClients: NewMockSDKServiceClients(ctrl),
 		sdkServiceClient:  NewMockSDKServiceClient(ctrl),
+		denomPricer:       NewMockDenomPricer(ctrl),
 	}
 
 	// Pre-setup expectations on sdkServiceClients
@@ -33,5 +37,5 @@ func newApp(t *testing.T, setup func(mocks)) *usecase.App {
 	if setup != nil {
 		setup(m)
 	}
-	return usecase.NewApp(m.sdkServiceClients)
+	return usecase.NewApp(m.sdkServiceClients, m.osmosisClient, m.crescentClient, m.denomPricer)
 }

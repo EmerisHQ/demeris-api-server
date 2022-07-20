@@ -12,6 +12,7 @@ import (
 	"github.com/emerishq/demeris-api-server/api/database"
 	"github.com/emerishq/demeris-api-server/api/router"
 	"github.com/emerishq/demeris-api-server/lib/fflag"
+	"github.com/emerishq/demeris-api-server/lib/poclient"
 	"github.com/emerishq/demeris-api-server/sdkservice"
 	"github.com/emerishq/demeris-api-server/usecase"
 	"github.com/emerishq/emeris-utils/k8s"
@@ -108,7 +109,17 @@ func main() {
 		l.Panicw("cannot initialize sdk-service clients", "error", err)
 	}
 
-	app := usecase.NewApp(sdkServiceClients)
+	osmosisClient := usecase.NewOsmosisGrpcClient("osmosis:9090")
+
+	crescentClient := usecase.NewCrescentGrpcClient("crescent:9090")
+
+	priceOracle := poclient.NewPOClient("http://price-oracle:8000")
+
+	denomer := usecase.NewDatabaseDenomer(dbi)
+
+	denomPricer := usecase.NewPriceOracleDenomPricer(denomer, dbi, priceOracle)
+
+	app := usecase.NewApp(sdkServiceClients, osmosisClient, crescentClient, denomPricer)
 
 	r := router.New(
 		dbi,

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-backend-models/cns"
-	"github.com/emerishq/emeris-utils/exported/sdktypes"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
 )
 

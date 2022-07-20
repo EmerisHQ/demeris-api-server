@@ -3,7 +3,10 @@ package usecase
 import (
 	"context"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	cretypes "github.com/crescent-network/crescent/x/liquidity/types"
 	sdkutilities "github.com/emerishq/sdk-service-meta/gen/sdk_utilities"
+	gammbalancer "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
 //go:generate mockgen -package usecase_test -source ports.go -destination ports_mocks_test.go
@@ -33,4 +36,17 @@ type SDKServiceClient interface {
 	EmoneyInflation(context.Context, *sdkutilities.EmoneyInflationPayload) (res *sdkutilities.EmoneyInflation2, err error)
 	BudgetParams(context.Context, *sdkutilities.BudgetParamsPayload) (res *sdkutilities.BudgetParams2, err error)
 	DistributionParams(context.Context, *sdkutilities.DistributionParamsPayload) (res *sdkutilities.DistributionParams2, err error)
+}
+
+type OsmosisClient interface {
+	Pools(ctx context.Context) ([]gammbalancer.Pool, error)
+}
+
+type CrescentClient interface {
+	Pools(ctx context.Context) ([]cretypes.PoolResponse, error)
+}
+
+// DenomPrices returns the USD price of a denom of the given chain.
+type DenomPricer interface {
+	DenomPrice(ctx context.Context, chainName, denom string) (sdktypes.Dec, error)
 }

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/emerishq/demeris-api-server/api/block"
-	"github.com/emerishq/demeris-api-server/api/cached"
 	"github.com/emerishq/demeris-api-server/api/liquidity"
+	"github.com/emerishq/demeris-api-server/api/prices"
 	"github.com/emerishq/demeris-api-server/lib/apierrors"
 	"github.com/emerishq/demeris-api-server/lib/stringcache"
 	"github.com/emerishq/demeris-api-server/sdkservice"
@@ -162,7 +162,7 @@ func registerRoutes(engine *gin.Engine, db *database.Database, s *store.Store,
 	// @tag.description pool-related endpoints
 	liquidity.Register(engine, db, s)
 
-	// @tag.name cached
-	// @tag.description cached data endpoints
-	cached.Register(engine, db, s)
+	// @tag.name prices
+	// @tag.description prices related endpoints
+	prices.Register(engine, app)
 }
